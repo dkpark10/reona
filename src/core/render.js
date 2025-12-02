@@ -4,5 +4,5 @@
  * @returns {string}
  */
 export function render(container, component) {
-  container.innerHTML = component;
+  container.appendChild(component);
 }
