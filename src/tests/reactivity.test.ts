@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { reactive, ref, effect } from "../core/reactivity";
+import { reactive, ref, effect } from "@/core/reactivity";
 
 describe("반응성 테스트", () => {
   test("객체", () => {

@@ -1,6 +1,9 @@
-let activeEffect = null;
+import type { Primitive } from "@/utils/types";
+import { isPrimitive } from "@/utils";
 
-export function effect(fn) {
+let activeEffect: null | Function = null;
+
+export function effect(fn: Function) {
   activeEffect = fn;
   fn();
   activeEffect = null;
@@ -12,14 +15,9 @@ export function effect(fn) {
 //     key(객체 키) → Set(effect)
 //   )
 // )
-/** @type {WeakMap<Record<string, any>, Map<string, Set<function>>} */
-const targetMap = new WeakMap();
+const targetMap = new WeakMap<object, Map<string | symbol, Set<Function>>>();
 
-/**
- * @param {Record<string, any>} target
- * @param {string} key
- */
-function track(target, key) {
+function track(target: Record<string, any>, key: string | symbol) {
   if (!activeEffect) return;
 
   let depsMap = targetMap.get(target);
@@ -36,31 +34,30 @@ function track(target, key) {
   deps.add(activeEffect);
 }
 
-/**
- * @param {Record<string, any>} target
- * @param {string} key
- */
-function trigger(target, key) {
+function trigger(target: Record<string, any>, key: string | symbol) {
   const depsMap = targetMap.get(target);
   if (!depsMap) return;
 
   const deps = depsMap.get(key);
   if (deps) {
-    deps.forEach((effect) => effect());
+    deps.forEach((effect) => {
+      effect();
+    });
   }
 }
 
-/**
- * @param {Record<string, any>} obj
- * @returns {Record<string, any>}
- */
-export function reactive(obj) {
+export function reactive<T extends Record<string, any>>(obj: T) {
+  if (isPrimitive(obj)) {
+    throw new Error("원시객체가 입니다.");
+  }
   return new Proxy(obj, {
     get(target, key) {
       track(target, key);
+      // @ts-ignore
       return target[key];
     },
     set(target, key, value) {
+      // @ts-ignore
       target[key] = value;
       trigger(target, key);
       return true;
@@ -68,21 +65,20 @@ export function reactive(obj) {
   });
 }
 
-/**
- * @param {number | string | boolean | undefined | symbol | bigint} value
- * @returns {{ value: number | string | boolean | undefined | symbol | bigint }}
- */
-export function ref(value) {
+export function ref<T extends Primitive>(value: T) {
+  if (!isPrimitive(value)) {
+    throw new Error("원시객체가 아닙니다.");
+  }
   const obj = {
     value,
   };
   return new Proxy(obj, {
     get(target, key) {
       track(target, key);
-      return target[key];
+      return target.value;
     },
     set(target, key, value) {
-      target[key] = value;
+      target.value = value;
       trigger(target, key);
       return true;
     },

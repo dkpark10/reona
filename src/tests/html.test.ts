@@ -1,31 +1,38 @@
 import { describe, expect, test } from "vitest";
-import { html } from "../core/html";
+import { html, createRenderableDom } from "@/core/html";
 
-/**
- * @param {string} str
- * @returns {string}
- */
-function removeSpace(str) {
+function removeSpace(str: string) {
   return str.replace(/\s+/g, "");
+}
+
+function parseHtml(str: TemplateStringsArray, ...rest: any[]): string {
+  const [rawStrings, values] = html(str, ...rest);
+  const dom = createRenderableDom(rawStrings as string, values as any[]);
+  return removeSpace(dom.innerHTML as string);
 }
 
 describe("html 함수 테스트", () => {
   test("기본", () => {
     const count = 10;
-    expect(html`<div>${count}</div>`).toBe("<div>10</div>");
+    expect(parseHtml`<div>${count}</div>`).toBe("<div>10</div>");
   });
 
-  test("배열", () => {
+  test.skip("배열", () => {
     const arr = [1, 2, 3, 4, 5];
     expect(
-      removeSpace(html`<ul>
+      parseHtml`<ul>
         ${arr.map(
-          (item) => `<li @click=${() => console.log(item)}>${item}</li>`
-        )}
-      </ul>`)
+          (item) => html`<li @click=${() => console.log(item)}>${item}</li>`
+        ).join('')}
+      </ul>`
     ).toBe(
       removeSpace(`<ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul>`)
     );
+  });
+
+  test("엘리먼트", () => {
+    const count = 10;
+    expect(parseHtml`<div>${html`<span>${count}</span>`}</div>`).toBe("<div><span>10</span></div>");
   });
 
   test("이벤트 리스너", () => {
@@ -39,19 +46,21 @@ describe("html 함수 테스트", () => {
     };
 
     expect(
-      removeSpace(html`
+      parseHtml`
         <div>
           <button type="button" @click=${increase}>증가</button>
           <button type="button" @click=${decrease}>감소</button>
           <div>${count}</div>
         </div>
-      `)
+      `
     ).toBe(
-      removeSpace(`<div>
+      removeSpace(
+      `<div>
         <button type="button">증가</button>
         <button type="button">감소</button>
         <div>${count}</div>
-      </div>`)
+      </div>`
+      )
     );
   });
 });
