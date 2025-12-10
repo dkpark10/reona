@@ -24,6 +24,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
+    // 생성자 초기화 여부
+    "strictPropertyInitialization": false,
+
     "paths": {
       "@/*": ["./src/*"],
     }
