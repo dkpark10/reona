@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { html, createRenderableDom } from "@/core/html";
+import { html, createRenderableDom } from "@/core/template";
 
 function removeSpace(str: string) {
   return str.replace(/\s+/g, "");

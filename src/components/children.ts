@@ -1,4 +1,4 @@
-import { html } from "@/core/html";
+import { html } from "@/core/template";
 import { ReonaElement } from "@/core/element";
 
 interface ChildrenProps {
@@ -11,6 +11,6 @@ export class Children extends ReonaElement<ChildrenProps> {
   }
 
   render() {
-    return html`<div>children...${this.$props.quantity + 1}</div> `;
+    return html`<div>children...${this.$props.quantity + 12}</div> `;
   }
 }

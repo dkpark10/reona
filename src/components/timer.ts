@@ -1,5 +1,6 @@
 import { ref } from "@/core/reactivity";
-import { html } from "@/core/html";
+import { html } from "@/core/template";
+// import { html } from "@/core/html";
 import { ReonaElement } from "@/core/element";
 
 export class Timer extends ReonaElement {

@@ -1,11 +1,21 @@
 import { effect } from "./reactivity";
-import { createRenderableDom } from "./html";
+import { createFragmentElement, processMarkers } from "@/core/template";
+import type { ReonaElement } from "./element";
 
-export function rootRender(container: Element, Component: new () => any) {
-  const c = new Component();
+export function rootRender(
+  container: Element,
+  Component: new () => ReonaElement
+) {
+  const component = new Component();
   effect(() => {
-    const [strings, values] = c.render();
-    const dom = createRenderableDom(strings, values);
-    container.replaceChildren(dom.content);
+    const result = component.render();
+    const fragment = createFragmentElement(result.template);
+    processMarkers(fragment, result.values);
+    container.replaceChildren(fragment);
+
+    // dom 이 붙고 레이아웃 전 queueMicrotask
+    queueMicrotask(() => {
+      component.__markMounted?.();
+    });
   });
 }
