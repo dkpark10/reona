@@ -1,15 +1,20 @@
+import { generateId } from "@/utils";
+import type { ReonaElement } from "./element";
+
+const components = new WeakMap<ReonaElement, ReturnType<typeof generateId>>();
+
 // vdom과 비슷한 역할
-class FiberNode {
-  private id: number | string;
+class Fiber {
+  private Component: new () => ReonaElement<any>;
 
-  // 다음 fiber
-  private nextNode: FiberNode | null = null;
+  private componentId: number;
 
-  constructor(id: number | string) {
-    this.id = id;
+  constructor(Component: new () => ReonaElement<any>) {
+    this.Component = Component;
+    this.componentId = generateId();
   }
 
-  getNextNode() {
-    return this.nextNode;
+  foo() {
+    components.set(new this.Component(), this.componentId);
   }
 }

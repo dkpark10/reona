@@ -1,8 +1,8 @@
 import { reactive } from "@/core/reactivity";
 import { html } from "@/core/template";
-import { Children } from "./children";
-import { Timer } from "./timer";
 import { ReonaElement } from "@/core/element";
+import { renderComponent } from "@/core/render";
+import { Timer } from "./timer";
 
 export class Counter extends ReonaElement {
   private data = reactive({
@@ -20,12 +20,13 @@ export class Counter extends ReonaElement {
 
   render() {
     return html`
-      <div id="root">
+      <div>
         <button type="button" @click=${this.increase.bind(this)}>증가</button>
         <button type="button" @click=${this.decrease.bind(this)}>감소</button>
-        ${new Children({ quantity: this.data.quantity })}
         <div>가격 X 수량: ${this.data.price * this.data.quantity}</div>
-        ${new Timer()}
+        ${renderComponent(Timer, {
+          quantity: this.data.quantity,
+        })}
       </div>
     `;
   }

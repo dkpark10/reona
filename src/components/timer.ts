@@ -1,12 +1,19 @@
 import { ref } from "@/core/reactivity";
 import { html } from "@/core/template";
-// import { html } from "@/core/html";
 import { ReonaElement } from "@/core/element";
 
-export class Timer extends ReonaElement {
+export interface TimerProps {
+  quantity: number;
+}
+
+export class Timer<T extends TimerProps = TimerProps> extends ReonaElement<T> {
   private intervalTimer: ReturnType<typeof setInterval> | null = null;
-  
+
   private timer = ref(this.getHHMMRR());
+
+  constructor() {
+    super();
+  }
 
   mounted() {
     this.intervalTimer = setInterval(() => {

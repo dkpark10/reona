@@ -42,6 +42,7 @@ export function handleAttributes(el: Element, values: any[]) {
   });
 }
 
+/** @description 마커표시된 텍스트 엘리먼트만을 수집하는 함수 */
 function collectTextMarkers(root: DocumentFragment): Text[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 
@@ -66,6 +67,7 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
   }
 
   const textNodes = collectTextMarkers(fragment);
+
   for (const textNode of textNodes) {
     const content = textNode.textContent ?? "";
 
@@ -78,6 +80,8 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
       if (match) {
         const value = values[Number(match[1])];
 
+        console.log(value, typeof value);
+
         /** @desc 컴포넌트 일 시 */
         if (value instanceof ReonaElement) {
           const res = value.render();
@@ -86,7 +90,7 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
           fragment.appendChild(frag);
 
           queueMicrotask(() => {
-            value.__markMounted?.();
+            value.mounted?.();
           })
         } else if (value instanceof Node) {
           /** @desc DOM 일 시 */

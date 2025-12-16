@@ -1,7 +1,6 @@
 export function isPrimitive(value: unknown) {
   return (
-    value === null ||
-    (typeof value !== 'object' && typeof value !== 'function')
+    value === null || (typeof value !== "object" && typeof value !== "function")
   );
 }
 
@@ -36,3 +35,10 @@ export function Component(tagName: string) {
     }
   };
 }
+
+export const generateId = (() => {
+  let id = 0;
+  return () => {
+    return id++;
+  };
+})();
