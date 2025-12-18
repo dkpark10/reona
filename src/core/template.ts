@@ -63,6 +63,7 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
 
   let el: Node | null;
   while ((el = walker.nextNode())) {
+    /** @description 이벤트 핸들러 및 속성을 부착함 */
     handleAttributes(el as Element, values);
   }
 
@@ -80,8 +81,6 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
       if (match) {
         const value = values[Number(match[1])];
 
-        console.log(value, typeof value);
-
         /** @desc 컴포넌트 일 시 */
         if (value instanceof ReonaElement) {
           const res = value.render();
@@ -90,7 +89,7 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
           fragment.appendChild(frag);
 
           queueMicrotask(() => {
-            value.mounted?.();
+            value.__mounted?.();
           })
         } else if (value instanceof Node) {
           /** @desc DOM 일 시 */

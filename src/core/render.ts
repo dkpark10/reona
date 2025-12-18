@@ -14,17 +14,40 @@ export function rootRender(
     const fragment = createFragmentElement(result.template);
     processMarkers(fragment, result.values);
     container.replaceChildren(fragment);
+  });
 
-    // dom 이 붙고 레이아웃 전 queueMicrotask
-    queueMicrotask(() => {
-      component.mounted?.();
-    });
+  /** @description dom 이 붙고 레이아웃 전 queueMicrotask */
+  queueMicrotask(() => {
+    component.__mounted();
   });
 }
 
+/** @description 전역 컴포넌트 관리 map */
+const componentMap = new WeakMap<
+  Function,
+  Map<string | number | symbol, ReonaElement>
+>();
+
 export function renderComponent<C extends new () => ReonaElement<any>>(
-  component: C,
-  props: ExtractElementProps<C>
+  Component: C,
+  props: ExtractElementProps<C>,
+  key = 'default'
 ) {
-  return component;
+  let keyMap = componentMap.get(Component);
+
+  if (!keyMap) {
+    keyMap = new Map();
+    componentMap.set(Component, keyMap);
+  }
+
+  let compoennt = keyMap.get(key);
+  /** @description 컴포넌트 없으면 생성 */
+  if (!compoennt) {
+    compoennt = new Component();
+    keyMap.set(key, compoennt);
+  }
+
+  compoennt.setProps(props);
+
+  return compoennt;
 }

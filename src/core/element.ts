@@ -6,7 +6,11 @@ export abstract class ReonaElement<
 > {
   protected $props: P;
 
-  constructor(props?: P) {
+  private $mount = false;
+
+  constructor() { }
+
+  setProps(props: P) {
     if (props) {
       if (isPrimitive(props)) {
         throw new Error("props는 객체형식으로 넣어야 합니다.");
@@ -15,9 +19,16 @@ export abstract class ReonaElement<
     }
   }
 
-  mounted?(): void;
+  __mounted() {
+    if (!this.$mount) {
+      this.$mount = true;
+      this.mounted?.();
+    }
+  }
 
-  unmounted?(): void;
+  protected mounted?(): void;
+
+  protected unmounted?(): void;
 
   abstract render(): RenderResult;
 }

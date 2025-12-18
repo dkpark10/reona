@@ -6,7 +6,7 @@ export interface TimerProps {
   quantity: number;
 }
 
-export class Timer<T extends TimerProps = TimerProps> extends ReonaElement<T> {
+export class Timer extends ReonaElement<TimerProps> {
   private intervalTimer: ReturnType<typeof setInterval> | null = null;
 
   private timer = ref(this.getHHMMRR());
@@ -16,6 +16,10 @@ export class Timer<T extends TimerProps = TimerProps> extends ReonaElement<T> {
   }
 
   mounted() {
+    console.log('timer 마운트');
+    if (this.intervalTimer) {
+      return;
+    }
     this.intervalTimer = setInterval(() => {
       this.timer.value = this.getHHMMRR();
     }, 1_000);
@@ -37,6 +41,11 @@ export class Timer<T extends TimerProps = TimerProps> extends ReonaElement<T> {
   }
 
   render() {
-    return html`<time>time: ${this.timer.value}</time>`;
+    return html`
+      <div>
+        <span>${this.$props.quantity}</span>
+        <time>time: ${this.timer.value}</time>
+      </div>
+    `;
   }
 }
