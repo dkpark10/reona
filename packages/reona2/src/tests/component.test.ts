@@ -8,9 +8,9 @@ describe("컴포넌트 테스트", () => {
       quantity: 2,
      */
     const instance = counter;
-    instance.methods.increase();
-    expect(instance.state.quantity).toBe(4);
-    instance.methods.decrease();
-    expect(instance.state.quantity).toBe(2);
+    instance.increase();
+    expect(instance.state!.quantity).toBe(4);
+    instance.decrease();
+    expect(instance.state!.quantity).toBe(2);
   });
 });

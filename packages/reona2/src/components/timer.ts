@@ -1,7 +1,7 @@
 import { html } from "@/core/html";
 import { component } from "@/core/component";
 
-export default component({
+export default component<{ price: number }>({
   data: () => {
     return {
       timer: null as null | string,
@@ -31,6 +31,7 @@ export default component({
   render() {
     return html`
       <div>
+        <div>${this.price}</div>
         <time>time: ${this.timer}</time>
       </div>
     `;

@@ -1,5 +1,6 @@
-import { html } from "@/core/html";
-import { component } from "@/core/component";
+import { html } from "../core/html";
+import { component, registComponent } from "../core/component";
+import timer from "./timer";
 
 export default component({
   data: () => {
@@ -26,7 +27,10 @@ export default component({
         <button type="button" @click=${this.decrease}>감소</button>
         <div>가격: ${this.price}</div>
         <div>수량: ${this.quantity}</div>
+        ${registComponent(timer, {
+          price: this.price,
+        })}
       </div>
     `;
-  }
+  },
 });

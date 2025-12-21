@@ -97,10 +97,6 @@ effect(() => {
   obj.a;
 });
 
-setTimeout(() => {
-  console.log(targetMap, activeEffect);
-}, 0);
-
 // class Parent {
 //   #private = reactive({ a: 1, b: 2 });
 //   $key = 'parent';
