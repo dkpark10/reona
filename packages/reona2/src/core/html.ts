@@ -1,3 +1,5 @@
+import { Fiber } from "./fiber";
+
 export type RenderResult = {
   template: string;
   values: any[];
@@ -18,19 +20,7 @@ export function createFragmentElement(html: string) {
   const template = document.createElement("template");
   template.innerHTML = html.trim();
 
-  const fragment = template.content;
-
-  const boundaryStart = document.createComment("boundary:start");
-  const boundaryEnd = document.createComment("boundary:end");
-
-  fragment.prepend(boundaryStart);
-  fragment.append(boundaryEnd);
-
-  return {
-    fragment,
-    boundaryStart,
-    boundaryEnd,
-  };
+  return template.content;
 }
 
 export function handleAttributes(el: Element, values: any[]) {
@@ -90,15 +80,8 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
         const value = values[Number(match[1])];
 
         /** @desc todo 컴포넌트 일 시 */
-        if (false) {
-          const res = value.render();
-          const { fragment } = createFragmentElement(res.template);
-          processMarkers(fragment, res.values);
-          fragment.appendChild(fragment);
-
-          queueMicrotask(() => {
-            value.__mounted?.();
-          })
+        if (value instanceof Fiber) {
+          fragment.appendChild(value.getFragment());
         } else if (value instanceof Node) {
           /** @desc DOM 일 시 */
           fragment.appendChild(value);

@@ -11,6 +11,7 @@ export type RenderResult = {
 
 export type ComponentOptions<P = Props, D = Data, M = Methods> = {
   data: () => D;
+  name?: string;
   render(): RenderResult;
   methods: M;
   mounted?: () => void;

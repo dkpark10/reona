@@ -7,7 +7,8 @@ export function component<
   D extends Data = Data,
   M extends Methods = Methods
 >(options: ComponentOptions<P, D, M>) {
-  const raw = options.data();
+  // data 함수에서 내부 메소드 사용에 따른 call 호출
+  const raw = options.data.call(options.methods);
   if (isPrimitive(raw)) {
     throw new Error("원시객체가 입니다.");
   }
@@ -38,15 +39,19 @@ export function component<
     boundMethods[key] = options.methods[key].bind(proxiedState);
   }
 
+  const NOT_PRODUCTION = __DEV__ || __TEST__;
+
   const instance = {
     ...options,
     ...boundMethods,
+    // ...(NOT_PRODUCTION && boundMethods),
     render: function () {
       return options.render.call(proxiedState);
     },
-    state: proxiedState,
+    ...(NOT_PRODUCTION && { state: proxiedState }),
     setProps: function (props: P) {
-      $props = props;
+      console.log("set props timing");
+      instance.props = props;
     },
     ...(options.mounted && {
       mounted() {
