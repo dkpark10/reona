@@ -11,13 +11,24 @@ export type RenderResult = {
 
 export type ComponentOptions<Props, D = Data, M = Methods> = {
   data: () => D;
+
   name?: string;
+
   render($props?: Props): RenderResult;
+
   methods: M;
+
   mounted?: () => void;
+
   unMounted?: () => void;
+
   updated?: () => void;
+
   state?: D;
+
   setProps?: (props: Props) => void;
+
   props?: Props;
+
+  watch?: Record<string, (current: D[keyof D], prev: D[keyof D]) => void>;
 } & ThisType<Props & D & M>;

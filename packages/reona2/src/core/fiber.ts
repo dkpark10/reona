@@ -51,6 +51,9 @@ export class Fiber {
 
     this.boundaryEnd.before(fragment);
     this.fragment = fragment;
+    queueMicrotask(() => {
+      this.instance.updated?.();
+    });
   }
 }
 

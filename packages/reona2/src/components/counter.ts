@@ -20,6 +20,20 @@ export default component<
     console.log("counter mounted");
   },
 
+  updated() {
+    console.log("counter updated");
+  },
+  
+  watch: {
+    price(current, prev) {
+      console.log(current, prev);
+    },
+
+    quantity(current, prev) {
+      console.log(current, prev);
+    },
+  },
+
   methods: {
     increase() {
       this.quantity += 2;

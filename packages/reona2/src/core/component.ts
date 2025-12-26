@@ -15,20 +15,28 @@ export function component<
 
   // @ts-ignore
   let $props: P = {};
+  let $prevData: D[keyof D];
+
   const proxiedState = new Proxy(raw, {
     get(target, key) {
       if (Object.prototype.hasOwnProperty.call(target, key)) {
         return Reflect.get(target, key);
       }
-    if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
+      if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
         return boundMethods[key as string];
       }
     },
 
     set(target, key, value) {
+      $prevData = Reflect.get(target, key);
+
       Reflect.set(target, key, value);
       const fiber = getInstanceMap().get(instance);
       fiber?.render();
+
+      if ($prevData !== value) {
+        instance.watch?.[key as string]?.(value, $prevData);
+      }
       return true;
     },
   });
@@ -37,6 +45,12 @@ export function component<
   for (const key in options.methods) {
     //@ts-ignore
     boundMethods[key] = options.methods[key].bind(proxiedState);
+  }
+
+  const boundData = {};
+  for (const key in raw) {
+    //@ts-ignore
+    boundData[key] = options.watch?.[key].bind(proxiedState, $prevData);
   }
 
   const NOT_PRODUCTION = __DEV__ || __TEST__;
@@ -68,6 +82,8 @@ export function component<
       },
     }),
   };
+
+  console.log(instance.watch);
   return instance;
 }
 
