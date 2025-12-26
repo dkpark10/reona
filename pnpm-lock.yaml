@@ -28,6 +28,8 @@ importers:
 
   packages/reona2: {}
 
+  packages/reona3: {}
+
 packages:
 
   '@asamuzakjp/css-color@3.2.0':

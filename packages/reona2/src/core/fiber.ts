@@ -22,7 +22,6 @@ export class Fiber {
   }
 
   public initialize() {
-    console.log('123123 initialize', this.key);
     const result = this.instance.render();
     this.fragment = createFragmentElement(result.template);
 
@@ -39,7 +38,6 @@ export class Fiber {
   }
 
   public render() {
-    console.log('123123 render', this.key);
     const result = this.instance.render();
     const fragment = createFragmentElement(result.template);
     processMarkers(fragment, result.values);

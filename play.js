@@ -15,8 +15,7 @@ export function effect(fn) {
       fn();
     } finally {
       effectStack.pop();
-      activeEffect =
-        effectStack[effectStack.length - 1] || null;
+      activeEffect = effectStack[effectStack.length - 1] || null;
     }
   };
 
