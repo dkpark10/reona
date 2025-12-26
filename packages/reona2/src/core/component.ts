@@ -20,7 +20,7 @@ export function component<
       if (Object.prototype.hasOwnProperty.call(target, key)) {
         return Reflect.get(target, key);
       }
-      if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
+    if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
         return boundMethods[key as string];
       }
     },
@@ -46,12 +46,11 @@ export function component<
     ...boundMethods,
     // ...(NOT_PRODUCTION && boundMethods),
     render: function () {
-      return options.render.call(proxiedState);
+      return options.render.call(proxiedState, $props);
     },
     ...(NOT_PRODUCTION && { state: proxiedState }),
     setProps: function (props: P) {
-      console.log("set props timing");
-      instance.props = props;
+      $props = props;
     },
     ...(options.mounted && {
       mounted() {

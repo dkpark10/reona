@@ -3,10 +3,10 @@
 import type { ComponentOptions, Props, Data, Methods } from "../utils/types";
 import { regist, getInstanceMap } from "./fiber";
 
-export function rootRender(
+export function rootRender<P extends Props>(
   container: Element,
-  instance: ComponentOptions<Props, Data, Methods>,
-  props?: Props
+  instance: ComponentOptions<P, Data, Methods>,
+  props?: P
 ) {
   regist({
     instance,

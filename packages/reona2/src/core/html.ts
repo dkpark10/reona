@@ -81,6 +81,7 @@ export function processMarkers(fragment: DocumentFragment, values: any[]) {
 
         /** @desc todo 컴포넌트 일 시 */
         if (value instanceof Fiber) {
+          console.log(value, value.getFragment().textContent);
           fragment.appendChild(value.getFragment());
         } else if (value instanceof Node) {
           /** @desc DOM 일 시 */

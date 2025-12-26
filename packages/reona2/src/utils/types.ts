@@ -9,15 +9,15 @@ export type RenderResult = {
   values: any[];
 };
 
-export type ComponentOptions<P = Props, D = Data, M = Methods> = {
+export type ComponentOptions<Props, D = Data, M = Methods> = {
   data: () => D;
   name?: string;
-  render(): RenderResult;
+  render($props?: Props): RenderResult;
   methods: M;
   mounted?: () => void;
   unMounted?: () => void;
   updated?: () => void;
   state?: D;
-  setProps?: (props: P) => void;
-  props?: P;
-} & ThisType<P & D & M>;
+  setProps?: (props: Props) => void;
+  props?: Props;
+} & ThisType<Props & D & M>;

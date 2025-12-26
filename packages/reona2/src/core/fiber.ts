@@ -22,6 +22,7 @@ export class Fiber {
   }
 
   public initialize() {
+    console.log('123123 initialize', this.key);
     const result = this.instance.render();
     this.fragment = createFragmentElement(result.template);
 
@@ -38,6 +39,7 @@ export class Fiber {
   }
 
   public render() {
+    console.log('123123 render', this.key);
     const result = this.instance.render();
     const fragment = createFragmentElement(result.template);
     processMarkers(fragment, result.values);
@@ -61,23 +63,24 @@ export function getInstanceMap() {
   return instanceMap;
 }
 
-export function regist<P = Props>({
+export function regist<P extends Props>({
   instance,
   key = "default",
   props,
 }: {
-  instance: ComponentOptions<Props, Data, Methods>;
+  instance: ComponentOptions<P, Data, Methods>;
   key?: Key;
   props?: P;
 }) {
   let fiber = instanceMap.get(instance);
 
   if (!fiber) {
-    fiber = new Fiber(instance, key);
-    instanceMap.set(instance, fiber);
     if (props) {
       instance.setProps!(props);
     }
+    // @ts-ignore
+    fiber = new Fiber(instance, key);
+    instanceMap.set(instance, fiber);
   }
   return fiber;
 }

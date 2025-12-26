@@ -36,11 +36,11 @@ export default component<
     },
   },
 
-  render() {
+  render(props) {
     return html`
       <div>
         <div>타이머</div>
-        <div>${this.price}</div>
+        <div>props: ${props?.price}</div>
         <time>time: ${this.timer}</time>
       </div>
     `;

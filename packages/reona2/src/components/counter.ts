@@ -2,9 +2,13 @@ import { html } from "../core/html";
 import { component, registComponent } from "../core/component";
 import timer from "./timer";
 
-export default component({
-  name: 'counter',
-  
+export default component<
+  { foo: number },
+  { price: number; quantity: number },
+  { increase: () => void; decrease: () => void }
+>({
+  name: "counter",
+
   data() {
     return {
       price: 5,
@@ -13,7 +17,7 @@ export default component({
   },
 
   mounted() {
-    console.log('counter mounted');
+    console.log("counter mounted");
   },
 
   methods: {
@@ -26,17 +30,22 @@ export default component({
     },
   },
 
-  render() {
+  render(props) {
     return html`
       <div>
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
+        <div>props: ${props?.foo}</div>
         <div>가격: ${this.price}</div>
         <div>수량: ${this.quantity}</div>
         <div>합산: ${this.quantity * this.price}</div>
-        ${registComponent(timer, {
-          price: this.price,
-        })}
+        ${registComponent(
+          timer,
+          {
+            price: this.price,
+          },
+          "timer"
+        )}
       </div>
     `;
   },
