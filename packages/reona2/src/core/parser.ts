@@ -1,4 +1,6 @@
 import type { RenderResult, Props } from "@/utils/types";
+import { Fiber } from "./fiber";
+import { isEmpty } from "../../../shared";
 
 export type VTextNode = {
   type: 'text';
@@ -12,8 +14,15 @@ export type VElementNode = {
   children: VNode[];
 }
 
+// fiber
+export type VComponent = {
+  type: 'component';
+  value: Fiber;
+}
+
 export type VNode = VTextNode | VElementNode;
 
+/** @description 받은 html을 vnode tree로 만듬 */
 export class Parser {
   private renderResult: RenderResult;
 
@@ -24,9 +33,15 @@ export class Parser {
   }
 
   public parse(): VNode {
-    const { doc } = this.renderResult;
-    const root = doc.body.firstElementChild!;
-    return this.convertNode(root);
+    const { template: t } = this.renderResult;
+    const template = document.createElement("template");
+
+    template.innerHTML = t.trim();
+
+    if(template.content.childNodes.length > 1) {
+      throw new Error('루트 엘리먼트는 1개여야 합니다.');
+    }
+    return this.convertNode(template.content.firstElementChild!);
   }
 
   private convertNode(node: Element): VElementNode {
@@ -47,14 +62,16 @@ export class Parser {
     const children: VNode[] = [];
     for (const child of node.childNodes) {
       const vnode = this.convertChild(child);
-      if (vnode) children.push(vnode);
+      if (vnode) {
+        children.push(vnode);
+      }
     }
 
     return {
       type: 'element',
       tag: node.tagName.toLowerCase() as keyof HTMLElementTagNameMap,
-      attr: attrs,
       children,
+      ...(!isEmpty(attrs) && { attr: attrs}),
     };
   }
 
@@ -67,8 +84,15 @@ export class Parser {
 
       if (/__marker_(\d+)__/.test(text)) {
         const { values } = this.renderResult;
-        const markerText = text.replace(/__marker_(\d+)__/, values[this.valueIndex]);
-        this.valueIndex++;
+
+        // fiber 인스턴스라면
+        if (values[this.valueIndex] instanceof Fiber) {
+          const fiber: Fiber = values[this.valueIndex++];
+          const parser = new Parser(fiber.getInstance().render());
+          return parser.parse();
+        }
+
+        const markerText = text.replace(/__marker_(\d+)__/, values[this.valueIndex++]);
         return {
           type: "text",
           value: markerText,
@@ -85,5 +109,42 @@ export class Parser {
     }
 
     return null;
+  }
+}
+
+class VnodeItem {
+  private children: VnodeItem[] = [];
+
+  private type: 'element' | 'text';
+
+  private attr: Props = {};
+
+  private tag: keyof HTMLElementTagNameMap;
+
+  private value: string;
+
+  constructor(
+    tag: keyof HTMLElementTagNameMap,
+    type: 'element' | 'text',
+    children?: VnodeItem[],
+    attr?: Props,
+    value?: string
+  ) {
+    this.tag = tag;
+    this.type = type;
+    if (children) {
+      this.children = children;
+    }
+    if (attr) {
+      this.attr = attr;
+    }
+    if (value) {
+      this.value = value;
+    }
+    this.children;
+    this.type;
+    this.attr;
+    this.tag;
+    this.value;
   }
 }

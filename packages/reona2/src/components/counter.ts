@@ -17,13 +17,13 @@ export default component<
   },
 
   mounted() {
-    console.log("counter mounted", document.getElementById('app'));
+    console.log("counter mounted", document.getElementById("app"));
   },
 
   updated() {
     console.log("counter updated");
   },
-  
+
   watch: {
     price(current, prev) {
       console.log(current, prev);
@@ -55,15 +55,14 @@ export default component<
           <div>수량: ${this.quantity}</div>
           <div>합산: ${this.quantity * this.price}</div>
         </section>
+        ${registComponent(
+          timer,
+          {
+            quantity: this.quantity,
+          },
+          "timer"
+        )}
       </div>
     `;
   },
 });
-
-
-        // ${registComponent(
-        //   timer, {
-        //     price: this.price,
-        //   },
-        //   "timer"
-        // )}

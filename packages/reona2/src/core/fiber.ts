@@ -1,6 +1,7 @@
 import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
 import { createFragmentElement, processMarkers } from "./dom";
-import { Parser } from "./parser";
+import { Parser, type VNode } from "./parser";
+import { createDOM } from "./renderer";
 
 type Key = string | number;
 
@@ -10,9 +11,11 @@ export class Fiber {
 
   private instance: ComponentOptions<Props, Data, Methods>;
 
-  private fragment: DocumentFragment;
-
   private container: Element;
+
+  private prevVnodeTree: VNode;
+
+  private nextVnodeTree: VNode;
 
   constructor(instance: ComponentOptions<Props, Data, Methods>, key: Key) {
     this.instance = instance;
@@ -20,35 +23,62 @@ export class Fiber {
     this.key;
   }
 
-  public setContainer(container: Element) {
+  public initalize(container: Element) {
+    const parser = new Parser(this.instance.render());
+    this.prevVnodeTree = parser.parse();
+
+    const dom = createDOM(this.prevVnodeTree);
     this.container = container;
+    container.appendChild(dom);
+    this.instance.mounted?.();
   }
 
-  public render() {
-    const result = this.instance.render();
-    const parser = new Parser(result);
-    const h = parser.parse();
-    console.log(h);
-
-    this.fragment = createFragmentElement(result.template);
-
-    processMarkers(this.fragment, result.values);
-
-    if (this.container) {
-      this.container.appendChild(this.fragment);
-      this.instance.mounted?.();
-    }
+  public getInstance() {
+    return this.instance;
   }
+
+  // public render() {
+  //   const result = this.instance.render();
+  //   this.fragment = createFragmentElement(result.template);
+
+  //   processMarkers(this.fragment, result.values);
+
+  //   if (this.container) {
+  //     this.container.appendChild(this.fragment);
+  //     this.instance.mounted?.();
+  //   }
+  // }
+
+  // public rerender() {
+  //   const result = this.instance.render();
+  //   this.fragment = createFragmentElement(result.template);
+
+  //   processMarkers(this.fragment, result.values);
+
+  //   if (this.container) {
+  //     this.container.replaceChildren(this.fragment);
+  //     this.instance.updated?.();
+  //   }
+  // }
 
   public rerender() {
-    const result = this.instance.render();
-    this.fragment = createFragmentElement(result.template);
+    const parser = new Parser(this.instance.render());
+    this.nextVnodeTree = parser.parse();
+    this.reconciliation();
+    const dom = createDOM(this.nextVnodeTree);
+    this.container.replaceChildren(dom);
 
-    processMarkers(this.fragment, result.values);
+    this.instance.updated?.();
+  }
 
-    if (this.container) {
-      this.container.replaceChildren(this.fragment);
-      this.instance.updated?.();
+  /**
+   * todo
+   *  @see {@link https://ko.legacy.reactjs.org/docs/reconciliation.html}
+   *  */
+  private reconciliation() {
+    // 루트 엘리먼트 타입이 다르다면
+    if (this.nextVnodeTree.type !== this.prevVnodeTree.type) {
+      return;
     }
   }
 }
@@ -60,6 +90,7 @@ export function getInstanceMap() {
   return instanceMap;
 }
 
+/** @description instance를 키로 fiber 객체를 반환 없으면 생성하고 반환 */
 export function regist<P extends Props>({
   instance,
   key = "default",
@@ -68,7 +99,7 @@ export function regist<P extends Props>({
   instance: ComponentOptions<P, Data, Methods>;
   key?: Key;
   props?: P;
-}) {
+}): Fiber {
   let fiber = instanceMap.get(instance);
 
   if (!fiber) {

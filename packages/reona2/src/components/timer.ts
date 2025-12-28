@@ -2,7 +2,7 @@ import { html } from "../core/html";
 import { component } from "../core/component";
 
 export default component<
-  { price: number },
+  { quantity: number },
   { timer: string; intervalTimer: null | number },
   { getHHMMRR: () => string }
 >({
@@ -16,14 +16,14 @@ export default component<
   },
 
   mounted() {
-    console.log("timer mounted");
+    console.log("timer mounted", document.getElementById('timer'));
     if (this.intervalTimer) {
       return;
     }
 
-    this.intervalTimer = setInterval(() => {
-      this.timer = this.getHHMMRR();
-    }, 1_000);
+    // this.intervalTimer = setInterval(() => {
+    //   this.timer = this.getHHMMRR();
+    // }, 1_000);
   },
 
   methods: {
@@ -38,9 +38,9 @@ export default component<
 
   render(props) {
     return html`
-      <div>
-        <div>타이머</div>
-        <div>props: ${props?.price}</div>
+      <div id="timer">
+        <div>================타이머================</div>
+        <div>props: ${props?.quantity}</div>
         <time>time: ${this.timer}</time>
       </div>
     `;

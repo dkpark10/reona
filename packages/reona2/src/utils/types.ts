@@ -7,7 +7,6 @@ export type Methods = Record<string, () => void>;
 export type RenderResult = {
   template: string;
   values: any[];
-  doc: Document;
 };
 
 export type ComponentOptions<Props, D = Data, M = Methods> = {
