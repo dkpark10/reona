@@ -17,7 +17,7 @@ export default component<
   },
 
   mounted() {
-    console.log("counter mounted");
+    console.log("counter mounted", document.getElementById('app'));
   },
 
   updated() {
@@ -46,21 +46,24 @@ export default component<
 
   render(props) {
     return html`
-      <div>
+      <div id="app">
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
-        <div>props: ${props?.foo}</div>
-        <div>가격: ${this.price}</div>
-        <div>수량: ${this.quantity}</div>
-        <div>합산: ${this.quantity * this.price}</div>
-        ${registComponent(
-          timer,
-          {
-            price: this.price,
-          },
-          "timer"
-        )}
+        <section>
+          <div>props: ${props?.foo}</div>
+          <div>가격: ${this.price}</div>
+          <div>수량: ${this.quantity}</div>
+          <div>합산: ${this.quantity * this.price}</div>
+        </section>
       </div>
     `;
   },
 });
+
+
+        // ${registComponent(
+        //   timer, {
+        //     price: this.price,
+        //   },
+        //   "timer"
+        // )}

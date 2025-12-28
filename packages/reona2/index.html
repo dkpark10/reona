@@ -8,8 +8,126 @@
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="root"></div>
   <script type="module" src="/src/main.ts"></script>
+  <script>
+    function parseTemplate(strings, ...values) {
+      const htmlString = mergeTemplate(strings, values);
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, "text/html");
+      return convertNode(doc.body.firstElementChild, values);
+    }
+
+    function mergeTemplate(strings, values) {
+      return strings.reduce((acc, str, i) => {
+        const val = values[i] !== undefined ? `%%BINDING_${i}%%` : "";
+        return acc + str + val;
+      }, "");
+    }
+
+    function convertNode(domNode, values) {
+      if (domNode.nodeType === 3) {
+        return parseTextNode(domNode.nodeValue, values);
+      }
+
+      const props = {};
+      const children = [];
+
+      for (const attr of domNode.attributes || []) {
+        props[attr.name] = attr.value;
+      }
+
+      for (const child of domNode.childNodes) {
+        const ch = convertNode(child, values);
+        if (ch) children.push(...(Array.isArray(ch) ? ch : [ch]));
+      }
+
+      return {
+        type: "element",
+        tag: domNode.tagName.toLowerCase(),
+        props,
+        children
+      };
+    }
+
+    function emitText(text) {
+      // 공백 텍스트 제거
+      if (/^\s*$/.test(text)) return;
+
+      // ${ expr } 단독일 때 Expression 노드로 처리
+      if (/^\s*\$\{[^}]+\}\s*$/.test(text)) {
+        emitExpression(text.trim());
+        return;
+      }
+
+      // 그것도 아니면 Text 노드로 추가
+      currentParent.children.push({
+        type: 'text',
+        value: text
+      });
+    }
+
+
+    function parseTextNode(text, values) {
+      if (!text.includes("%%BINDING_")) {
+        return { type: "text", value: text };
+      }
+
+      const parts = text.split(/(%%BINDING_\d+%%)/g).filter(Boolean);
+
+      return parts.map(part => {
+        const match = part.match(/%%BINDING_(\d+)%%/);
+        if (!match) return { type: "text", value: part };
+
+        const index = Number(match[1]);
+        return {
+          type: "binding",
+          key: extractBinding(values[index])
+        };
+      });
+    }
+
+    function extractBinding(fnOrValue) {
+      if (typeof fnOrValue === "function") {
+        const str = fnOrValue.toString();
+        const match = str.match(/this\.(\w+)/);
+        return match ? match[1] : "";
+      }
+      return fnOrValue;
+    }
+
+    function cleanTextNodes(node) {
+      if (!node || !node.children) return node;
+
+      node.children = node.children
+        .filter(child => {
+          if (child.type !== 'text') return true;
+
+          const value = child.value;
+
+          // 공백, 줄바꿈, 탭만 있는 경우 제거
+          if (/^\s*$/.test(value)) return false;
+
+          // 템플릿 표현식만 있는 경우 제거 (\n 포함 케이스 포함)
+          if (/^\s*\$\{[^}]+\}\s*$/.test(value)) return false;
+
+          return true;
+        })
+        .map(child => cleanTextNodes(child)); // 재귀
+
+      return node;
+    }
+
+    const ast = parseTemplate`
+      <div id="app">
+        <button @click=${() => { }}>증가</button>
+        <div>수량: ${123}</div>
+      </div>
+    `;
+
+    console.log(cleanTextNodes(ast));
+  </script>
 </body>
 
 </html>

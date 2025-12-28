@@ -1,5 +1,6 @@
 import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
-import { createFragmentElement, processMarkers } from "./html";
+import { createFragmentElement, processMarkers } from "./dom";
+import { Parser } from "./parser";
 
 type Key = string | number;
 
@@ -11,49 +12,44 @@ export class Fiber {
 
   private fragment: DocumentFragment;
 
-  private boundaryStart: Comment;
-
-  private boundaryEnd: Comment;
+  private container: Element;
 
   constructor(instance: ComponentOptions<Props, Data, Methods>, key: Key) {
     this.instance = instance;
     this.key = key;
-    this.initialize();
+    this.key;
   }
 
-  public initialize() {
-    const result = this.instance.render();
-    this.fragment = createFragmentElement(result.template);
-
-    this.boundaryStart = document.createComment(`${this.key}:start`);
-    this.boundaryEnd = document.createComment(`${this.key}:end`);
-    this.fragment.prepend(this.boundaryStart);
-    this.fragment.append(this.boundaryEnd);
-
-    processMarkers(this.fragment, result.values);
-  }
-
-  public getFragment() {
-    return this.fragment;
+  public setContainer(container: Element) {
+    this.container = container;
   }
 
   public render() {
     const result = this.instance.render();
-    const fragment = createFragmentElement(result.template);
-    processMarkers(fragment, result.values);
+    const parser = new Parser(result);
+    const h = parser.parse();
+    console.log(h);
 
-    let node = this.boundaryStart.nextSibling;
-    while (node && node !== this.boundaryEnd) {
-      const next = node.nextSibling;
-      node.remove();
-      node = next;
+    this.fragment = createFragmentElement(result.template);
+
+    processMarkers(this.fragment, result.values);
+
+    if (this.container) {
+      this.container.appendChild(this.fragment);
+      this.instance.mounted?.();
     }
+  }
 
-    this.boundaryEnd.before(fragment);
-    this.fragment = fragment;
-    queueMicrotask(() => {
+  public rerender() {
+    const result = this.instance.render();
+    this.fragment = createFragmentElement(result.template);
+
+    processMarkers(this.fragment, result.values);
+
+    if (this.container) {
+      this.container.replaceChildren(this.fragment);
       this.instance.updated?.();
-    });
+    }
   }
 }
 

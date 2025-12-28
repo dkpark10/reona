@@ -32,7 +32,7 @@ export function component<
 
       Reflect.set(target, key, value);
       const fiber = getInstanceMap().get(instance);
-      fiber?.render();
+      fiber?.rerender();
 
       if ($prevData !== value) {
         instance.watch?.[key as string]?.(value, $prevData);
@@ -66,24 +66,16 @@ export function component<
     setProps: function (props: P) {
       $props = props;
     },
-    ...(options.mounted && {
-      mounted() {
-        return options.mounted!.call(proxiedState);
-      },
-    }),
-    ...(options.unMounted && {
-      unMounted() {
-        return options.unMounted!.call(proxiedState);
-      },
-    }),
-    ...(options.updated && {
-      unMounted() {
-        return options.unMounted!.call(proxiedState);
-      },
-    }),
+    mounted() {
+      return options.mounted?.call(proxiedState);
+    },
+    unMounted() {
+      return options.unMounted?.call(proxiedState);
+    },
+    updated() {
+      return options.updated?.call(proxiedState);
+    },
   };
-
-  console.log(instance.watch);
   return instance;
 }
 

@@ -14,10 +14,6 @@ export function rootRender<P extends Props>(
     key: "root",
   });
 
-  const fragment = fiber.getFragment();
-  container.appendChild(fragment);
-
-  queueMicrotask(() => {
-    instance.mounted?.();
-  });
+  fiber.setContainer(container);
+  fiber.render();
 }
