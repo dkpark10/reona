@@ -11,6 +11,7 @@ export default defineConfig({
     environment: "jsdom",
   },
   define: {
-    __DEV__: process.env.NODE_ENV === "development" || process.env.NODE_ENV === 'test',
+    __DEV__: process.env.NODE_ENV === "development",
+    __TEST__: process.env.NODE_ENV === 'test',
   },
 });
