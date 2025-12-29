@@ -44,7 +44,7 @@ export default component<
     },
   },
 
-  render(props) {
+  template(props) {
     return html`
       <div id="app">
         <button type="button" @click=${this.increase}>증가</button>

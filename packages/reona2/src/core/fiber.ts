@@ -1,5 +1,4 @@
 import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
-import { createFragmentElement, processMarkers } from "./dom";
 import { Parser, type VNode } from "./parser";
 import { createDOM } from "./renderer";
 
@@ -11,11 +10,17 @@ export class Fiber {
 
   private instance: ComponentOptions<Props, Data, Methods>;
 
-  private container: Element;
+  private parentElement: Element;
 
   private prevVnodeTree: VNode;
 
   private nextVnodeTree: VNode;
+
+  private prevDom: HTMLElement;
+
+  private nextDom: HTMLElement;
+
+  private mounted: boolean;
 
   constructor(instance: ComponentOptions<Props, Data, Methods>, key: Key) {
     this.instance = instance;
@@ -23,52 +28,43 @@ export class Fiber {
     this.key;
   }
 
-  public initalize(container: Element) {
-    const parser = new Parser(this.instance.render());
+  public getMounted() {
+    return this.mounted;
+  }
+
+  // 초기 렌더
+  public render(parentElement: Element) {
+    const template = this.instance.template();
+    const parser = new Parser(template);
     this.prevVnodeTree = parser.parse();
+    this.parentElement = parentElement;
 
-    const dom = createDOM(this.prevVnodeTree);
-    this.container = container;
-    container.appendChild(dom);
-    this.instance.mounted?.();
+    this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
+    this.parentElement.insertBefore(this.prevDom, null);
+
+    // queueMicrotask 대체 방법???
+    queueMicrotask(() => {
+      if (!this.mounted) {
+        this.instance.mounted?.();
+        this.mounted = true;
+      }
+    });
   }
-
-  public getInstance() {
-    return this.instance;
-  }
-
-  // public render() {
-  //   const result = this.instance.render();
-  //   this.fragment = createFragmentElement(result.template);
-
-  //   processMarkers(this.fragment, result.values);
-
-  //   if (this.container) {
-  //     this.container.appendChild(this.fragment);
-  //     this.instance.mounted?.();
-  //   }
-  // }
-
-  // public rerender() {
-  //   const result = this.instance.render();
-  //   this.fragment = createFragmentElement(result.template);
-
-  //   processMarkers(this.fragment, result.values);
-
-  //   if (this.container) {
-  //     this.container.replaceChildren(this.fragment);
-  //     this.instance.updated?.();
-  //   }
-  // }
 
   public rerender() {
-    const parser = new Parser(this.instance.render());
+    const template = this.instance.template();
+    const parser = new Parser(template);
     this.nextVnodeTree = parser.parse();
-    this.reconciliation();
-    const dom = createDOM(this.nextVnodeTree);
-    this.container.replaceChildren(dom);
 
-    this.instance.updated?.();
+    this.reconciliation();
+
+    this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
+    this.prevDom.replaceWith(this.nextDom);
+    this.prevDom = this.nextDom;
+
+    queueMicrotask(() => {
+      this.instance.updated?.();
+    });
   }
 
   /**
@@ -81,34 +77,4 @@ export class Fiber {
       return;
     }
   }
-}
-
-/** @description 전역 컴포넌트 관리 map */
-const instanceMap = new WeakMap<ComponentOptions<any, any, any>, Fiber>();
-
-export function getInstanceMap() {
-  return instanceMap;
-}
-
-/** @description instance를 키로 fiber 객체를 반환 없으면 생성하고 반환 */
-export function regist<P extends Props>({
-  instance,
-  key = "default",
-  props,
-}: {
-  instance: ComponentOptions<P, Data, Methods>;
-  key?: Key;
-  props?: P;
-}): Fiber {
-  let fiber = instanceMap.get(instance);
-
-  if (!fiber) {
-    if (props) {
-      instance.setProps!(props);
-    }
-    // @ts-ignore
-    fiber = new Fiber(instance, key);
-    instanceMap.set(instance, fiber);
-  }
-  return fiber;
 }

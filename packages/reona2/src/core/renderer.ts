@@ -2,7 +2,7 @@
 
 import type { VNode } from "./parser";
 import type { ComponentOptions, Props, Data, Methods } from "../utils/types";
-import { regist } from "./fiber";
+import { regist } from "./component";
 
 export function rootRender<P extends Props>(
   container: Element,
@@ -15,13 +15,31 @@ export function rootRender<P extends Props>(
     key: "root",
   });
 
-  fiber.initalize(container);
+  fiber.render(container);
+}
+
+/** @description 가장 가까운 부모 찾음  */
+export function getClosestParent(node: Node): Element | null {
+  let parent = node.parentElement;
+  while (parent && parent.parentElement) {
+    parent = parent.parentElement;
+  }
+  return parent;
 }
 
 /** @description vnode 객체를 실제 dom 으로 만듬 */
-export function createDOM(vnode: VNode) {
+export function createDOM(vnode: VNode): HTMLElement;
+export function createDOM(vnode: VNode, parentElement: Element): HTMLElement;
+export function createDOM(vnode: VNode, parentElement?: Element) {
   if (vnode.type === "text") {
     return document.createTextNode(vnode.value);
+  }
+
+  if (vnode.type === "component") {
+    // todo 부모에서 리렌더링 시 자식을 어떻게 처리해야 할지?? 이대로??
+    const fiber = vnode.fiber;
+    fiber.render(parentElement!);
+    return null;
   }
 
   // todo DocumentFragment (tag 없는 루트 최적화)
@@ -48,7 +66,11 @@ export function createDOM(vnode: VNode) {
 
   // children
   vnode.children?.forEach((child) => {
-    el.appendChild(createDOM(child));
+    const c = createDOM(child, el);
+    if (c) {
+      el.appendChild(c);
+    }
   });
+
   return el;
 }

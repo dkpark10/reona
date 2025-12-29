@@ -1,19 +1,58 @@
-export class Stack<T> {
-  private data: T[] = [];
-  constructor() {}
+export class Queue<T> {
+  private items: { [key: number]: T } = {};
+  private head = 0;
+  private tail = 0;
 
-  public push(value: T) {
-    this.data.push(value);
+  enqueue(item: T): void {
+    this.items[this.tail] = item;
+    this.tail++;
   }
 
-  public pop() {
-    this.data.pop();
+  dequeue(): T | undefined {
+    if (this.isEmpty()) return undefined;
+    const item = this.items[this.head];
+    delete this.items[this.head];
+    this.head++;
+    return item;
   }
 
-  public top() {
-    return this.data[this.data.length - 1];
+  peek(): T | undefined {
+    return this.items[this.head];
+  }
+
+  isEmpty(): boolean {
+    return this.head === this.tail;
+  }
+
+  size(): number {
+    return this.tail - this.head;
   }
 }
+
+export class Stack<T> {
+  private items: T[] = [];
+
+  push(item: T): void {
+    this.items.push(item);
+  }
+
+  pop(): T | undefined {
+    return this.items.pop();
+  }
+
+  top(): T | undefined {
+    return this.items[this.items.length - 1];
+  }
+
+  isEmpty(): boolean {
+    return this.items.length === 0;
+  }
+
+  size(): number {
+    return this.items.length;
+  }
+}
+
 
 export function supportsMoveBefore() {
   return (

@@ -16,14 +16,13 @@ export default component<
   },
 
   mounted() {
-    console.log("timer mounted", document.getElementById('timer'));
+    console.log("timer mounted", this.intervalTimer, document.getElementById('timer'));
     if (this.intervalTimer) {
       return;
     }
-
-    // this.intervalTimer = setInterval(() => {
-    //   this.timer = this.getHHMMRR();
-    // }, 1_000);
+    this.intervalTimer = setInterval(() => {
+      this.timer = this.getHHMMRR();
+    }, 1_000);
   },
 
   methods: {
@@ -36,11 +35,11 @@ export default component<
     },
   },
 
-  render(props) {
+  template(props) {
     return html`
       <div id="timer">
         <div>================타이머================</div>
-        <div>props: ${props?.quantity}</div>
+        <div>props 수량: ${props?.quantity}</div>
         <time>time: ${this.timer}</time>
       </div>
     `;

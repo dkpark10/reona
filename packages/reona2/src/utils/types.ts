@@ -14,7 +14,7 @@ export type ComponentOptions<Props, D = Data, M = Methods> = {
 
   name?: string;
 
-  render($props?: Props): RenderResult;
+  template($props?: Props): RenderResult;
 
   methods: M;
 

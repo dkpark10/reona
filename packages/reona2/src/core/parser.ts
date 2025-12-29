@@ -17,10 +17,10 @@ export type VElementNode = {
 // fiber
 export type VComponent = {
   type: 'component';
-  value: Fiber;
+  fiber: Fiber;
 }
 
-export type VNode = VTextNode | VElementNode;
+export type VNode = VTextNode | VElementNode | VComponent;
 
 /** @description 받은 html을 vnode tree로 만듬 */
 export class Parser {
@@ -38,7 +38,7 @@ export class Parser {
 
     template.innerHTML = t.trim();
 
-    if(template.content.childNodes.length > 1) {
+    if (template.content.childNodes.length > 1) {
       throw new Error('루트 엘리먼트는 1개여야 합니다.');
     }
     return this.convertNode(template.content.firstElementChild!);
@@ -71,7 +71,7 @@ export class Parser {
       type: 'element',
       tag: node.tagName.toLowerCase() as keyof HTMLElementTagNameMap,
       children,
-      ...(!isEmpty(attrs) && { attr: attrs}),
+      ...(!isEmpty(attrs) && { attr: attrs }),
     };
   }
 
@@ -88,8 +88,11 @@ export class Parser {
         // fiber 인스턴스라면
         if (values[this.valueIndex] instanceof Fiber) {
           const fiber: Fiber = values[this.valueIndex++];
-          const parser = new Parser(fiber.getInstance().render());
-          return parser.parse();
+          
+          return {
+            type: 'component',
+            fiber,
+          }
         }
 
         const markerText = text.replace(/__marker_(\d+)__/, values[this.valueIndex++]);

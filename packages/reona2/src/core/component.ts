@@ -1,6 +1,44 @@
 import { isPrimitive } from "../utils";
 import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
-import { regist, getInstanceMap } from "./fiber";
+import { Fiber } from "./fiber";
+
+/** @description 전역 컴포넌트 관리 map */
+let instanceMap: Map<ComponentOptions<any, any, any>, Fiber>;
+
+if (__DEV__ || __TEST__) {
+  instanceMap = new Map<ComponentOptions<any, any, any>, Fiber>();
+} else {
+  // @ts-ignore
+  instanceMap = new WeakMap<ComponentOptions<any, any, any>, Fiber>();
+}
+
+export function getInstanceMap() {
+  return instanceMap;
+}
+
+/** @description instance를 키로 fiber 객체를 반환 없으면 생성하고 반환 */
+export function regist<P extends Props>({
+  instance,
+  key = "default",
+  props,
+}: {
+  instance: ComponentOptions<P, Data, Methods>;
+  key?: string | number;
+  props?: P;
+}): Fiber {
+  let fiber = instanceMap.get(instance);
+
+  if (props) {
+    instance.setProps!(props);
+  }
+
+  if (!fiber) {
+    // @ts-ignore
+    fiber = new Fiber(instance, key);
+    instanceMap.set(instance, fiber);
+  }
+  return fiber;
+}
 
 export function component<
   P extends Props = Props,
@@ -13,8 +51,7 @@ export function component<
     throw new Error("원시객체가 입니다.");
   }
 
-  // @ts-ignore
-  let $props: P = {};
+  let $props: P | undefined = undefined;
   let $prevData: D[keyof D];
 
   const proxiedState = new Proxy(raw, {
@@ -59,8 +96,8 @@ export function component<
     ...options,
     ...boundMethods,
     // ...(NOT_PRODUCTION && boundMethods),
-    render: function () {
-      return options.render.call(proxiedState, $props);
+    template: function () {
+      return options.template.call(proxiedState, $props);
     },
     ...(NOT_PRODUCTION && { state: proxiedState }),
     setProps: function (props: P) {
