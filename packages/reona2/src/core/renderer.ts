@@ -6,7 +6,7 @@ import { regist } from "./component";
 
 export function rootRender<P extends Props>(
   container: Element,
-  instance: ComponentOptions<P, Data, Methods>,
+  instance: () => ComponentOptions<P, Data, Methods>,
   props?: P
 ) {
   const fiber = regist({

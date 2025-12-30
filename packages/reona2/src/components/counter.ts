@@ -60,7 +60,14 @@ export default component<
           {
             quantity: this.quantity,
           },
-          "timer"
+          "timer1"
+        )}
+        ${registComponent(
+          timer,
+          {
+            quantity: 12345,
+          },
+          "timer2"
         )}
       </div>
     `;
