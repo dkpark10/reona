@@ -16,7 +16,7 @@ export default component<
   },
 
   mounted() {
-    console.log("timer mounted", this.intervalTimer, document.getElementById('timer'));
+    console.log("timer mounted", document.querySelector('time'));
     if (this.intervalTimer) {
       return;
     }
@@ -37,7 +37,7 @@ export default component<
 
   template(props) {
     return html`
-      <div id="timer">
+      <div>
         <div>================타이머================</div>
         <div>props 수량: ${props?.quantity}</div>
         <time>time: ${this.timer}</time>

@@ -50,10 +50,16 @@ export class Parser {
     for (const attr of node.attributes) {
       const { values } = this.renderResult;
 
-      /** @description attr에 이벤트 할당 */
-      if (/__marker_(\d+)__/.test(attr.value)) {
-        attrs[attr.name] = values[this.valueIndex];
-        this.valueIndex++;
+      // attr에 이벤트 할당
+      const markers = attr.value.match(/__marker_(\d+)__/g);
+      if (markers && markers.length >= 1) {
+        if (typeof values[this.valueIndex] === 'function') {
+          attrs[attr.name] = values[this.valueIndex++];
+        } else {
+          attrs[attr.name] = markers.reduce((acc) => {
+            return acc += values[this.valueIndex++]
+          }, '');
+        }
       } else {
         attrs[attr.name] = attr.value;
       }
@@ -63,7 +69,11 @@ export class Parser {
     for (const child of node.childNodes) {
       const vnode = this.convertChild(child);
       if (vnode) {
-        children.push(vnode);
+        if (Array.isArray(vnode)) {
+          children.push(...vnode);
+        } else {
+          children.push(vnode);
+        }
       }
     }
 
@@ -75,32 +85,37 @@ export class Parser {
     };
   }
 
-  private convertChild(node: ChildNode): VNode | null {
+  private convertChild(node: ChildNode): VNode | VNode[] | null {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent ?? "";
 
-      /** @description 공백 제거 */
+      // 공백제거
       if (/^\s*$/.test(text)) return null;
 
-      if (/__marker_(\d+)__/.test(text)) {
-        const { values } = this.renderResult;
+      // marker가 붙어있는 경우가 있으므로 match
+      const markers = text.match(/__marker_(\d+)__/g);
+      if (markers && markers.length >= 1) {
+        return markers.map((marker) => {
+          const { values } = this.renderResult;
 
-        // fiber 인스턴스라면
-        if (values[this.valueIndex] instanceof Fiber) {
-          const fiber: Fiber = values[this.valueIndex++];
-          
-          return {
-            type: 'component',
-            fiber,
+          // fiber 인스턴스라면
+          if (values[this.valueIndex] instanceof Fiber) {
+            const fiber: Fiber = values[this.valueIndex++];
+
+            return {
+              type: 'component',
+              fiber,
+            };
           }
-        }
 
-        const markerText = text.replace(/__marker_(\d+)__/, values[this.valueIndex++]);
-        return {
-          type: "text",
-          value: markerText,
-        };
+          const markerText = text.replace(marker, values[this.valueIndex++]);
+          return {
+            type: "text",
+            value: markerText,
+          };
+        });
       }
+
       return {
         type: "text",
         value: text
