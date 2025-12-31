@@ -24,11 +24,17 @@ export type ComponentOptions<Props, D = Data, M = Methods> = {
 
   updated?: () => void;
 
-  state?: D;
-
-  setProps?: (props: Props) => void;
-
-  props?: Props;
-
   watch?: Record<string, (current: D[keyof D], prev: D[keyof D]) => void>;
 } & ThisType<Props & D & M>;
+
+export type ComponentInstance<
+  P extends Props = Props,
+  D extends Data = Data,
+  M extends Methods = Methods
+> = ComponentOptions<P, D, M> & {
+  state?: D;
+
+  setProps?: (props: P) => void;
+
+  props?: P;
+};

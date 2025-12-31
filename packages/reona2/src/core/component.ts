@@ -1,15 +1,15 @@
 import { isPrimitive } from "../utils";
-import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
+import type { Props, Data, Methods, ComponentOptions, ComponentInstance } from "../utils/types";
 import { Fiber } from "./fiber";
 
 /** @description 전역 컴포넌트 관리 map */
-let instanceMap: Map<ComponentOptions<any, any, any>, Fiber>;
+let instanceMap: Map<ComponentInstance<any, any, any>, Fiber>;
 
 if (__DEV__ || __TEST__) {
-  instanceMap = new Map<ComponentOptions<any, any, any>, Fiber>();
+  instanceMap = new Map<ComponentInstance<any, any, any>, Fiber>();
 } else {
   // @ts-ignore
-  instanceMap = new WeakMap<ComponentOptions<any, any, any>, Fiber>();
+  instanceMap = new WeakMap<ComponentInstance<any, any, any>, Fiber>();
 }
 
 export function getInstanceMap() {
@@ -17,8 +17,8 @@ export function getInstanceMap() {
 }
 
 /** @description instance를 키로 fiber 객체를 반환 없으면 생성하고 반환 */
-export function registComponent<P extends Props>(
-  getInstance: () => ComponentOptions<P, Data, Methods>, {
+export function createComponent<P extends Props>(
+  getInstance: () => ComponentInstance<P, Data, Methods>, {
     props,
     key = "default",
   }: {
@@ -33,7 +33,6 @@ export function registComponent<P extends Props>(
   }
 
   if (!fiber) {
-    // @ts-ignore
     fiber = new Fiber(instance, key);
     instanceMap.set(instance, fiber);
   }
@@ -94,7 +93,7 @@ export function component<
 
     const NOT_PRODUCTION = __DEV__ || __TEST__;
 
-    const instance = {
+    const instance: ComponentInstance<P, D, M> = {
       ...options,
       ...boundMethods,
       // ...(NOT_PRODUCTION && boundMethods),

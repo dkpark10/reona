@@ -8,7 +8,5 @@ export function html(
   const rawString = strings
     .join("%%identifier%%")
     .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
-
-
   return { template: rawString, values };
 }

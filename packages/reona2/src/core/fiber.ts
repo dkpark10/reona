@@ -35,8 +35,7 @@ export class Fiber {
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    const parser = new Parser(template);
-    this.prevVnodeTree = parser.parse();
+    this.prevVnodeTree = new Parser(template).parse();
     this.parentElement = parentElement;
 
     this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
@@ -53,8 +52,7 @@ export class Fiber {
 
   public rerender() {
     const template = this.instance.template();
-    const parser = new Parser(template);
-    this.nextVnodeTree = parser.parse();
+    this.nextVnodeTree = new Parser(template).parse();
 
     this.reconciliation();
 

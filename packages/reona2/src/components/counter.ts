@@ -1,5 +1,5 @@
 import { html } from "../core/html";
-import { component, registComponent } from "../core/component";
+import { component, createComponent } from "../core/component";
 import timer from "./timer";
 
 export default component<
@@ -55,14 +55,14 @@ export default component<
           <div>수량: ${this.quantity}</div>
           <div>합산: ${this.quantity * this.price}</div>
         </section>
-        ${registComponent(
+        ${createComponent(
           timer, {
             props: {
               quantity: 123123
             },
           },
         )}
-        ${registComponent(
+        ${createComponent(
           timer, {
             props: {
               quantity: this.quantity,

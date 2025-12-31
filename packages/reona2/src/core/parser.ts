@@ -30,6 +30,7 @@ export class Parser {
 
   constructor(renderResult: RenderResult) {
     this.renderResult = renderResult;
+    return this;
   }
 
   public parse(): VNode {
