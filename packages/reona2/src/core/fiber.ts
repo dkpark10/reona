@@ -20,7 +20,7 @@ export class Fiber {
 
   private nextDom: HTMLElement;
 
-  private mounted: boolean;
+  private mounted: boolean = false;
 
   constructor(instance: ComponentOptions<Props, Data, Methods>, key: Key) {
     this.instance = instance;
@@ -28,8 +28,8 @@ export class Fiber {
     this.key;
   }
 
-  public getMounted() {
-    return this.mounted;
+  public getInstance() {
+    return this.instance;
   }
 
   // 초기 렌더

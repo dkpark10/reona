@@ -65,3 +65,10 @@ export function supportsMoveBefore() {
 export function isEmpty<T extends Record<string, any>>(obj: T) {
   return Object.keys(obj).length <= 0;
 }
+
+export const generateId = (() => {
+  let id = 0;
+  return () => {
+    return id++;
+  };
+})();

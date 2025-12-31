@@ -17,15 +17,14 @@ export function getInstanceMap() {
 }
 
 /** @description instance를 키로 fiber 객체를 반환 없으면 생성하고 반환 */
-export function regist<P extends Props>({
-  instance: getInstance,
-  key = "default",
-  props,
-}: {
-  instance: () => ComponentOptions<P, Data, Methods>;
-  key?: string | number;
-  props?: P;
-}): Fiber {
+export function registComponent<P extends Props>(
+  getInstance: () => ComponentOptions<P, Data, Methods>, {
+    props,
+    key = "default",
+  }: {
+    key?: string | number;
+    props?: P;
+  }): Fiber {
   const instance = getInstance();
   let fiber = instanceMap.get(instance);
 
@@ -38,6 +37,7 @@ export function regist<P extends Props>({
     fiber = new Fiber(instance, key);
     instanceMap.set(instance, fiber);
   }
+  console.log(instanceMap.size);
   return fiber;
 }
 
@@ -46,11 +46,11 @@ export function component<
   D extends Data = Data,
   M extends Methods = Methods
 >(options: ComponentOptions<P, D, M>) {
-  return function () {
+  return function getComponent() {
     // data 함수에서 내부 메소드 사용에 따른 call 호출
     const raw = options.data.call(options.methods);
     if (isPrimitive(raw)) {
-      throw new Error("원시객체가 입니다.");
+      throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
     }
 
     let $props: P | undefined = undefined;
@@ -116,18 +116,5 @@ export function component<
       },
     };
     return instance;
-  };
-}
-
-export function registComponent<P extends Props = Props>(
-  instance: () => ComponentOptions<P, Data, Methods>,
-  props: P,
-  key = "default"
-) {
-  return regist({
-    // @ts-ignore
-    instance,
-    props,
-    key,
-  });
+  }
 }

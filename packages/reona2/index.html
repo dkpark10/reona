@@ -10,6 +10,10 @@
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.ts"></script>
+  <script type="module">
+    import { bar } from './play.js'
+    console.log(bar === bar);
+  </script>
 </body>
 
 </html>

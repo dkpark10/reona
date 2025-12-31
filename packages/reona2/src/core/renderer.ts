@@ -2,17 +2,18 @@
 
 import type { VNode } from "./parser";
 import type { ComponentOptions, Props, Data, Methods } from "../utils/types";
-import { regist } from "./component";
+import { registComponent } from "./component";
 
 export function rootRender<P extends Props>(
   container: Element,
   instance: () => ComponentOptions<P, Data, Methods>,
-  props?: P
+  {
+    props, key = 'root',
+  }: { props?: P, key?: string }
 ) {
-  const fiber = regist({
-    instance,
+  const fiber = registComponent(instance, {
     props,
-    key: "root",
+    key,
   });
 
   fiber.render(container);

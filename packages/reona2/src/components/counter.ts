@@ -50,26 +50,27 @@ export default component<
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
         <section>
-          <div>props: ${props?.foo}</div>
+          <div>props: ${props?.foo} ${props?.foo} ${props?.foo}</div>
           <div>가격: ${this.price}</div>
           <div>수량: ${this.quantity}</div>
           <div>합산: ${this.quantity * this.price}</div>
         </section>
         ${registComponent(
-          timer,
-          {
-            quantity: this.quantity,
+          timer, {
+            props: {
+              quantity: 123123
+            },
           },
-          "timer1"
         )}
         ${registComponent(
-          timer,
-          {
-            quantity: 12345,
+          timer, {
+            props: {
+              quantity: this.quantity,
+            },
           },
-          "timer2"
         )}
       </div>
     `;
   },
 });
+

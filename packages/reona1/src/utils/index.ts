@@ -35,26 +35,3 @@ export function Component(tagName: string) {
     }
   };
 }
-
-export const generateId = (() => {
-  let id = 0;
-  return () => {
-    return id++;
-  };
-})();
-
-export class Stack<T> {
-  private data: T[] = [];
-
-  push(data: T) {
-    this.data.push(data);
-  }
-
-  pop() {
-    this.data.pop();
-  }
-
-  top() {
-    return this.data[this.data.length - 1];
-  }
-}

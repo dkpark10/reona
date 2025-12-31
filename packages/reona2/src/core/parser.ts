@@ -70,7 +70,8 @@ export class Parser {
       const vnode = this.convertChild(child);
       if (vnode) {
         if (Array.isArray(vnode)) {
-          children.push(...vnode);
+          const filteredEmptyTextValue = vnode.filter((node) => !!node);
+          children.push(...filteredEmptyTextValue);
         } else {
           children.push(vnode);
         }
@@ -85,9 +86,9 @@ export class Parser {
     };
   }
 
-  private convertChild(node: ChildNode): VNode | VNode[] | null {
+  private convertChild(node: ChildNode): VNode | Array<VNode | null> | null {
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent ?? "";
+      let text = node.textContent ?? "";
 
       // 공백제거
       if (/^\s*$/.test(text)) return null;
@@ -95,24 +96,28 @@ export class Parser {
       // marker가 붙어있는 경우가 있으므로 match
       const markers = text.match(/__marker_(\d+)__/g);
       if (markers && markers.length >= 1) {
-        return markers.map((marker) => {
+        return markers.map(() => {
           const { values } = this.renderResult;
 
           // fiber 인스턴스라면
           if (values[this.valueIndex] instanceof Fiber) {
             const fiber: Fiber = values[this.valueIndex++];
-
             return {
               type: 'component',
               fiber,
             };
           }
 
-          const markerText = text.replace(marker, values[this.valueIndex++]);
-          return {
-            type: "text",
-            value: markerText,
-          };
+          // marker 가 있다면 원본 텍스트를 변경한다.
+          if (/__marker_(\d+)__/.test(text)) {
+            text = this.replaceMarkers(text);
+            return {
+              type: "text",
+              value: text,
+            };
+          }
+          // marker 가 없으면 빈 텍스트 반환
+          return null;
         });
       }
 
@@ -128,6 +133,15 @@ export class Parser {
 
     return null;
   }
+
+  public replaceMarkers(str: string): string {
+    const { values } = this.renderResult;
+    return str.replace(/__marker_(\d+)__/g, () => {
+      const v = values[this.valueIndex++];
+      return v !== undefined ? String(v) : "";
+    });
+  }
+
 }
 
 class VnodeItem {
