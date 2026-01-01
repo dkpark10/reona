@@ -10,13 +10,13 @@ export type RenderResult = {
 };
 
 export type ComponentOptions<Props, D = Data, M = Methods> = {
-  data: () => D;
+  template($props?: Props): RenderResult;
+
+  data?: () => D;
 
   name?: string;
 
-  template($props?: Props): RenderResult;
-
-  methods: M;
+  methods?: M;
 
   mounted?: () => void;
 

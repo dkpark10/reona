@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { Parser } from "../core/parser";
 import { html } from "../core//html";
-import { Fiber } from "../core/fiber";
+import Parser from "../core/parser";
+import Fiber from "../core/fiber";
 import { component, createComponent } from "../core/component";
 
 describe("파서 테스트", () => {

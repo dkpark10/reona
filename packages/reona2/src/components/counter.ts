@@ -1,6 +1,6 @@
 import { html } from "../core/html";
 import { component, createComponent } from "../core/component";
-import timer from "./timer";
+import Timer from "./timer";
 
 export default component<
   { foo: number },
@@ -56,16 +56,9 @@ export default component<
           <div>합산: ${this.quantity * this.price}</div>
         </section>
         ${createComponent(
-          timer, {
+          Timer, {
             props: {
               quantity: 123123
-            },
-          },
-        )}
-        ${createComponent(
-          timer, {
-            props: {
-              quantity: this.quantity,
             },
           },
         )}
@@ -73,4 +66,3 @@ export default component<
     `;
   },
 });
-

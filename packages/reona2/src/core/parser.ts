@@ -1,5 +1,5 @@
 import type { RenderResult, Props } from "@/utils/types";
-import { Fiber } from "./fiber";
+import Fiber from "./fiber";
 import { isEmpty } from "../../../shared";
 
 export type VTextNode = {
@@ -23,7 +23,7 @@ export type VComponent = {
 export type VNode = VTextNode | VElementNode | VComponent;
 
 /** @description 받은 html을 vnode tree로 만듬 */
-export class Parser {
+export default class Parser {
   private renderResult: RenderResult;
 
   private valueIndex = 0;

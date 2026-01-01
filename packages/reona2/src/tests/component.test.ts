@@ -43,7 +43,7 @@ describe("컴포넌트 테스트", () => {
      */
     const instance = counter();
 
-    type WatchType = Record<keyof ReturnType<typeof instance.data>, () => void>;
+    type WatchType = Record<keyof ReturnType<NonNullable<typeof instance.data>>, () => void>;
 
     const spyWatch = vi.spyOn(instance.watch as WatchType, "quantity");
 

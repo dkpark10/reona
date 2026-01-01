@@ -1,13 +1,15 @@
 import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
-import { Parser, type VNode } from "./parser";
+import Parser, { type VNode } from "./parser";
 import { createDOM } from "./renderer";
 
-type Key = string | number;
+type FiberOption = {
+  key: string | number;
+}
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
-export class Fiber {
-  private key: Key;
-
+export default class Fiber {
+  private key: FiberOption['key'];
+  
   private instance: ComponentOptions<Props, Data, Methods>;
 
   private parentElement: Element;
@@ -20,11 +22,11 @@ export class Fiber {
 
   private nextDom: HTMLElement;
 
-  private mounted: boolean = false;
+  private mounted = false;
 
-  constructor(instance: ComponentOptions<Props, Data, Methods>, key: Key) {
+  constructor(instance: ComponentOptions<Props, Data, Methods>, options: FiberOption) {
     this.instance = instance;
-    this.key = key;
+    this.key = options.key;
     this.key;
   }
 
@@ -54,10 +56,9 @@ export class Fiber {
     const template = this.instance.template();
     this.nextVnodeTree = new Parser(template).parse();
 
-    this.reconciliation();
-
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
+
     this.prevDom = this.nextDom;
 
     queueMicrotask(() => {
@@ -69,7 +70,7 @@ export class Fiber {
    * todo
    *  @see {@link https://ko.legacy.reactjs.org/docs/reconciliation.html}
    *  */
-  private reconciliation() {
+  private reconciliate() {
     // 루트 엘리먼트 타입이 다르다면
     if (this.nextVnodeTree.type !== this.prevVnodeTree.type) {
       return;
