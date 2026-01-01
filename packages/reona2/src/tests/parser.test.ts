@@ -92,7 +92,7 @@ describe("파서 테스트", () => {
             ],
             tag: 'div',
             type: 'element',
-          },]
+          }],
         }
       ],
       attr: { id: 'app' }
@@ -108,9 +108,7 @@ describe("파서 테스트", () => {
       },
 
       methods: {
-        foo() {
-
-        },
+        foo() {},
       },
 
       template() {
@@ -120,7 +118,7 @@ describe("파서 테스트", () => {
 
     const template = html`
       <div id="app">
-      ${createComponent(child, {})}
+        ${createComponent(child, {})}
       </div>`;
 
     expect(new Parser(template).parse()).toEqual({
@@ -128,6 +126,50 @@ describe("파서 테스트", () => {
       tag: 'div',
       children: [{ type: 'component', fiber: expect.any(Fiber) }],
       attr: { id: 'app' }
+    });
+  });
+
+  test('배열 vdom 값을 테스트 한다.', () => {
+    const template = html`
+      <ul>
+        ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
+      </ul>`;
+
+    expect(new Parser(template).parse()).toEqual({
+      type: 'element',
+      tag: 'ul',
+      children: [
+        {
+          type: 'element',
+          tag: 'li',
+          children: [
+            {
+              type: 'text',
+              value: '1',
+            },
+          ],
+        },
+        {
+          type: 'element',
+          tag: 'li',
+          children: [
+            {
+              type: 'text',
+              value: '2',
+            },
+          ],
+        },
+        {
+          type: 'element',
+          tag: 'li',
+          children: [
+            {
+              type: 'text',
+              value: '3',
+            },
+          ],
+        },
+      ],
     });
   });
 });
