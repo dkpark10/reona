@@ -1,5 +1,5 @@
 import { isPrimitive } from "../utils";
-import type { Props, Data, Methods, ComponentOptions, ComponentInstance } from "../utils/types";
+import type { Props, Data, Methods, ComponentOptions, ComponentInstance, Computed } from "../utils/types";
 import Fiber from "./fiber";
 
 /** @description 전역 컴포넌트 관리 map */
@@ -23,7 +23,7 @@ export function createComponent<P extends Props>(
   }: {
     key?: string | number;
     props?: P;
-}): Fiber {
+  }): Fiber {
   const instance = getInstance();
   let fiber = instanceMap.get(instance);
 
@@ -41,8 +41,9 @@ export function createComponent<P extends Props>(
 export function component<
   P extends Props = Props,
   D extends Data = Data,
-  M extends Methods = Methods
->(options: ComponentOptions<P, D, M>) {
+  M extends Methods = Methods,
+  C extends Computed = Computed
+>(options: ComponentOptions<P, D, M, C>) {
   return function getComponent() {
     // data 함수에서 내부 메소드 사용에 따른 call 호출
     const raw = options.data?.call(options.methods);
@@ -53,11 +54,23 @@ export function component<
     let $props: P | undefined = undefined;
     let $prevData: D[keyof D];
 
-    const proxiedState = new Proxy(raw || {}, {
+    const computedData = {};
+    for (const key in options.computed) {
+      const v = options.computed[key].call(raw);
+      Object.assign(computedData, { [options.computed[key].name]: v });
+    }
+
+    const proxiedState = new Proxy(Object.assign(raw || {}, computedData), {
       get(target, key) {
         if (Object.prototype.hasOwnProperty.call(target, key)) {
+
+          // computed 값
+          if (options.computed && Object.prototype.hasOwnProperty.call(options.computed, key)) {
+            return options.computed?.[key as string].call(target);
+          }
           return Reflect.get(target, key);
         }
+
         if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
           return boundMethods[key as string];
         }
@@ -81,12 +94,6 @@ export function component<
     for (const key in options.methods) {
       //@ts-ignore
       boundMethods[key] = options.methods[key].bind(proxiedState);
-    }
-
-    const boundData = {};
-    for (const key in raw) {
-      //@ts-ignore
-      boundData[key] = options.watch?.[key].bind(proxiedState, $prevData);
     }
 
     const NOT_PRODUCTION = __DEV__ || __TEST__;

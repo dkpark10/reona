@@ -20,9 +20,9 @@ export default component<
     if (this.intervalTimer) {
       return;
     }
-    this.intervalTimer = setInterval(() => {
-      this.timer = this.getHHMMRR();
-    }, 1_000);
+    // this.intervalTimer = setInterval(() => {
+    //   this.timer = this.getHHMMRR();
+    // }, 1_000);
   },
 
   methods: {

@@ -5,7 +5,8 @@ import Timer from "./timer";
 export default component<
   { foo: number },
   { price: number; quantity: number },
-  { increase: () => void; decrease: () => void }
+  { increase: () => void; decrease: () => void },
+  { double: number; }
 >({
   name: "counter",
 
@@ -22,6 +23,12 @@ export default component<
 
   updated() {
     console.log("counter updated");
+  },
+
+  computed: {
+    double() {
+      return this.quantity * 4;
+    },
   },
 
   watch: {
@@ -54,14 +61,15 @@ export default component<
           <div>가격: ${this.price}</div>
           <div>수량: ${this.quantity}</div>
           <div>합산: ${this.quantity * this.price}</div>
-        </section>
-        ${createComponent(
-          Timer, {
-            props: {
-              quantity: 123123
+          <div>더블: ${this.double}</div>
+          ${createComponent(
+            Timer, {
+              props: {
+                quantity: this.quantity
+              },
             },
-          },
-        )}
+          )}
+        </section>
       </div>
     `;
   },
