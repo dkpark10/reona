@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { isHtmlString, isPrimitive } from "@/utils";
 
 describe("유틸 테스트", () => {
-  test("isPrimitive", () => {
+  test("원시객체 여부 판별을 테스트 한다.", () => {
     expect(isPrimitive("123123")).toBeTruthy();
     expect(isPrimitive(123123)).toBeTruthy();
     expect(isPrimitive(true)).toBeTruthy();
@@ -15,7 +15,7 @@ describe("유틸 테스트", () => {
     expect(isPrimitive(class Foo {})).not.toBeTruthy();
   });
 
-  test("isHtmlString", () => {
+  test("html 형식인지 테스트 한다.", () => {
     expect(isHtmlString("123123")).not.toBeTruthy();
     expect(isHtmlString("<div>123</div>")).toBeTruthy();
     expect(isHtmlString("<span>text</span>")).toBeTruthy();

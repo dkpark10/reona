@@ -36,7 +36,6 @@ export function createComponent<P extends Props>(
     fiber = new Fiber(instance, key);
     instanceMap.set(instance, fiber);
   }
-  console.log(instanceMap.size);
   return fiber;
 }
 
@@ -93,7 +92,7 @@ export function component<
 
     const NOT_PRODUCTION = __DEV__ || __TEST__;
 
-    const instance: ComponentInstance<P, D, M> = {
+    const instance = {
       ...options,
       ...boundMethods,
       // ...(NOT_PRODUCTION && boundMethods),
