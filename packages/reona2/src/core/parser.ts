@@ -1,6 +1,7 @@
-import type { RenderResult, Props } from "@/utils/types";
+import type { RenderResult, Props } from "../utils/types";
 import Fiber from "./fiber";
 import { isEmpty } from "../../../shared";
+import { isRenderResult } from "../utils";
 
 export type VTextNode = {
   type: 'text';
@@ -56,6 +57,11 @@ export default class Parser {
       if (markers && markers.length >= 1) {
         if (typeof values[this.valueIndex] === 'function') {
           attrs[attr.name] = values[this.valueIndex++];
+        } else if (typeof values[this.valueIndex] === 'object') {
+          attrs[attr.name] = values[this.valueIndex++];
+          console.warn(
+            `${node.tagName.toLowerCase()} 엘리먼트에 ${attr.name} 속성에 ${values[this.valueIndex - 1]} 객체가 들어가 있습니다. 값이 맞는지 확인하세요.`
+          );
         } else {
           attrs[attr.name] = markers.reduce((acc) => {
             return acc += values[this.valueIndex++]
@@ -71,7 +77,7 @@ export default class Parser {
       const vnode = this.convertChild(child);
       if (vnode) {
         if (Array.isArray(vnode)) {
-          const filteredEmptyTextValue = vnode.filter((node) => !!node);
+          const filteredEmptyTextValue = vnode.filter((node) => !!node).flat();
           children.push(...filteredEmptyTextValue);
         } else {
           children.push(vnode);
@@ -107,6 +113,16 @@ export default class Parser {
               type: 'component',
               fiber,
             };
+          }
+
+          if (Array.isArray(values[this.valueIndex])) {
+            const result = values[this.valueIndex++].map((value: any) => {
+              if (isRenderResult(value)) {
+                const vdom = new Parser(value).parse();
+                return vdom;
+              }
+            });
+            return result;
           }
 
           // marker 가 있다면 원본 텍스트를 변경한다.

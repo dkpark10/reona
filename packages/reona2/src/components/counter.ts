@@ -56,6 +56,9 @@ export default component<
       <div id="app">
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
+        <ul data-testid="${'list'}">
+          ${[1,2,3].map((item) => html`<li>${item}</li>`)}
+        </ul>
         <section>
           <div>props: ${props?.foo} ${props?.foo} ${props?.foo}</div>
           <div>가격: ${this.price}</div>

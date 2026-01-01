@@ -1,4 +1,4 @@
-import { isPrimitive } from "../utils";
+import { isPrimitive } from "../../../shared";
 import type { Props, Data, Methods, ComponentOptions, ComponentInstance, Computed } from "../utils/types";
 import Fiber from "./fiber";
 

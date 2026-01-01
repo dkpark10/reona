@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { isHtmlString, isPrimitive } from "@/utils";
+import { isHtmlString } from "../utils";
+import { isPrimitive } from "../../../shared"
 
 describe("유틸 테스트", () => {
   test("원시객체 여부 판별을 테스트 한다.", () => {

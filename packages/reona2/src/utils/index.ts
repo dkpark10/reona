@@ -1,8 +1,4 @@
-export function isPrimitive(value: unknown) {
-  return (
-    value === null || (typeof value !== "object" && typeof value !== "function")
-  );
-}
+import type { RenderResult } from "./types";
 
 export function unescapeHtml(str: string) {
   const parser = new DOMParser();
@@ -34,4 +30,13 @@ export function Component(tagName: string) {
       customElements.define(tagName, constructor);
     }
   };
+}
+
+export function isRenderResult(obj: any): obj is RenderResult {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    typeof obj.template === "string" &&
+    Array.isArray(obj.values)
+  );
 }
