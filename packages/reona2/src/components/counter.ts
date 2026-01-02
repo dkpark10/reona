@@ -57,7 +57,7 @@ export default component<
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
         <ul data-testid="${'list'}">
-          ${[1,2,3].map((item) => html`<li>${item}</li>`)}
+          ${[1,2,3].map((item) => html`<li>아이템: ${item}</li>`)}
         </ul>
         <section>
           <div>props: ${props?.foo} ${props?.foo} ${props?.foo}</div>
@@ -72,8 +72,16 @@ export default component<
               },
             },
           )}
+          ${createComponent(
+            Timer, {
+              props: {
+                quantity: 12345,
+              },
+            },
+          )}
         </section>
       </div>
     `;
   },
 });
+

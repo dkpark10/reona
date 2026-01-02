@@ -1,7 +1,7 @@
 import type { RenderResult, Props } from "../utils/types";
 import Fiber from "./fiber";
 import { isEmpty } from "../../../shared";
-import { isRenderResult } from "../utils";
+import { isRenderResultObject } from "../utils";
 
 export type VTextNode = {
   type: 'text';
@@ -28,9 +28,12 @@ export default class Parser {
   private renderResult: RenderResult;
 
   private valueIndex = 0;
-
-  constructor(renderResult: RenderResult) {
+  
+  private depth: number | undefined;
+  
+  constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
+    this.depth = depth;
     return this;
   }
 
@@ -46,10 +49,10 @@ export default class Parser {
     return this.convertNode(template.content.firstElementChild!);
   }
 
-  private convertNode(node: Element): VElementNode {
+  private convertNode(el: Element): VElementNode {
     const attrs: Props = {};
 
-    for (const attr of node.attributes) {
+    for (const attr of el.attributes) {
       const { values } = this.renderResult;
 
       // attr에 이벤트 할당
@@ -60,7 +63,7 @@ export default class Parser {
         } else if (typeof values[this.valueIndex] === 'object') {
           attrs[attr.name] = values[this.valueIndex++];
           console.warn(
-            `${node.tagName.toLowerCase()} 엘리먼트에 ${attr.name} 속성에 ${values[this.valueIndex - 1]} 객체가 들어가 있습니다. 값이 맞는지 확인하세요.`
+            `${el.tagName.toLowerCase()} 엘리먼트에 ${attr.name} 속성에 ${values[this.valueIndex - 1]} 객체가 들어가 있습니다. 값이 맞는지 확인하세요.`
           );
         } else {
           attrs[attr.name] = markers.reduce((acc) => {
@@ -73,7 +76,7 @@ export default class Parser {
     }
 
     const children: VNode[] = [];
-    for (const child of node.childNodes) {
+    for (const child of el.childNodes) {
       const vnode = this.convertChild(child);
       if (vnode) {
         if (Array.isArray(vnode)) {
@@ -87,7 +90,7 @@ export default class Parser {
 
     return {
       type: 'element',
-      tag: node.tagName.toLowerCase() as keyof HTMLElementTagNameMap,
+      tag: el.tagName.toLowerCase() as keyof HTMLElementTagNameMap,
       children,
       ...(!isEmpty(attrs) && { attr: attrs }),
     };
@@ -105,19 +108,40 @@ export default class Parser {
       if (markers && markers.length >= 1) {
         return markers.map(() => {
           const { values } = this.renderResult;
+          const value = values[this.valueIndex];
 
           // fiber 인스턴스라면
-          if (values[this.valueIndex] instanceof Fiber) {
-            const fiber: Fiber = values[this.valueIndex++];
+          // if (value instanceof Fiber) {
+          //   const fiber: Fiber = value;
+          //   this.valueIndex++;
+
+          //   return {
+          //     type: 'component',
+          //     fiber,
+          //   };
+          // }
+
+          // createComponent 반환 함수일 시
+          if (typeof value === 'function' && value.__isCreateComponent) {
+            const getFiber = value as (depth: number) => Fiber;
+            const fiber = getFiber(this.depth!);
+            this.depth!++;
+            this.valueIndex++;
+
             return {
               type: 'component',
               fiber,
             };
+
+            const instance = fiber.instance;
+            const vdom = new Parser(instance.template(), this.depth! + 1).parse();
+            return vdom;
           }
 
-          if (Array.isArray(values[this.valueIndex])) {
+          // 배열이 들어 왔다면
+          if (Array.isArray(value)) {
             const result = values[this.valueIndex++].map((value: any) => {
-              if (isRenderResult(value)) {
+              if (isRenderResultObject(value)) {
                 const vdom = new Parser(value).parse();
                 return vdom;
               }
@@ -125,7 +149,7 @@ export default class Parser {
             return result;
           }
 
-          // marker 가 있다면 원본 텍스트를 변경한다.
+          // marker가 있다면 원본 텍스트를 변경한다.
           if (/__marker_(\d+)__/.test(text)) {
             text = this.replaceMarkers(text);
             return {
@@ -157,43 +181,5 @@ export default class Parser {
       const v = values[this.valueIndex++];
       return v !== undefined ? String(v) : "";
     });
-  }
-
-}
-
-class VnodeItem {
-  private children: VnodeItem[] = [];
-
-  private type: 'element' | 'text';
-
-  private attr: Props = {};
-
-  private tag: keyof HTMLElementTagNameMap;
-
-  private value: string;
-
-  constructor(
-    tag: keyof HTMLElementTagNameMap,
-    type: 'element' | 'text',
-    children?: VnodeItem[],
-    attr?: Props,
-    value?: string
-  ) {
-    this.tag = tag;
-    this.type = type;
-    if (children) {
-      this.children = children;
-    }
-    if (attr) {
-      this.attr = attr;
-    }
-    if (value) {
-      this.value = value;
-    }
-    this.children;
-    this.type;
-    this.attr;
-    this.tag;
-    this.value;
   }
 }

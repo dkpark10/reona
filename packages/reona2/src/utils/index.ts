@@ -32,7 +32,7 @@ export function Component(tagName: string) {
   };
 }
 
-export function isRenderResult(obj: any): obj is RenderResult {
+export function isRenderResultObject(obj: any): obj is RenderResult {
   return (
     obj !== null &&
     typeof obj === "object" &&

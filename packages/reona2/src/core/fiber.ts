@@ -1,4 +1,4 @@
-import type { Props, Data, Methods, ComponentOptions } from "../utils/types";
+import type { Props, Data, Methods, ComponentInstance } from "../utils/types";
 import Parser, { type VNode } from "./parser";
 import { createDOM } from "./renderer";
 
@@ -8,9 +8,9 @@ type FiberOption = {
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
 export default class Fiber {
-  private key: FiberOption['key'];
+  public instance: ComponentInstance<Props, Data, Methods>;
   
-  private instance: ComponentOptions<Props, Data, Methods>;
+  public key: FiberOption['key'];
 
   private parentElement: Element;
 
@@ -24,20 +24,18 @@ export default class Fiber {
 
   private mounted = false;
 
-  constructor(instance: ComponentOptions<Props, Data, Methods>, options: FiberOption) {
+  constructor(instance: ComponentInstance<Props, Data, Methods>, options: FiberOption) {
     this.instance = instance;
     this.key = options.key;
     this.key;
   }
 
-  public getInstance() {
-    return this.instance;
-  }
-
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    this.prevVnodeTree = new Parser(template).parse();
+    const depth = Number(this.instance.$componentKey.match(/^\d+/)![0]);
+
+    this.prevVnodeTree = new Parser(template, depth + 1).parse();
     this.parentElement = parentElement;
 
     this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
@@ -54,7 +52,9 @@ export default class Fiber {
 
   public rerender() {
     const template = this.instance.template();
-    this.nextVnodeTree = new Parser(template).parse();
+    const depth = Number(this.instance.$componentKey.match(/^\d+/)![0]);
+
+    this.nextVnodeTree = new Parser(template, depth + 1).parse();
 
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);

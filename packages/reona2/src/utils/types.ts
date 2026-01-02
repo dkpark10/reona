@@ -4,6 +4,7 @@ export type Props = Record<string, any>;
 export type Data = Record<string, any>;
 export type Methods = Record<string, () => void>;
 export type Computed = any;
+export type ComponentKey = string;
 
 export type RenderResult = {
   template: string;
@@ -36,9 +37,9 @@ export type ComponentInstance<
   M extends Methods = Methods,
   C extends Computed = Computed,
 > = ComponentOptions<P, D, M, C> & {
-  state?: D;
+  state: D;
 
-  setProps?: (props: P) => void;
+  $props: Props;
 
-  props?: P;
+  $componentKey: ComponentKey;
 };

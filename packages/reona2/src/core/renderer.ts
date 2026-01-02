@@ -1,32 +1,36 @@
 /** @description 실제 dom 조작 로직을 여기다 작성 */
 
 import type { VNode } from "./parser";
-import type { ComponentOptions, Props, Data, Methods } from "../utils/types";
+import type { ComponentInstance, Props, Data, Methods } from "../utils/types";
 import { createComponent } from "./component";
+
+interface Option {
+  props?: Props;
+  key?: string;
+}
 
 export function rootRender<P extends Props>(
   container: Element,
-  instance: () => ComponentOptions<P, Data, Methods>,
-  {
-    props, key = 'root',
-  }: { props?: P, key?: string }
+  instance: () => any,
+  options?: Option,
 ) {
-  const fiber = createComponent(instance, {
-    props,
-    key,
+  const getFiber = createComponent(instance as () => ComponentInstance<P, Data, Methods>, {
+    props: options?.props,
+    key: options?.key,
   });
 
+  const fiber = getFiber(0);
   fiber.render(container);
 }
 
 /** @description 가장 가까운 부모 찾음  */
-export function getClosestParent(node: Node): Element | null {
-  let parent = node.parentElement;
-  while (parent && parent.parentElement) {
-    parent = parent.parentElement;
-  }
-  return parent;
-}
+// export function getClosestParent(node: Node): Element | null {
+//   let parent = node.parentElement;
+//   while (parent && parent.parentElement) {
+//     parent = parent.parentElement;
+//   }
+//   return parent;
+// }
 
 /** @description vnode 객체를 실제 dom 으로 만듬 */
 export function createDOM(vnode: VNode): HTMLElement;
@@ -65,7 +69,6 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
     }
   }
 
-  // children
   vnode.children?.forEach((child) => {
     const c = createDOM(child, el);
     if (c) {

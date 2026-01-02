@@ -1,15 +1,25 @@
 import { isPrimitive } from "../../../shared";
-import type { Props, Data, Methods, ComponentOptions, ComponentInstance, Computed } from "../utils/types";
+import type {
+  ComponentKey,
+  Props,
+  Data,
+  Methods,
+  ComponentOptions,
+  ComponentInstance,
+  Computed
+} from "../utils/types";
 import Fiber from "./fiber";
 
+type MapKey = ComponentKey;
+
 /** @description 전역 컴포넌트 관리 map */
-let instanceMap: Map<ComponentInstance<any, any, any>, Fiber>;
+let instanceMap: Map<MapKey, Fiber>;
 
 if (__DEV__ || __TEST__) {
-  instanceMap = new Map<ComponentInstance<any, any, any>, Fiber>();
+  instanceMap = new Map<MapKey, Fiber>();
 } else {
   // @ts-ignore
-  instanceMap = new WeakMap<ComponentInstance<any, any, any>, Fiber>();
+  instanceMap = new WeakMap<MapKey, Fiber>();
 }
 
 export function getInstanceMap() {
@@ -17,25 +27,34 @@ export function getInstanceMap() {
 }
 
 export function createComponent<P extends Props>(
-  getInstance: () => ComponentInstance<P, Data, Methods>, {
+  getInstance: () => any, {
     props,
-    key = "default",
+    key: defaultKey = "__reona_key__",
   }: {
     key?: string | number;
     props?: P;
-  }): Fiber {
-  const instance = getInstance();
-  let fiber = instanceMap.get(instance);
+  }) {
+  /** @description 컴포넌트의 depth */
+  const func = function getFiber(depth: number) {
+    const key = `${depth}${defaultKey}`;
 
-  if (props) {
-    instance.setProps!(props);
-  }
+    let fiber: Fiber | undefined = instanceMap.get(key);
+    if (!fiber) {
+      const instance = getInstance() as ComponentInstance<P, Data, Methods>;
+      // @ts-ignore
+      fiber = new Fiber(instance, { key });
+      instanceMap.set(key, fiber);
+    }
 
-  if (!fiber) {
-    fiber = new Fiber(instance, { key });
-    instanceMap.set(instance, fiber);
+    if (props) {
+      fiber.instance.$props = props;
+    }
+
+    fiber.instance.$componentKey = key;
+    return fiber;
   }
-  return fiber;
+  func.__isCreateComponent = true;
+  return func;
 }
 
 export function component<
@@ -47,10 +66,11 @@ export function component<
   return function getComponent() {
     // data 함수에서 내부 메소드 사용에 따른 call 호출
     const raw = options.data?.call(options.methods);
-    if (isPrimitive(raw)) {
+    if (raw && isPrimitive(raw)) {
       throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
     }
 
+    let $componentKey: ComponentKey = '';
     let $props: P | undefined = undefined;
     let $prevData: D[keyof D];
 
@@ -80,7 +100,10 @@ export function component<
         $prevData = Reflect.get(target, key);
 
         Reflect.set(target, key, value);
-        const fiber = getInstanceMap().get(instance);
+        if (!__TEST__ && !instance.$componentKey) {
+          throw new Error('고유 키가 없습니다.');
+        }
+        const fiber = getInstanceMap().get(instance.$componentKey);
         fiber?.rerender();
 
         if ($prevData !== value) {
@@ -103,12 +126,9 @@ export function component<
       ...boundMethods,
       // ...(NOT_PRODUCTION && boundMethods),
       template: function () {
-        return options.template.call(proxiedState, $props);
+        return options.template.call(proxiedState, instance.$props);
       },
       ...(NOT_PRODUCTION && { state: proxiedState as D }),
-      setProps: function (props: P) {
-        $props = props;
-      },
       mounted() {
         return options.mounted?.call(proxiedState);
       },
@@ -118,6 +138,8 @@ export function component<
       updated() {
         return options.updated?.call(proxiedState);
       },
+      $componentKey,
+      $props,
     };
     return instance;
   }
