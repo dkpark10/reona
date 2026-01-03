@@ -1,5 +1,5 @@
-import { html } from "../core/html";
-import { component } from "../core/component";
+import { html } from "../../packages/reona2/src/core/html";
+import { component } from "../../packages/reona2/src/core/component";
 
 export default component<
   { quantity: number },

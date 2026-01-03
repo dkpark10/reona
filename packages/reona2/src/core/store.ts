@@ -3,21 +3,23 @@ type State = Record<string, any>;
 type Mutation = Record<string, (...args: any[]) => any>;
 
 type StoreOption<S, M> = {
-  state: S;
+  state: () => S;
   mutation: M;
 } & ThisType<S & M>;
 
 export function createStore<S extends State, M extends Mutation>
   (storeOptions: StoreOption<S, M>) {
-  // const computedState = Object.entries(storeOptions.state).reduce((acc, [k, v]) => {
-  //   return {
-  //     ...acc,
-  //     [k]: () => v,
-  //   };
-  // }, {});
+  const state = storeOptions.state();
+
+  const computed = Object.keys(state).reduce((acc, k) => {
+    return {
+      ...acc,
+      [k]: () => state[k],
+    };
+  }, {} as { [K in keyof S]: () => S[K] });
 
   return {
-    state: storeOptions.state,
+    state: computed,
     mutation: {
       ...storeOptions.mutation,
     },
@@ -25,14 +27,16 @@ export function createStore<S extends State, M extends Mutation>
 }
 
 export const counterStore = createStore({
-  state: {
-    globalState: 9999,
-    unused: false,
+  state() {
+    return {
+      globalState: 9999,
+    };
   },
 
   mutation: {
     trigger() {
       this.globalState += 1;
+      console.log(this);
     },
   },
 });

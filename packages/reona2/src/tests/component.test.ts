@@ -1,39 +1,5 @@
 import { vi, describe, expect, test } from "vitest";
-import { component } from "../core/component";
-import { html } from "../core/html";
-
-const counter = component({
-  data() {
-    return {
-      price: 5,
-      quantity: 2,
-    };
-  },
-
-  watch: {
-    price(current, prev) {
-      console.log(current, prev);
-    },
-
-    quantity(current, prev) {
-      console.log(current, prev);
-    },
-  },
-
-  methods: {
-    increase() {
-      this.quantity += 2;
-    },
-
-    decrease() {
-      this.quantity -= 2;
-    },
-  },
-
-  template() {
-    return html``;
-  },
-});
+import counter from "../../../../fixture/counter";
 
 describe("컴포넌트 테스트", () => {
   test("data 변경 시 값의 변경과 watch 콜백을 호출하여야 한다.", () => {

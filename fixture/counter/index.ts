@@ -1,9 +1,8 @@
-import { html } from "../core/html";
-import { component, createComponent } from "../core/component";
-import Timer from "./timer";
+import { html } from "../../packages/reona2/src/core/html";
+import { component } from "../../packages/reona2/src/core/component";
 
 export default component<
-  { foo: number },
+  {},
   { price: number; quantity: number },
   { increase: () => void; decrease: () => void },
   { double: number; }
@@ -51,34 +50,16 @@ export default component<
     },
   },
 
-  template(props) {
+  template() {
     return html`
       <div id="app">
         <button type="button" @click=${this.increase}>증가</button>
         <button type="button" @click=${this.decrease}>감소</button>
-        <ul data-testid="${'list'}">
-          ${[1,2,3].map((item) => html`<li>아이템: ${item}</li>`)}
-        </ul>
         <section>
-          <div>props: ${props?.foo} ${props?.foo} ${props?.foo}</div>
           <div>가격: ${this.price}</div>
           <div>수량: ${this.quantity}</div>
           <div>합산: ${this.quantity * this.price}</div>
           <div>더블: ${this.double}</div>
-          ${createComponent(
-            Timer, {
-              props: {
-                quantity: this.quantity
-              },
-            },
-          )}
-          ${createComponent(
-            Timer, {
-              props: {
-                quantity: 12345,
-              },
-            },
-          )}
         </section>
       </div>
     `;

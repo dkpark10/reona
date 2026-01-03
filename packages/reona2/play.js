@@ -1,5 +1,17 @@
-// 싱글톤
-// 클로저
-// 모듈 스코프
-// 외부 store map...
-// 모든 것을 다 사용해보자...
+const counterStore = {
+  state: {
+    globalState: 9999,
+  },
+
+  mutation: {
+    trigger() {
+      this.globalState += 1;
+    },
+  },
+};
+
+counterStore.mutation.trigger();
+counterStore.mutation.trigger();
+counterStore.mutation.trigger();
+counterStore.mutation.trigger();
+counterStore.mutation.trigger();

@@ -26,17 +26,16 @@ export function getInstanceMap() {
   return instanceMap;
 }
 
+interface CreateComponentOption<P> {
+  key?: string | number;
+  props?: P;
+}
+
 export function createComponent<P extends Props>(
-  getInstance: () => any, {
-    props,
-    key: defaultKey = "__reona_key__",
-  }: {
-    key?: string | number;
-    props?: P;
-  }) {
+  getInstance: () => any, options?: CreateComponentOption<P>) {
   /** @description 컴포넌트의 depth */
   const func = function getFiber(depth: number) {
-    const key = `${depth}${defaultKey}`;
+    const key = `${depth}${options?.key || '__reona_key__'}`;
 
     let fiber: Fiber | undefined = instanceMap.get(key);
     if (!fiber) {
@@ -46,8 +45,8 @@ export function createComponent<P extends Props>(
       instanceMap.set(key, fiber);
     }
 
-    if (props) {
-      fiber.instance.$props = props;
+    if (options && options.props) {
+      fiber.instance.$props = options.props;
     }
 
     fiber.instance.$componentKey = key;
