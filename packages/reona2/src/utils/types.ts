@@ -2,8 +2,8 @@ export type Primitive = number | string | boolean | undefined | symbol | bigint;
 
 export type Props = Record<string, any>;
 export type Data = Record<string, any>;
-export type Methods = Record<string, () => void>;
-export type Computed = any;
+export type Methods = Record<string, (...args: any[]) => any>;
+export type Computed = Record<string, any>;
 export type ComponentKey = string;
 
 export type RenderResult = {
@@ -11,8 +11,8 @@ export type RenderResult = {
   values: any[];
 };
 
-export type ComponentOptions<Props, D = Data, M = Methods, C = Computed> = {
-  template($props?: Props): RenderResult;
+export type ComponentOptions<P = Props, D = Data, M = Methods, C = Computed> = {
+  template($props?: P): RenderResult;
 
   data?: () => D;
 
@@ -39,7 +39,7 @@ export type ComponentInstance<
 > = ComponentOptions<P, D, M, C> & {
   state: D;
 
-  $props: Props;
+  $props: P;
 
   $componentKey: ComponentKey;
 };
