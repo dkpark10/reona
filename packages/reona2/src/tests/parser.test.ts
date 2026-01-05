@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { html } from "../core//html";
 import Parser from "../core/parser";
 import Fiber from "../core/fiber";
-import { component, createComponent } from "../core/component";
+import { html, component, createComponent } from "../core/component";
 
 describe("파서 테스트", () => {
   test("vdom 생성값을 테스트 한다.", () => {

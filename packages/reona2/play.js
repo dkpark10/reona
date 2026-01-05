@@ -1,13 +1,16 @@
-const p = new Proxy({ a : 12 }, {
+const p = new Proxy({ a: 12 }, {
   get(target, key, receiver) {
-    return target[key];
+    if (key === 'foo') {
+      return 123;
+    }
+    return Reflect.get(target, key, receiver);
   },
 
   set(target, key, value, receiver) {
-    target[key] = value;
-    return true; 
+    const result = Reflect.set(target, key, value, receiver);
+    return result;
   },
 })
 
-p.a;
-p.a = 123;
+console.log(p.foo);
+console.log(p.sadkjas);

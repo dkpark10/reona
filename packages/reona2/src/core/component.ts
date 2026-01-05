@@ -6,11 +6,23 @@ import type {
   Methods,
   ComponentOptions,
   ComponentInstance,
-  Computed
+  Computed,
+  RenderResult,
 } from "../utils/types";
 import Fiber from "./fiber";
 
 type MapKey = ComponentKey;
+
+export function html(
+  strings: TemplateStringsArray,
+  ...values: any[]
+): RenderResult {
+  let idx = 0;
+  const rawString = strings
+    .join("%%identifier%%")
+    .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
+  return { template: rawString, values };
+}
 
 /** @description 전역 컴포넌트 관리 map */
 let instanceMap: Map<MapKey, Fiber>;
@@ -22,7 +34,7 @@ if (__DEV__ || __TEST__) {
   instanceMap = new WeakMap<MapKey, Fiber>();
 }
 
-export function getInstanceMap() {
+function getInstanceMap() {
   return instanceMap;
 }
 
@@ -92,7 +104,7 @@ export function component<
       set(target, key, value, receiver) {
         $prevData = Reflect.get(receiver, key);
 
-        Reflect.set(target, key, value, receiver);
+        const result = Reflect.set(target, key, value, receiver);
         if (!__TEST__ && !instance.$componentKey) {
           throw new Error('고유 키가 없습니다.');
         }
@@ -102,7 +114,7 @@ export function component<
         if ($prevData !== value) {
           instance.watch?.[key as string]?.(value, $prevData);
         }
-        return true;
+        return result;
       },
     });
 

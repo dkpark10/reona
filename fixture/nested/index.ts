@@ -1,5 +1,4 @@
-import { html } from "../../packages/reona2/src/core/html";
-import { component, createComponent } from "../../packages/reona2/src/core/component";
+import { html, component, createComponent } from "../../packages/reona2/src/core/component";
 import timer from "./timer";
 
 export default component<

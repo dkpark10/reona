@@ -1,13 +1,10 @@
-import { html } from "../../packages/reona2/src/core/html";
-import { component } from "../../packages/reona2/src/core/component";
+import { html, component } from "../../packages/reona2/src/core/component";
 import { counterStore } from "../../packages/reona2/src/core/store";
-
-type Method = typeof counterStore.mutation;
 
 export default component<
   {},
   { value: number; },
-  { trigger2: () => void; } & Method,
+  { trigger: () => void; trigger2: () => void; },
   { globalState: number; double: number; }
 >({
   name: "child1",
@@ -19,7 +16,9 @@ export default component<
   },
 
   computed: {
-    ...counterStore.state,
+    globalState() {
+      return counterStore.state.globalState;
+    },
 
     double() {
       return this.value * 2;
@@ -28,6 +27,9 @@ export default component<
 
   methods: {
     ...counterStore.mutation,
+    // trigger() {
+    //   counterStore.mutation.trigger();
+    // },
 
     trigger2() {
       this.value += 1;
@@ -37,9 +39,9 @@ export default component<
   template() {
     return html`
       <div>
-        <button type="button" @click=${this.trigger}>trigger</button>
+        <button type="button" @click=${this.trigger}>trigger1</button>
         <button type="button" @click=${this.trigger2}>trigger2</button>
-        <div>${this.globalState}</div>
+        <div>store: ${this.globalState}</div>
         <div>data computed: ${this.double}</div>
       </div>
     `;

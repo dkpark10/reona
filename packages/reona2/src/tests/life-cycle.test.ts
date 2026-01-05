@@ -1,6 +1,5 @@
 import { vi, describe, expect, test, beforeEach, afterEach } from "vitest";
-import { component } from "../core/component";
-import { html } from "../core/html";
+import { html, component } from "../core/component";
 import { rootRender } from "../core/renderer";
 
 beforeEach(() => {

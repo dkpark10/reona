@@ -1,3 +1,5 @@
+// import { Observable } from "../../../shared";
+
 type State = Record<string, any>;
 
 type Mutation = Record<string, (...args: any[]) => any>;
@@ -7,23 +9,38 @@ type StoreOption<S, M> = {
   mutation: M;
 } & ThisType<S & M>;
 
-export function createStore<S extends State, M extends Mutation>
-  (storeOptions: StoreOption<S, M>) {
-  const state = storeOptions.state();
+export function createStore<S extends State, M extends Mutation>(
+  storeOptions: StoreOption<S, M>
+) {
+  const rawState = storeOptions.state();
 
-  const computed = Object.keys(state).reduce((acc, k) => {
-    return {
-      ...acc,
-      [k]: () => state[k],
-    };
-  }, {} as { [K in keyof S]: () => S[K] });
+  const listeners = new Set<() => void>();
+
+  const proxyState = new Proxy(rawState, {
+    get(target, key, receiver) {
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      const result = Reflect.set(target, key, value, receiver);
+      listeners.forEach(fn => fn());
+      return result;
+    },
+  });
+
+  const bindMutation = {} as M;
+  for (const k in storeOptions.mutation) {
+    // @ts-ignore
+    bindMutation[k] = storeOptions.mutation[k].bind(proxyState);
+  }
 
   return {
-    state: computed,
-    mutation: {
-      ...storeOptions.mutation,
+    state: proxyState,
+    mutation: bindMutation,
+    subscribe(fn: () => void) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
     },
-  }
+  };
 }
 
 export const counterStore = createStore({
