@@ -19,7 +19,7 @@ export default component<
 
   template() {
     return html`
-      <div>store: ${this.globalState}</div>
+      <div data-testid="store2">${this.globalState}</div>
     `;
   },
 });

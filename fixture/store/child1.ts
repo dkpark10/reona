@@ -43,9 +43,9 @@ export default component<
   template() {
     return html`
       <div>
-        <button type="button" @click=${this.trigger}>trigger1</button>
+        <button type="button" data-testid="trigger" @click=${this.trigger}>trigger1</button>
         <button type="button" @click=${this.trigger2}>trigger2</button>
-        <div>store: ${this.globalState}</div>
+        <div data-testid="store1">${this.globalState}</div>
         <div>data computed: ${this.double}</div>
       </div>
     `;
