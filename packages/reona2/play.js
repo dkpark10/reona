@@ -1,17 +1,13 @@
-const counterStore = {
-  state: {
-    globalState: 9999,
+const p = new Proxy({ a : 12 }, {
+  get(target, key, receiver) {
+    return target[key];
   },
 
-  mutation: {
-    trigger() {
-      this.globalState += 1;
-    },
+  set(target, key, value, receiver) {
+    target[key] = value;
+    return true; 
   },
-};
+})
 
-counterStore.mutation.trigger();
-counterStore.mutation.trigger();
-counterStore.mutation.trigger();
-counterStore.mutation.trigger();
-counterStore.mutation.trigger();
+p.a;
+p.a = 123;

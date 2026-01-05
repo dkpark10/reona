@@ -36,7 +36,6 @@ export const counterStore = createStore({
   mutation: {
     trigger() {
       this.globalState += 1;
-      console.log(this);
     },
   },
 });

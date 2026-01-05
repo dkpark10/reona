@@ -6,7 +6,7 @@ type Method = typeof counterStore.mutation;
 
 export default component<
   {},
-  {},
+  { value: number; },
   { trigger2: () => void; } & Method,
   { globalState: number; double: number; }
 >({
@@ -40,7 +40,7 @@ export default component<
         <button type="button" @click=${this.trigger}>trigger</button>
         <button type="button" @click=${this.trigger2}>trigger2</button>
         <div>${this.globalState}</div>
-        <div>기존 data computed: ${this.double}</div>
+        <div>data computed: ${this.double}</div>
       </div>
     `;
   },

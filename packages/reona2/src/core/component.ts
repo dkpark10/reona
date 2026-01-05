@@ -73,32 +73,26 @@ export function component<
     let $props: P | undefined = undefined;
     let $prevData: D[keyof D];
 
-    const computedData = {};
-    for (const key in options.computed) {
-      const v = options.computed[key].call(raw);
-      Object.assign(computedData, { [options.computed[key].name]: v });
-    }
-
-    const proxiedState = new Proxy(Object.assign(raw || {}, computedData), {
-      get(target, key) {
-        if (Object.prototype.hasOwnProperty.call(target, key)) {
-
-          // computed 값
-          if (options.computed && Object.prototype.hasOwnProperty.call(options.computed, key)) {
-            return options.computed?.[key as string].call(target);
-          }
-          return Reflect.get(target, key);
+    const proxiedState = new Proxy(raw || {}, {
+      get(target, key, receiver) {
+        // computed 값
+        if (options.computed && Object.prototype.hasOwnProperty.call(options.computed, key)) {
+          return options.computed?.[key as string].call(receiver);
         }
 
-        if (Object.prototype.hasOwnProperty.call(boundMethods, key)) {
-          return boundMethods[key as string];
+        if (Object.prototype.hasOwnProperty.call(target, key)) {
+          return Reflect.get(target, key, receiver);
+        }
+
+        if (Object.prototype.hasOwnProperty.call(binddMethods, key)) {
+          return binddMethods[key as string];
         }
       },
 
-      set(target, key, value) {
-        $prevData = Reflect.get(target, key);
+      set(target, key, value, receiver) {
+        $prevData = Reflect.get(receiver, key);
 
-        Reflect.set(target, key, value);
+        Reflect.set(target, key, value, receiver);
         if (!__TEST__ && !instance.$componentKey) {
           throw new Error('고유 키가 없습니다.');
         }
@@ -112,29 +106,29 @@ export function component<
       },
     });
 
-    const boundMethods: M = {} as M;
+    const binddMethods: M = {} as M;
     for (const key in options.methods) {
       //@ts-ignore
-      boundMethods[key] = options.methods[key].bind(proxiedState);
+      binddMethods[key] = options.methods[key].bind(proxiedState);
     }
 
     const NOT_PRODUCTION = __DEV__ || __TEST__;
 
     const instance = {
       ...options,
-      ...boundMethods,
+      ...binddMethods,
       // ...(NOT_PRODUCTION && boundMethods),
       template: function () {
         return options.template.call(proxiedState, instance.$props);
       },
       ...(NOT_PRODUCTION && { state: proxiedState as D }),
-      mounted() {
+      mounted: function () {
         return options.mounted?.call(proxiedState);
       },
-      unMounted() {
+      unMounted: function () {
         return options.unMounted?.call(proxiedState);
       },
-      updated() {
+      updated: function () {
         return options.updated?.call(proxiedState);
       },
       $componentKey,
