@@ -20,9 +20,12 @@ export function createStore<S extends State, M extends Mutation>(
     get(target, key, receiver) {
       return Reflect.get(target, key, receiver);
     },
+
     set(target, key, value, receiver) {
       const result = Reflect.set(target, key, value, receiver);
-      listeners.forEach(fn => fn());
+      listeners.forEach(function(fn) {
+        fn();
+      });
       return result;
     },
   });
@@ -37,8 +40,11 @@ export function createStore<S extends State, M extends Mutation>(
     state: proxyState,
     mutation: bindMutation,
     subscribe(fn: () => void) {
+      // fiber.rerender 함수를 받아야 한다.
       listeners.add(fn);
-      return () => listeners.delete(fn);
+      return function() {
+        listeners.delete(fn);
+      };
     },
   };
 }

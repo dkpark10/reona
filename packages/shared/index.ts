@@ -79,7 +79,6 @@ export function isPrimitive(value: unknown) {
 }
 
 type Observer<T> = (value: T) => void;
-
 export class Observable<T> {
   private observers = new Set<Observer<T>>();
 
@@ -101,17 +100,3 @@ export class Observable<T> {
     this.observers.clear();
   }
 }
-
-// const state$ = new Observable<number>();
-// const unsub1 = state$.subscribe((v) => {
-//   console.log('observer 1:', v);
-// });
-// const unsub2 = state$.subscribe((v) => {
-//   console.log('observer 2:', v);
-// });
-// state$.notify(1);
-// // observer 1: 1
-// // observer 2: 1
-// unsub1();
-// state$.notify(2);
-// // observer 2: 2

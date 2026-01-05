@@ -15,6 +15,9 @@ export default component<
     };
   },
 
+  // todo connect 없이 내부 추상화...
+  connect: counterStore.subscribe,
+
   computed: {
     globalState() {
       return counterStore.state.globalState;
@@ -26,10 +29,9 @@ export default component<
   },
 
   methods: {
-    ...counterStore.mutation,
-    // trigger() {
-    //   counterStore.mutation.trigger();
-    // },
+    trigger() {
+      counterStore.mutation.trigger();
+    },
 
     trigger2() {
       this.value += 1;

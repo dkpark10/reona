@@ -76,18 +76,28 @@ export function component<
 >(options: ComponentOptions<P, D, M, C>) {
   return function getComponent() {
     // data 함수에서 내부 메소드 사용에 따른 call 호출
-    const raw = options.data?.call(options.methods);
+    const raw = options.data?.call(options.methods) || {};
     if (raw && isPrimitive(raw)) {
       throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
     }
 
     let $componentKey: ComponentKey = '';
     let $props: P | undefined = undefined;
-    let $prevData: D[keyof D];
 
-    const proxiedState = new Proxy(raw || {}, {
+    function rerRender() {
+      const fiber = getInstanceMap().get(instance.$componentKey);
+      fiber?.rerender();
+    };
+
+    if (typeof options.connect === 'function') {
+      const unsubscribe = options.connect(rerRender);
+      // todo unmount 호출 시 
+      unsubscribe;
+    }
+
+    const proxiedState = new Proxy(raw as D, {
       get(target, key, receiver) {
-        // computed 값
+        // computed 값 todo cache
         if (options.computed && Object.prototype.hasOwnProperty.call(options.computed, key)) {
           return options.computed?.[key as string].call(receiver);
         }
@@ -102,16 +112,15 @@ export function component<
       },
 
       set(target, key, value, receiver) {
-        $prevData = Reflect.get(receiver, key);
+        const $prevData: D[keyof D] = Reflect.get(receiver, key);
 
         const result = Reflect.set(target, key, value, receiver);
         if (!__TEST__ && !instance.$componentKey) {
           throw new Error('고유 키가 없습니다.');
         }
-        const fiber = getInstanceMap().get(instance.$componentKey);
-        fiber?.rerender();
 
         if ($prevData !== value) {
+          rerRender();
           instance.watch?.[key as string]?.(value, $prevData);
         }
         return result;
@@ -119,10 +128,10 @@ export function component<
     });
 
     const binddMethods: M = {} as M;
-    for (const key in options.methods) {
+    Object.keys(options.methods || {}).forEach((key) => {
       //@ts-ignore
       binddMethods[key] = options.methods[key].bind(proxiedState);
-    }
+    });
 
     const NOT_PRODUCTION = __DEV__ || __TEST__;
 

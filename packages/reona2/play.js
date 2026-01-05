@@ -1,16 +1,31 @@
-const p = new Proxy({ a: 12 }, {
-  get(target, key, receiver) {
-    if (key === 'foo') {
-      return 123;
-    }
-    return Reflect.get(target, key, receiver);
-  },
+class Observable {
+  observers = new Set();
 
-  set(target, key, value, receiver) {
-    const result = Reflect.set(target, key, value, receiver);
-    return result;
-  },
-})
+  subscribe(fn) {
+    this.observers.add(fn);
 
-console.log(p.foo);
-console.log(p.sadkjas);
+    return () => {
+      this.observers.delete(fn);
+    };
+  }
+
+  notify(value) {
+    this.observers.forEach(function (fn) {
+      fn(value);
+    });
+  }
+
+  clear() {
+    this.observers.clear();
+  }
+}
+
+const computed = {
+  value() {
+    return 123;
+  },
+};
+
+function createComputed(computed) {
+  
+}
