@@ -1,7 +1,6 @@
 import type { Props, Data, Methods, ComponentInstance } from "../utils/types";
 import Parser, { type VNode } from "./parser";
 import { createDOM } from "./renderer";
-import { setCurrentFiber } from "./context";
 
 type FiberOption = {
   key: string | number;

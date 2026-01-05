@@ -9,7 +9,7 @@ export default component<
 >({
   name: "child2",
 
-  connect: counterStore.subscribe,
+  connect: [counterStore.subscribe],
 
   computed: {
     globalState() {

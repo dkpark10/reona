@@ -82,10 +82,11 @@ export function component<
       fiber?.rerender();
     };
 
-    if (typeof options.connect === 'function') {
-      const unsubscribe = options.connect(rerRender);
-      // todo unmount 호출 시 
-      unsubscribe;
+    if (options.connect) {
+      const unsubscribes = options.connect.map((subscribe) =>
+        subscribe(rerRender)
+      );
+      unsubscribes;
     }
 
     const proxiedState = new Proxy(raw as D, {

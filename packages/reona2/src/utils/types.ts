@@ -28,7 +28,7 @@ export type ComponentOptions<P = Props, D = Data, M = Methods, C = Computed> = {
 
   computed?: Record<string, () => any>;
 
-  connect?: (fn: () => void) => () => void;
+  connect?: ((fn: () => void) => () => void)[];
 
   watch?: Record<string, (current: D[keyof D], prev: D[keyof D]) => void>;
 } & ThisType<Props & D & M & C>;
