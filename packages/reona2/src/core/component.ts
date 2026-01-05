@@ -25,14 +25,7 @@ export function html(
 }
 
 /** @description 전역 컴포넌트 관리 map */
-let instanceMap: Map<MapKey, Fiber>;
-
-if (__DEV__ || __TEST__) {
-  instanceMap = new Map<MapKey, Fiber>();
-} else {
-  // @ts-ignore
-  instanceMap = new WeakMap<MapKey, Fiber>();
-}
+const instanceMap = new Map<MapKey, Fiber>();
 
 function getInstanceMap() {
   return instanceMap;
