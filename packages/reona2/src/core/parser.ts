@@ -1,4 +1,4 @@
-import type { RenderResult, Props, ComponentKey } from "../utils/types";
+import type { RenderResult, Props } from "../utils/types";
 import Fiber from "./fiber";
 import { isEmpty } from "../../../shared";
 import { isRenderResultObject } from "../utils";
@@ -29,9 +29,7 @@ export default class Parser {
 
   private valueIndex = 0;
   
-  public depth: number | undefined;
-  
-  public currentRenderedInstances = new Set<ComponentKey>();
+  private depth: number | undefined;
   
   constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
@@ -115,8 +113,6 @@ export default class Parser {
           if (typeof value === 'function' && value.__isCreateComponent) {
             const getFiber = value as (depth: number) => Fiber;
             const fiber = getFiber(this.depth!);
-
-            this.currentRenderedInstances.add(fiber.instance.$componentKey);
 
             this.depth!++;
             this.valueIndex++;

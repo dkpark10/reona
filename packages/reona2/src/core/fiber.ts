@@ -5,14 +5,14 @@ import { getDepth } from "../../../shared";
 import { instanceMap } from "./instances";
 
 type FiberOption = {
-  key: string | number;
+  key: ComponentKey;
 }
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
 export default class Fiber {
   public instance: ComponentInstance<Props, Data, Methods>;
 
-  public key: FiberOption['key'];
+  public key: ComponentKey;
 
   public mounted = false;
 
@@ -60,11 +60,12 @@ export default class Fiber {
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();
 
-    this.unmount(parser.currentRenderedInstances, depth, parser.depth || depth);
+    this.ummount();
 
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
 
+    this.prevVnodeTree = this.nextVnodeTree;
     this.prevDom = this.nextDom;
 
     queueMicrotask(() => {
@@ -72,24 +73,45 @@ export default class Fiber {
     });
   }
 
-  public unmount(currentRenderedInstances: Set<ComponentKey>, begin: number, end: number) {
-    for (const [key, fiber] of instanceMap) {
-      const depth = getDepth(key);
+  // todo 최적화 방법??
+  private ummount() {
+    const prevFibers = this.collectFibers(this.prevVnodeTree);
+    const nextFibers = this.collectFibers(this.nextVnodeTree);
 
-      // 루트는 제외
-      if (depth === 0) {
-        continue;
-      }
+    const unmountFibers: Fiber[] = [];
 
-      if (depth < begin || end > depth) {
-        continue;
-      }
-
-      if (!currentRenderedInstances?.has(key)) {
-        fiber.instance.unMounted?.();
-        instanceMap.delete(key);
+    for (const fiber of prevFibers) {
+      if (!nextFibers.has(fiber)) {
+        unmountFibers.push(fiber);
       }
     }
+
+    for (const fiber of unmountFibers) {
+      fiber.instance.unMounted?.();
+      instanceMap.delete(fiber.key);
+    }
+  }
+
+  private collectFibers(
+    vnode: VNode | undefined,
+    set: Set<Fiber> = new Set()
+  ): Set<Fiber> {
+    if (!vnode) return set;
+
+    switch (vnode.type) {
+      case 'component':
+        set.add(vnode.fiber);
+        break;
+
+      case 'element':
+        vnode.children.forEach((child) => this.collectFibers(child, set));
+        break;
+
+      case 'text':
+        break;
+    }
+
+    return set;
   }
 
   /**
