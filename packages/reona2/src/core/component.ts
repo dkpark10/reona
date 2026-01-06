@@ -10,8 +10,7 @@ import type {
   RenderResult,
 } from "../utils/types";
 import Fiber from "./fiber";
-
-type MapKey = ComponentKey;
+import { instanceMap } from "./instances";
 
 export function html(
   strings: TemplateStringsArray,
@@ -22,13 +21,6 @@ export function html(
     .join("%%identifier%%")
     .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
   return { template: rawString, values };
-}
-
-/** @description 전역 컴포넌트 관리 map */
-const instanceMap = new Map<MapKey, Fiber>();
-
-function getInstanceMap() {
-  return instanceMap;
 }
 
 interface CreateComponentOption<P> {
@@ -78,8 +70,8 @@ export function component<
     let $props: P | undefined = undefined;
 
     function rerRender() {
-      const fiber = getInstanceMap().get(instance.$componentKey);
-      fiber?.rerender();
+      const fiber = instanceMap.get(instance.$componentKey);
+      fiber?.reRender();
     };
 
     if (options.connect) {

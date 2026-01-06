@@ -1,33 +1,21 @@
 export class Queue<T> {
-  private items: { [key: number]: T } = {};
+  private arr: T[] = [];
   private head = 0;
-  private tail = 0;
 
-  enqueue(item: T): void {
-    this.items[this.tail] = item;
-    this.tail++;
+  public enqueue(v: T) {
+    this.arr.push(v);
   }
 
-  dequeue(): T | undefined {
-    if (this.isEmpty()) return undefined;
-    const item = this.items[this.head];
-    delete this.items[this.head];
-    this.head++;
-    return item;
+  public dequeue() {
+    if (this.head >= this.arr.length) return undefined;
+    return this.arr[this.head++];
   }
 
-  peek(): T | undefined {
-    return this.items[this.head];
-  }
-
-  isEmpty(): boolean {
-    return this.head === this.tail;
-  }
-
-  size(): number {
-    return this.tail - this.head;
+  get size() {
+    return this.arr.length - this.head;
   }
 }
+
 
 export class Stack<T> {
   private items: T[] = [];
@@ -99,4 +87,9 @@ export class Observable<T> {
   clear() {
     this.observers.clear();
   }
+}
+
+// ex) 0__reona_key__
+export function getDepth(key: string) {
+  return Number(key.match(/^\d+/)![0]);
 }

@@ -1,4 +1,4 @@
-import type { RenderResult, Props } from "../utils/types";
+import type { RenderResult, Props, ComponentKey } from "../utils/types";
 import Fiber from "./fiber";
 import { isEmpty } from "../../../shared";
 import { isRenderResultObject } from "../utils";
@@ -31,10 +31,11 @@ export default class Parser {
   
   private depth: number | undefined;
   
+  public currentRenderedInstamces = new Set<ComponentKey>();
+  
   constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
     this.depth = depth;
-    return this;
   }
 
   public parse(): VNode {
@@ -110,21 +111,13 @@ export default class Parser {
           const { values } = this.renderResult;
           const value = values[this.valueIndex];
 
-          // fiber 인스턴스라면
-          // if (value instanceof Fiber) {
-          //   const fiber: Fiber = value;
-          //   this.valueIndex++;
-
-          //   return {
-          //     type: 'component',
-          //     fiber,
-          //   };
-          // }
-
           // createComponent 반환 함수일 시
           if (typeof value === 'function' && value.__isCreateComponent) {
             const getFiber = value as (depth: number) => Fiber;
             const fiber = getFiber(this.depth!);
+
+            this.currentRenderedInstamces.add(fiber.instance.$componentKey);
+
             this.depth!++;
             this.valueIndex++;
 
@@ -132,10 +125,6 @@ export default class Parser {
               type: 'component',
               fiber,
             };
-
-            const instance = fiber.instance;
-            const vdom = new Parser(instance.template(), this.depth! + 1).parse();
-            return vdom;
           }
 
           // 배열이 들어 왔다면

@@ -1,6 +1,8 @@
-import type { Props, Data, Methods, ComponentInstance } from "../utils/types";
+import type { Props, Data, Methods, ComponentInstance, ComponentKey } from "../utils/types";
 import Parser, { type VNode } from "./parser";
 import { createDOM } from "./renderer";
+import { getDepth } from "../../../shared";
+import { instanceMap } from "./instances";
 
 type FiberOption = {
   key: string | number;
@@ -9,8 +11,10 @@ type FiberOption = {
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
 export default class Fiber {
   public instance: ComponentInstance<Props, Data, Methods>;
-  
+
   public key: FiberOption['key'];
+
+  public mounted = false;
 
   private parentElement: Element;
 
@@ -22,8 +26,6 @@ export default class Fiber {
 
   private nextDom: HTMLElement;
 
-  private mounted = false;
-
   constructor(instance: ComponentInstance<Props, Data, Methods>, options: FiberOption) {
     this.instance = instance;
     this.key = options.key;
@@ -33,15 +35,16 @@ export default class Fiber {
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    const depth = Number(this.instance.$componentKey.match(/^\d+/)![0]);
+    const depth = getDepth(this.instance.$componentKey);
 
-    this.prevVnodeTree = new Parser(template, depth + 1).parse();
+    const parser = new Parser(template, depth + 1);
+    this.prevVnodeTree = parser.parse();
     this.parentElement = parentElement;
 
     this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
     this.parentElement.insertBefore(this.prevDom, null);
 
-    // queueMicrotask 대체 방법???
+    // todo queueMicrotask 대체 방법???
     queueMicrotask(() => {
       if (!this.mounted) {
         this.instance.mounted?.();
@@ -50,11 +53,14 @@ export default class Fiber {
     });
   }
 
-  public rerender() {
+  public reRender() {
     const template = this.instance.template();
-    const depth = Number(this.instance.$componentKey.match(/^\d+/)![0]);
+    const depth = getDepth(this.instance.$componentKey);
 
-    this.nextVnodeTree = new Parser(template, depth + 1).parse();
+    const parser = new Parser(template, depth + 1);
+    this.nextVnodeTree = parser.parse();
+
+    this.unmount(parser.currentRenderedInstamces);
 
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
@@ -64,6 +70,15 @@ export default class Fiber {
     queueMicrotask(() => {
       this.instance.updated?.();
     });
+  }
+
+  public unmount(currentRenderedInstamces: Set<ComponentKey>) {
+    for (const [key, fiber] of instanceMap) {
+      if (!currentRenderedInstamces?.has(key) && getDepth(key) !== 0) {
+        fiber.instance.unMounted?.();
+        instanceMap.delete(key);
+      }
+    }
   }
 
   /**
