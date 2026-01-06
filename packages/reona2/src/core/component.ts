@@ -1,4 +1,4 @@
-import { isPrimitive } from "../../../shared";
+import { isPrimitive, createKey } from "../../../shared";
 import type {
   ComponentKey,
   Props,
@@ -32,7 +32,7 @@ export function createComponent<P extends Props>(
   getInstance: () => any, options?: CreateComponentOption<P>) {
   /** @description 컴포넌트의 depth */
   const func = function getFiber(depth: number) {
-    const key = `${depth}${options?.key || '__reona_key__'}`;
+    const key = createKey(depth, options?.key);
 
     let fiber: Fiber | undefined = instanceMap.get(key);
     if (!fiber) {

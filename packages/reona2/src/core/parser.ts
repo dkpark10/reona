@@ -29,9 +29,9 @@ export default class Parser {
 
   private valueIndex = 0;
   
-  private depth: number | undefined;
+  public depth: number | undefined;
   
-  public currentRenderedInstamces = new Set<ComponentKey>();
+  public currentRenderedInstances = new Set<ComponentKey>();
   
   constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
@@ -43,7 +43,7 @@ export default class Parser {
     const template = document.createElement("template");
 
     template.innerHTML = t.trim();
-
+    
     if (template.content.childNodes.length > 1) {
       throw new Error('루트 엘리먼트는 1개여야 합니다.');
     }
@@ -116,7 +116,7 @@ export default class Parser {
             const getFiber = value as (depth: number) => Fiber;
             const fiber = getFiber(this.depth!);
 
-            this.currentRenderedInstamces.add(fiber.instance.$componentKey);
+            this.currentRenderedInstances.add(fiber.instance.$componentKey);
 
             this.depth!++;
             this.valueIndex++;

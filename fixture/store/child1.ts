@@ -16,9 +16,7 @@ export default component<
   },
 
   // todo connect 없이 내부 추상화...
-  connect: [
-    counterStore.subscribe,
-  ],
+  connect: [counterStore.subscribe],
 
   computed: {
     globalState() {

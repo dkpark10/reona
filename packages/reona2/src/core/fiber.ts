@@ -60,7 +60,7 @@ export default class Fiber {
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();
 
-    this.unmount(parser.currentRenderedInstamces);
+    this.unmount(parser.currentRenderedInstances, depth, parser.depth || depth);
 
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
@@ -72,9 +72,20 @@ export default class Fiber {
     });
   }
 
-  public unmount(currentRenderedInstamces: Set<ComponentKey>) {
+  public unmount(currentRenderedInstances: Set<ComponentKey>, begin: number, end: number) {
     for (const [key, fiber] of instanceMap) {
-      if (!currentRenderedInstamces?.has(key) && getDepth(key) !== 0) {
+      const depth = getDepth(key);
+
+      // 루트는 제외
+      if (depth === 0) {
+        continue;
+      }
+
+      if (depth < begin || end > depth) {
+        continue;
+      }
+
+      if (!currentRenderedInstances?.has(key)) {
         fiber.instance.unMounted?.();
         instanceMap.delete(key);
       }

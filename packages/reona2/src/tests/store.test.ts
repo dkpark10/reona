@@ -18,4 +18,12 @@ test("전역 스토어 값 업데이트 시 형제 컴포넌트 값도 변경되
   (document.querySelector('button[data-testid="trigger"]') as HTMLButtonElement)?.click();
   expect(document.querySelector('div[data-testid="store1"]')?.textContent).toBe('10000');
   expect(document.querySelector('div[data-testid="store2"]')?.textContent).toBe('10000');
+
+  (document.querySelector('button[data-testid="trigger"]') as HTMLButtonElement)?.click();
+  expect(document.querySelector('div[data-testid="store1"]')?.textContent).toBe('10001');
+  expect(document.querySelector('div[data-testid="store2"]')?.textContent).toBe('10001');
+
+  (document.querySelector('button[data-testid="trigger"]') as HTMLButtonElement)?.click();
+  expect(document.querySelector('div[data-testid="store1"]')?.textContent).toBe('10002');
+  expect(document.querySelector('div[data-testid="store2"]')?.textContent).toBe('10002');
 });

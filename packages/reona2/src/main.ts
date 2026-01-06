@@ -1,8 +1,10 @@
 import { rootRender } from "./core/renderer";
-import Counter from "../../../fixture/counter";
-import Store from "../../../fixture/store";
-import Nested from "../../../fixture/nested";
-import Condition from "../../../fixture/condition";
+import counter from "../../../fixture/counter";
+import store from "../../../fixture/store";
+import nested from "../../../fixture/nested";
+import condition from "../../../fixture/condition";
 
-// rootRender(document.getElementById("root")!, Counter);
-rootRender(document.getElementById("root")!, Condition);
+// rootRender(document.getElementById("root")!, counter);
+rootRender(document.getElementById("root")!, condition);
+// rootRender(document.getElementById("root")!, store);
+// rootRender(document.getElementById("root")!, nested);
