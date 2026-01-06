@@ -68,6 +68,7 @@ export function component<
 
     let $componentKey: ComponentKey = '';
     let $props: P | undefined = undefined;
+    let $unsubscribes: (() => void)[] = [];
 
     function rerRender() {
       const fiber = instanceMap.get(instance.$componentKey);
@@ -75,10 +76,9 @@ export function component<
     };
 
     if (options.connect) {
-      const unsubscribes = options.connect.map((subscribe) =>
+      $unsubscribes = options.connect.map((subscribe) =>
         subscribe(rerRender)
       );
-      unsubscribes;
     }
 
     const proxiedState = new Proxy(raw as D, {
@@ -133,6 +133,9 @@ export function component<
         return options.mounted?.call(proxiedState);
       },
       unMounted: function () {
+        $unsubscribes.forEach((unsubscribes) => {
+          unsubscribes();
+        });
         return options.unMounted?.call(proxiedState);
       },
       updated: function () {

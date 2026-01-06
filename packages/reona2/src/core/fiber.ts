@@ -73,22 +73,16 @@ export default class Fiber {
     });
   }
 
-  // todo 최적화 방법??
+  // todo 부분 최적화 방법??
   private ummount() {
     const prevFibers = this.collectFibers(this.prevVnodeTree);
     const nextFibers = this.collectFibers(this.nextVnodeTree);
 
-    const unmountFibers: Fiber[] = [];
-
     for (const fiber of prevFibers) {
       if (!nextFibers.has(fiber)) {
-        unmountFibers.push(fiber);
+        fiber.instance.unMounted?.();
+        instanceMap.delete(fiber.key);
       }
-    }
-
-    for (const fiber of unmountFibers) {
-      fiber.instance.unMounted?.();
-      instanceMap.delete(fiber.key);
     }
   }
 
@@ -97,20 +91,16 @@ export default class Fiber {
     set: Set<Fiber> = new Set()
   ): Set<Fiber> {
     if (!vnode) return set;
-
     switch (vnode.type) {
       case 'component':
         set.add(vnode.fiber);
         break;
-
       case 'element':
         vnode.children.forEach((child) => this.collectFibers(child, set));
         break;
-
       case 'text':
         break;
     }
-
     return set;
   }
 
