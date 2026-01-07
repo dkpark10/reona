@@ -34,12 +34,18 @@ export function createComponent<P extends Props>(
   const func = function getFiber(depth: number) {
     const key = createKey(depth, options?.key);
 
-    let fiber: Fiber | undefined = instanceMap.get(key);
+    let instanceDeps = instanceMap.get(getInstance);
+    if (!instanceDeps) {
+      instanceDeps = new Map();
+    }
+
+    let fiber: Fiber | undefined = instanceDeps.get(key);
     if (!fiber) {
       const instance = getInstance() as ComponentInstance<P, Data, Methods>;
       // @ts-ignore
       fiber = new Fiber(instance, { key });
-      instanceMap.set(key, fiber);
+      instanceDeps.set(key, fiber);
+      instanceMap.set(getInstance, instanceDeps);
     }
 
     if (options && options.props) {
@@ -59,12 +65,16 @@ export function component<
   M extends Methods = Methods,
   C extends Computed = Computed
 >(options: ComponentOptions<P, D, M, C>) {
-  return function () {
-    return getComponent(options);
+  const func = function () {
+    Object.assign(options, {
+      fiberKey: func,
+    })
+    return getInstance(options);
   }
+  return func;
 }
 
-function getComponent<
+function getInstance<
   P extends Props = Props,
   D extends Data = Data,
   M extends Methods = Methods,
@@ -79,10 +89,14 @@ function getComponent<
   let $componentKey: ComponentKey = '';
   let $props: P | undefined = undefined;
   let $unsubscribes: (() => void)[] = [];
+  // @ts-ignore
+  let $fiberKey = options.fiberKey;
 
   function rerRender() {
-    const fiber = instanceMap.get(instance.$componentKey);
-    fiber?.reRender();
+    if ($fiberKey) {
+      const fiber = instanceMap.get($fiberKey)?.get(instance.$componentKey);
+      fiber?.reRender();
+    }
   };
 
   if (options.connect) {
@@ -153,6 +167,7 @@ function getComponent<
     },
     $componentKey,
     $props,
+    $fiberKey,
   };
   return instance;
 }

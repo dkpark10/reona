@@ -7,8 +7,6 @@ export default component<
   { value: number; },
   { trigger: () => void; }
 >({
-  name: "condition",
-
   data() {
     return {
       value: 0,

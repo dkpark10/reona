@@ -10,7 +10,7 @@ type FiberOption = {
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
 export default class Fiber {
-  public instance: ComponentInstance<Props, Data, Methods>;
+  public instance: ComponentInstance<Props, Data, Methods, any>;
 
   public key: ComponentKey;
 
@@ -81,7 +81,8 @@ export default class Fiber {
     for (const fiber of prevFibers) {
       if (!nextFibers.has(fiber)) {
         fiber.instance.unMounted?.();
-        instanceMap.delete(fiber.key);
+        const fiberKey = fiber.instance.$fiberKey;
+        instanceMap.get(fiberKey)?.delete(fiber.instance.$componentKey);
       }
     }
   }

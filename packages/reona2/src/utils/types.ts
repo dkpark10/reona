@@ -44,4 +44,6 @@ export type ComponentInstance<
   $props: P;
 
   $componentKey: ComponentKey;
+  
+  $fiberKey: Function;
 };
