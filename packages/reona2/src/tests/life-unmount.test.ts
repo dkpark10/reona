@@ -9,15 +9,29 @@ test("unmount 훅 테스트를 한다..", async () => {
   div.id = 'root';
   document.body.appendChild(div);
 
-  const mountFn = vi.fn();
-  const unMountFn = vi.fn();
+  const mountFn1 = vi.fn();
+  const unMountFn1 = vi.fn();
+  const mountFn2 = vi.fn();
+  const unMountFn2 = vi.fn();
 
-  const child = component({
-    name: "child",
+  const child1 = component({
+    name: "child1",
 
-    mounted: mountFn,
+    mounted: mountFn1,
 
-    unMounted: unMountFn,
+    unMounted: unMountFn1,
+
+    template() {
+      return html`<div>child</div>`;
+    },
+  });
+
+  const child2 = component({
+    name: "child2",
+
+    mounted: mountFn2,
+
+    unMounted: unMountFn2,
 
     template() {
       return html`<div>child</div>`;
@@ -44,7 +58,7 @@ test("unmount 훅 테스트를 한다..", async () => {
         <div id="app">
           <button type="button" @click=${this.trigger}>trigger</button>
           <div>${this.value}</div>
-          ${this.value % 2 === 0 ? createComponent(child) : ''}
+          ${this.value % 2 === 0 ? createComponent(child1) : createComponent(child2)}
         </div>
       `;
     },
@@ -55,17 +69,20 @@ test("unmount 훅 테스트를 한다..", async () => {
 
   document.querySelector('button')?.click();
   await flushMicrotasks();
-  expect(unMountFn).toHaveBeenCalled();
+  expect(unMountFn1).toHaveBeenCalled();
+  expect(mountFn2).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
   await flushMicrotasks();
-  expect(mountFn).toHaveBeenCalled();
+  expect(unMountFn2).toHaveBeenCalled();
+  expect(mountFn1).toHaveBeenCalled();
+
+  await flushMicrotasks();
+  expect(unMountFn1).toHaveBeenCalled();
+  expect(mountFn2).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
   await flushMicrotasks();
-  expect(unMountFn).toHaveBeenCalled();
-
-  document.querySelector('button')?.click();
-  await flushMicrotasks();
-  expect(mountFn).toHaveBeenCalled();
+  expect(unMountFn2).toHaveBeenCalled();
+  expect(mountFn1).toHaveBeenCalled();
 });

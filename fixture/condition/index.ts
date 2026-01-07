@@ -26,10 +26,8 @@ export default component<
       <div id="app">
         <button type="button" @click=${this.trigger}>trigger</button>
         <div>${this.value}</div>
-        ${this.value % 2 === 0 ? createComponent(condi1) : ''}
+        ${this.value % 2 === 0 ? createComponent(condi1) : createComponent(condi2)}
       </div>
     `;
   },
 });
-
-// ${this.value % 2 === 0 ? createComponent(condi1): createComponent(condi2) }

@@ -16,7 +16,6 @@ export class Queue<T> {
   }
 }
 
-
 export class Stack<T> {
   private items: T[] = [];
 

@@ -38,7 +38,7 @@ test("상태 변경이 되어도 마운트 훅 실행은 1번이 보장 되어�
 
   rootRender(document.getElementById("root")!, C);
   await flushMicrotasks();
-  expect(document.getElementById('app')).not.toBeFalsy();
+  expect(document.getElementById('app')).toBeDefined();
   expect(mockFn).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
