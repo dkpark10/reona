@@ -60,8 +60,8 @@ describe("컴포넌트 테스트", () => {
     });
 
     rootRender(document.getElementById("root")!, parent);
-    expect(document.getElementById('props1')).toBeDefined();
-    expect(document.getElementById('props2')).toBeDefined();
-    expect(document.getElementById('props3')).toBeDefined();
+    expect(document.getElementById('props1')).toBeInTheDocument();
+    expect(document.getElementById('props2')).toBeInTheDocument();
+    expect(document.getElementById('props3')).toBeInTheDocument();
   });
 });
