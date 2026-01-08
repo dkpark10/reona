@@ -1,5 +1,5 @@
-import { component, html } from "../../packages/reona2/src/core/component";
-import { counterStore } from "../../packages/reona2/src/core/store";
+import { component, html } from "../../packages/reona/src/core/component";
+import { counterStore } from "../../packages/reona/src/core/store";
 
 export default component<
   {},

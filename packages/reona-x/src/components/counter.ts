@@ -1,4 +1,4 @@
-import { html, mounted, state, updated } from "../core/temp";
+import { html, watch, state } from "../core/temp";
 
 interface CounterProps {
   value: number;
@@ -10,14 +10,6 @@ export default function Counter({ value }: CounterProps) {
     quantity: 2,
   });
 
-  mounted(() => {
-    console.log("mounted", document.getElementById("app"));
-  });
-
-  updated(() => {
-    console.log("updated");
-  });
-
   const increase = () => {
     data.price += 2;
   };
@@ -25,6 +17,10 @@ export default function Counter({ value }: CounterProps) {
   const decrease = () => {
     data.price -= 2;
   };
+
+  watch(data, (current, prev) => {
+    console.log('123213');
+  });
 
   return html`
     <div id="app">

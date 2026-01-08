@@ -1,13 +1,36 @@
-import type { Primitive } from "@/utils/types";
-import { isPrimitive } from "@/utils";
+import type { Primitive } from "../utils/types";
+import { isPrimitive } from "../utils";
+import { Observable } from "../../../shared";
 
+let shouldTrack = true
 let activeEffect: null | Function = null;
+
+const observable = new Observable<'enalbe' | 'disable'>();
 
 export function effect(fn: Function) {
   activeEffect = fn;
   fn();
   activeEffect = null;
 }
+
+export class EffectScheduler {
+  private effectCallback: Function[] = [];
+
+  constructor() {}
+
+  public add(fn: Function) {
+    this.effectCallback.push(fn);
+  }
+
+  public run() {
+    const f = this.effectCallback.shift();
+    effect(() => {
+      f?.();
+    });
+  }
+}
+
+export const effectScheduler = new EffectScheduler();
 
 // 구조
 // WeakMap(
@@ -19,6 +42,7 @@ const targetMap = new WeakMap<object, Map<string | symbol, Set<Function>>>();
 
 function track(target: Record<string, any>, key: string | symbol) {
   if (!activeEffect) return;
+  if (!shouldTrack) return;
 
   let depsMap = targetMap.get(target);
   if (!depsMap) {
