@@ -4,7 +4,7 @@ import type {
   Props,
   Data,
 } from "../utils/types";
-import { reactive, effectScheduler } from "./reactivity";
+import { reactive, Effect } from "./reactivity";
 import { isHtmlString } from "../utils";
 import { createKey, getDepth } from "../../../shared";
 import Parser, { type VNode } from "./parser";
@@ -16,8 +16,6 @@ const instanceMap = new WeakMap<Component, Map<string, Fiber>>();
 /** @description 함수형 컴포넌트에서 재호출 시 싱글톤을 유지하기 위한 상태 리스트 */
 let currentComponent: number | null = null;
 const states = new Map<number, Record<string, any>>();
-
-const lifeHooks = new Map<number, Set<Function>>();
 
 export function state<D extends Data>(initial: D) {
   if (currentComponent === null) {
@@ -102,7 +100,7 @@ export class Fiber {
   }
 
   public render(parentElement: Element) {
-    effectScheduler.add(() => {
+    new Effect(() => {
       const depth = getDepth(this.key);
       currentComponent = depth;
       const template = this.component(this.props);
@@ -113,7 +111,6 @@ export class Fiber {
       parentElement.replaceChildren(this.vdom);
       this.isMounted = true;
     });
-    effectScheduler.run();
   }
 }
 
@@ -131,8 +128,8 @@ export function html(
 }
 
 export function watch<D extends Data>(value: D,
-  callback: (current: D, prev: D) => void) {
-  effectScheduler.add(() => {
-    console.log(callback, value);
-  })
+  callback: (current: D) => void) {
+  new Effect(() => {
+    callback(value);
+  });
 }

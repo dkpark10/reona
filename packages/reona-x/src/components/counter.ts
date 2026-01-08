@@ -18,8 +18,8 @@ export default function Counter({ value }: CounterProps) {
     data.price -= 2;
   };
 
-  watch(data, (current, prev) => {
-    console.log('123213');
+  watch(data, (current) => {
+    console.log('watch', current.price);
   });
 
   return html`
