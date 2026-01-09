@@ -1,7 +1,19 @@
-import { vi, describe, expect, test } from "vitest";
+import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
 import counter from "../../../../fixture/counter";
 import { html, component, createComponent } from "../core/component";
 import { rootRender } from "../core/runtime-dom";
+
+beforeEach(() => {
+  const div = document.createElement('div');
+  div.id = 'root';
+  document.body.appendChild(div);
+});
+
+afterEach(() => {
+  if (document.getElementById('root')) {
+    document.body.removeChild(document.getElementById('root')!);
+  }
+});
 
 describe("컴포넌트 테스트", () => {
   test("data 변경 시 값의 변경과 watch 콜백을 호출하여야 한다.", () => {
@@ -24,38 +36,38 @@ describe("컴포넌트 테스트", () => {
     expect(spyWatch).toHaveBeenCalledWith(2, 4);
   });
 
-  test("동일한 컴포넌트는 재사용 가능하여야 한다.", () => {
+  test("props를 보여주고 컴포넌트는 재사용 가능한 새로운 인스턴스여야 한다.", () => {
     const div = document.createElement('div');
     div.id = 'root';
     document.body.appendChild(div);
 
     const child = component<{ value: string; }>({
-      template(props) {
-        return html`<div id="${props?.value}">child</div>`;
+      template() {
+        return html`<div id="${this.$props.value}">child</div>`;
       },
     });
 
     const parent = component({
       template() {
         return html`
-            <div id="app">
-              ${createComponent(child, {
-                props: {
-                  value: 'props1',
-                },
-              })}
-              ${createComponent(child, {
-                props: {
-                  value: 'props2',
-                },
-              })}
-              ${createComponent(child, {
-                props: {
-                  value: 'props3',
-                },
-              })}
-            </div>
-          `;
+          <div id="app">
+            ${createComponent(child, {
+              props: {
+                value: 'props1',
+              },
+            })}
+            ${createComponent(child, {
+              props: {
+                value: 'props2',
+              },
+            })}
+            ${createComponent(child, {
+              props: {
+                value: 'props3',
+              },
+            })}
+          </div>
+        `;
       },
     });
 

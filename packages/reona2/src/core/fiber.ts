@@ -35,7 +35,7 @@ export default class Fiber {
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.$componentKey);
+    const depth = getDepth(this.instance.getComponentKey());
 
     const parser = new Parser(template, depth + 1);
     this.prevVnodeTree = parser.parse();
@@ -55,7 +55,7 @@ export default class Fiber {
 
   public reRender() {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.$componentKey);
+    const depth = getDepth(this.instance.getComponentKey());
 
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();
@@ -82,7 +82,7 @@ export default class Fiber {
       if (!nextFibers.has(fiber)) {
         fiber.instance.unMounted?.();
         const fiberKey = fiber.instance.$fiberKey;
-        instanceMap.get(fiberKey)?.delete(fiber.instance.$componentKey);
+        instanceMap.get(fiberKey)?.delete(fiber.instance.getComponentKey());
       }
     }
   }

@@ -41,9 +41,11 @@ export type ComponentInstance<
 > = ComponentOptions<P, D, M, C> & {
   state: D;
 
-  $props: P;
+  setProps: (props: P) => void;
 
-  $componentKey: ComponentKey;
+  setComponentKey: (key: string) => void;
+  
+  getComponentKey: () => string;
   
   $fiberKey: Function;
 };
