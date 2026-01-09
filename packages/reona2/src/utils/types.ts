@@ -31,7 +31,7 @@ export type ComponentOptions<P = Props, D = Data, M = Methods, C = Computed> = {
   connect?: ((fn: () => void) => () => void)[];
 
   watch?: Record<string, (current: D[keyof D], prev: D[keyof D]) => void>;
-} & ThisType<Props & D & M & C>;
+} & ThisType<{ $props: P } & { $refs: Record<string, Element | null> } & D & M & C>;
 
 export type ComponentInstance<
   P extends Props = Props,
@@ -41,11 +41,13 @@ export type ComponentInstance<
 > = ComponentOptions<P, D, M, C> & {
   state: D;
 
+  $fiberKey: Function;
+  
   setProps: (props: P) => void;
 
   setComponentKey: (key: string) => void;
   
   getComponentKey: () => string;
-  
-  $fiberKey: Function;
+
+  setRefs:(key: string, el: Element) => void;
 };

@@ -1,0 +1,21 @@
+import { component, html } from "../../packages/reona2/src/core/component";
+
+export default component<
+  {},
+  { val1: number; val2: number; },
+  { trigger: () => void; }
+>({
+  name: "counter",
+
+  mounted() {
+    console.log(this.$refs.hh);
+  },
+
+  template() {
+    return html`
+      <div id="app">
+        <h1 $$ref="hh">hh</h1>
+      </div>
+    `;
+  },
+});

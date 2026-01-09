@@ -3,6 +3,7 @@
 import type { VNode } from "./parser";
 import type { ComponentInstance, Props, Data, Methods } from "../utils/types";
 import { createComponent } from "./component";
+import Fiber from "./fiber";
 
 interface Option {
   props?: Props;
@@ -33,9 +34,9 @@ export function rootRender<P extends Props>(
 // }
 
 /** @description vnode 객체를 실제 dom 으로 만듬 */
-export function createDOM(vnode: VNode): HTMLElement;
-export function createDOM(vnode: VNode, parentElement: Element): HTMLElement;
-export function createDOM(vnode: VNode, parentElement?: Element) {
+export function createDOM(vnode: VNode, fiber: Fiber,): HTMLElement;
+export function createDOM(vnode: VNode, fiber: Fiber, parentElement: Element): HTMLElement;
+export function createDOM(vnode: VNode, fiber: Fiber, parentElement?: Element) {
   if (vnode.type === "text") {
     return document.createTextNode(vnode.value);
   }
@@ -51,7 +52,7 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
   if (!vnode.tag) {
     const fragment = document.createDocumentFragment();
     vnode.children?.forEach((child) => {
-      fragment.appendChild(createDOM(child));
+      fragment.appendChild(createDOM(child, fiber));
     });
     return fragment;
   }
@@ -64,13 +65,17 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
         const eventName = key.slice(1);
         el.addEventListener(eventName, value);
       } else {
-        el.setAttribute(key, value);
+        if (/^\$\$ref\b/.test(key)) {
+          fiber.instance.setRefs(value, el);
+        } else {
+          el.setAttribute(key, value);
+        }
       }
     }
   }
 
   vnode.children?.forEach((child) => {
-    const c = createDOM(child, el);
+    const c = createDOM(child, fiber, el);
     if (c) {
       el.appendChild(c);
     }

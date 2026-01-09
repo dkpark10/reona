@@ -92,6 +92,7 @@ function getInstance<
   let $unsubscribes: (() => void)[] = [];
   // @ts-ignore
   let $fiberKey = options.fiberKey;
+  let $refs = {} as Record<string, Element | null>;
 
   function rerRender() {
     update(() => {
@@ -125,6 +126,10 @@ function getInstance<
 
       if (key === '$props') {
         return $props;
+      }
+
+      if (key === '$refs') {
+        return $refs;
       }
     },
 
@@ -180,6 +185,9 @@ function getInstance<
     },
     getComponentKey: function () {
       return $componentKey;
+    },
+    setRefs: function(key: string, el: Element) {
+      $refs[key] = el;
     },
     $fiberKey,
   };

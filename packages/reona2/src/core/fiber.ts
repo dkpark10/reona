@@ -41,7 +41,7 @@ export default class Fiber {
     this.prevVnodeTree = parser.parse();
     this.parentElement = parentElement;
 
-    this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
+    this.prevDom = createDOM(this.prevVnodeTree, this, this.parentElement);
     this.parentElement.insertBefore(this.prevDom, null);
 
     // todo queueMicrotask 대체 방법???
@@ -62,7 +62,7 @@ export default class Fiber {
 
     this.ummount();
 
-    this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
+    this.nextDom = createDOM(this.nextVnodeTree, this, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
 
     this.prevVnodeTree = this.nextVnodeTree;
