@@ -11,6 +11,7 @@ export default component<
     return {
       val1: 0,
       val2: 0,
+      val3: 0,
     };
   },
 
@@ -18,6 +19,7 @@ export default component<
     trigger() {
       this.val1 += 2;
       this.val2 += 2;
+      this.val3 += 2;
     },
   },
 
@@ -27,6 +29,7 @@ export default component<
         <button type="button" @click=${this.trigger}>트리거</button>
         <div>${this.val1}</div>
         <div>${this.val2}</div>
+        <div>${this.val3}</div>
       </div>
     `;
   },

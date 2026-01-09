@@ -1,5 +1,6 @@
 export class Queue<T> {
   private arr: T[] = [];
+
   private head = 0;
 
   public enqueue(v: T) {
@@ -11,8 +12,13 @@ export class Queue<T> {
     return this.arr[this.head++];
   }
 
-  get size() {
-    return this.arr.length - this.head;
+  public isEmpty() {
+    return this.arr.length - this.head <= 0;
+  }
+
+  public clear() {
+    this.arr = [];
+    this.head = 0;
   }
 }
 
