@@ -1,6 +1,6 @@
 import type { Props, Data, Methods, ComponentInstance, ComponentKey } from "../utils/types";
 import Parser, { type VNode } from "./parser";
-import { createDOM } from "./renderer";
+import { createDOM } from "./runtime-dom";
 import { getDepth } from "../../../shared";
 import { instanceMap } from "./instances";
 

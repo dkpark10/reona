@@ -1,7 +1,7 @@
 import { vi, describe, expect, test } from "vitest";
 import counter from "../../../../fixture/counter";
 import { html, component, createComponent } from "../core/component";
-import { rootRender } from "../core/renderer";
+import { rootRender } from "../core/runtime-dom";
 
 describe("컴포넌트 테스트", () => {
   test("data 변경 시 값의 변경과 watch 콜백을 호출하여야 한다.", () => {

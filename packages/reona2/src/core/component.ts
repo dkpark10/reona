@@ -11,6 +11,7 @@ import type {
 } from "../utils/types";
 import Fiber from "./fiber";
 import { instanceMap } from "./instances";
+import { update } from "./renderer";
 
 export function html(
   strings: TemplateStringsArray,
@@ -93,10 +94,12 @@ function getInstance<
   let $fiberKey = options.fiberKey;
 
   function rerRender() {
-    if ($fiberKey) {
-      const fiber = instanceMap.get($fiberKey)?.get(instance.$componentKey);
-      fiber?.reRender();
-    }
+    update(() => {
+      if ($fiberKey) {
+        const fiber = instanceMap.get($fiberKey)?.get(instance.$componentKey);
+        fiber?.reRender();
+      }
+    });
   };
 
   if (options.connect) {

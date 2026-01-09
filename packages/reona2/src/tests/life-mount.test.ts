@@ -1,15 +1,16 @@
 import { vi, expect, test } from "vitest";
 import { html, component } from "../core/component";
-import { rootRender } from "../core/renderer";
-
-const flushMicrotasks = () => new Promise<void>(resolve => queueMicrotask(resolve));
+import { rootRender } from "../core/runtime-dom";
+import { flushMicrotasks, flushRaf } from "./utils";
 
 test("상태 변경이 되어도 마운트 훅 실행은 1번이 보장 되어야 한다.", async () => {
   const div = document.createElement('div');
   div.id = 'root';
   document.body.appendChild(div);
 
-  const mockFn = vi.fn();
+  const mockFn = vi.fn(() => {
+    console.log('mounted', document.getElementById('app'));
+  });
 
   const C = component({
     mounted: mockFn,
@@ -42,6 +43,7 @@ test("상태 변경이 되어도 마운트 훅 실행은 1번이 보장 되어�
   expect(mockFn).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
+  await flushRaf();
   expect(document.querySelector('[data-testid="count"]')?.textContent).toBe('1');
   expect(mockFn).toHaveBeenCalled();
 });

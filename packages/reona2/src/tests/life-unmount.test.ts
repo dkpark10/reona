@@ -1,10 +1,9 @@
 import { vi, expect, test } from "vitest";
 import { html, component, createComponent } from "../core/component";
-import { rootRender } from "../core/renderer";
+import { rootRender } from "../core/runtime-dom";
+import { flushRaf } from "./utils";
 
-const flushMicrotasks = () => new Promise<void>(resolve => queueMicrotask(resolve));
-
-test("unmount 훅 테스트를 한다..", async () => {
+test("unmount 훅 테스트를 한다.", async () => {
   const div = document.createElement('div');
   div.id = 'root';
   document.body.appendChild(div);
@@ -65,24 +64,23 @@ test("unmount 훅 테스트를 한다..", async () => {
   });
 
   rootRender(document.getElementById("root")!, parent);
-  await flushMicrotasks();
 
   document.querySelector('button')?.click();
-  await flushMicrotasks();
+  await flushRaf();
   expect(unMountFn1).toHaveBeenCalled();
   expect(mountFn2).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
-  await flushMicrotasks();
+  await flushRaf();
   expect(unMountFn2).toHaveBeenCalled();
   expect(mountFn1).toHaveBeenCalled();
 
-  await flushMicrotasks();
+  await flushRaf();
   expect(unMountFn1).toHaveBeenCalled();
   expect(mountFn2).toHaveBeenCalled();
 
   document.querySelector('button')?.click();
-  await flushMicrotasks();
+  await flushRaf();
   expect(unMountFn2).toHaveBeenCalled();
   expect(mountFn1).toHaveBeenCalled();
 });
