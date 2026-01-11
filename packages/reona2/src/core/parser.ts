@@ -28,9 +28,9 @@ export default class Parser {
   private renderResult: RenderResult;
 
   private valueIndex = 0;
-  
+
   private depth: number | undefined;
-  
+
   constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
     this.depth = depth;
@@ -41,7 +41,7 @@ export default class Parser {
     const template = document.createElement("template");
 
     template.innerHTML = t.trim();
-    
+
     if (template.content.childNodes.length > 1) {
       throw new Error('루트 엘리먼트는 1개여야 합니다.');
     }
@@ -111,16 +111,7 @@ export default class Parser {
 
           // createComponent 반환 함수일 시
           if (typeof value === 'function' && value.__isCreateComponent) {
-            const getFiber = value as (depth: number) => Fiber;
-            const fiber = getFiber(this.depth!);
-
-            this.depth!++;
-            this.valueIndex++;
-
-            return {
-              type: 'component',
-              fiber,
-            };
+            return this.convertFiber(value);
           }
 
           // 배열이 들어 왔다면
@@ -129,6 +120,9 @@ export default class Parser {
               if (isRenderResultObject(value)) {
                 const vdom = new Parser(value).parse();
                 return vdom;
+              }
+              if (typeof value === 'function' && value.__isCreateComponent) {
+                return this.convertFiber(value);
               }
             });
             return result;
@@ -166,5 +160,16 @@ export default class Parser {
       const v = values[this.valueIndex++];
       return v !== undefined ? String(v) : "";
     });
+  }
+
+  public convertFiber(getFiber: (depth: number) => Fiber) {
+    const fiber = getFiber(this.depth!);
+    this.depth!++;
+    this.valueIndex++;
+
+    return {
+      type: 'component',
+      fiber,
+    };
   }
 }

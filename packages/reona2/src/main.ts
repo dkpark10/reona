@@ -14,5 +14,11 @@ import { rootRender } from "./core/runtime-dom";
 // import nested from "../../../fixture/nested";
 // rootRender(document.getElementById("root")!, nested);
 
-import refs from "../../../fixture/refs";
-rootRender(document.getElementById("root")!, refs);
+// import refs from "../../../fixture/refs";
+// rootRender(document.getElementById("root")!, refs);
+
+// import refs from "../../../fixture/refs";
+// rootRender(document.getElementById("root")!, refs);
+
+import array from "../../../fixture/array";
+rootRender(document.getElementById("root")!, array);
