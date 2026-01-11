@@ -1,6 +1,6 @@
 import type { Props, Data, Methods, ComponentInstance, ComponentKey } from "../utils/types";
 import Parser, { type VNode } from "./parser";
-import { createDOM } from "./renderer";
+import { createDOM } from "./runtime-dom";
 import { getDepth } from "../../../shared";
 import { instanceMap } from "./instances";
 
@@ -35,13 +35,13 @@ export default class Fiber {
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.$componentKey);
+    const depth = getDepth(this.instance.getComponentKey());
 
     const parser = new Parser(template, depth + 1);
     this.prevVnodeTree = parser.parse();
     this.parentElement = parentElement;
 
-    this.prevDom = createDOM(this.prevVnodeTree, this.parentElement);
+    this.prevDom = createDOM(this.prevVnodeTree, this, this.parentElement);
     this.parentElement.insertBefore(this.prevDom, null);
 
     // todo queueMicrotask 대체 방법???
@@ -55,14 +55,14 @@ export default class Fiber {
 
   public reRender() {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.$componentKey);
+    const depth = getDepth(this.instance.getComponentKey());
 
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();
 
     this.ummount();
 
-    this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
+    this.nextDom = createDOM(this.nextVnodeTree, this, this.parentElement);
     this.prevDom.replaceWith(this.nextDom);
 
     this.prevVnodeTree = this.nextVnodeTree;
@@ -82,7 +82,7 @@ export default class Fiber {
       if (!nextFibers.has(fiber)) {
         fiber.instance.unMounted?.();
         const fiberKey = fiber.instance.$fiberKey;
-        instanceMap.get(fiberKey)?.delete(fiber.instance.$componentKey);
+        instanceMap.get(fiberKey)?.delete(fiber.instance.getComponentKey());
       }
     }
   }

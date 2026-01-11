@@ -11,6 +11,7 @@ import type {
 } from "../utils/types";
 import Fiber from "./fiber";
 import { instanceMap } from "./instances";
+import { update } from "./renderer";
 
 export function html(
   strings: TemplateStringsArray,
@@ -49,10 +50,10 @@ export function createComponent<P extends Props>(
     }
 
     if (options && options.props) {
-      fiber.instance.$props = options.props;
+      fiber.instance.setProps(options.props);
     }
 
-    fiber.instance.$componentKey = key;
+    fiber.instance.setComponentKey(key);
     return fiber;
   }
   func.__isCreateComponent = true;
@@ -91,12 +92,15 @@ function getInstance<
   let $unsubscribes: (() => void)[] = [];
   // @ts-ignore
   let $fiberKey = options.fiberKey;
+  let $refs = {} as Record<string, Element | null>;
 
   function rerRender() {
-    if ($fiberKey) {
-      const fiber = instanceMap.get($fiberKey)?.get(instance.$componentKey);
-      fiber?.reRender();
-    }
+    update(() => {
+      if ($fiberKey) {
+        const fiber = instanceMap.get($fiberKey)?.get($componentKey);
+        fiber?.reRender();
+      }
+    });
   };
 
   if (options.connect) {
@@ -119,13 +123,21 @@ function getInstance<
       if (Object.prototype.hasOwnProperty.call(binddMethods, key)) {
         return binddMethods[key as string];
       }
+
+      if (key === '$props') {
+        return $props;
+      }
+
+      if (key === '$refs') {
+        return $refs;
+      }
     },
 
     set(target, key, value, receiver) {
       const $prevData: D[keyof D] = Reflect.get(receiver, key);
 
       const result = Reflect.set(target, key, value, receiver);
-      if (!__TEST__ && !instance.$componentKey) {
+      if (!__TEST__ && !$componentKey) {
         throw new Error('고유 키가 없습니다.');
       }
 
@@ -150,7 +162,7 @@ function getInstance<
     ...binddMethods,
     // ...(NOT_PRODUCTION && boundMethods),
     template: function () {
-      return options.template.call(proxiedState, instance.$props);
+      return options.template.call(proxiedState);
     },
     ...(NOT_PRODUCTION && { state: proxiedState as D }),
     mounted: function () {
@@ -165,8 +177,18 @@ function getInstance<
     updated: function () {
       return options.updated?.call(proxiedState);
     },
-    $componentKey,
-    $props,
+    setProps: function (props: P) {
+      $props = props;
+    },
+    setComponentKey: function (key: string) {
+      $componentKey = key;
+    },
+    getComponentKey: function () {
+      return $componentKey;
+    },
+    setRefs: function(key: string, el: Element) {
+      $refs[key] = el;
+    },
     $fiberKey,
   };
   return instance;

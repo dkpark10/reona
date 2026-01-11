@@ -1,7 +1,21 @@
-import { vi, describe, expect, test } from "vitest";
-import counter from "../../../../fixture/counter";
+import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
 import { html, component, createComponent } from "../core/component";
-import { rootRender } from "../core/renderer";
+import { rootRender } from "../core/runtime-dom";
+import { flushMicrotasks, flushRaf } from './utils';
+import counter from "../../../../fixture/counter";
+import nested from "../../../../fixture/nested";
+
+beforeEach(() => {
+  const div = document.createElement('div');
+  div.id = 'root';
+  document.body.appendChild(div);
+});
+
+afterEach(() => {
+  if (document.getElementById('root')) {
+    document.body.removeChild(document.getElementById('root')!);
+  }
+});
 
 describe("컴포넌트 테스트", () => {
   test("data 변경 시 값의 변경과 watch 콜백을 호출하여야 한다.", () => {
@@ -24,38 +38,34 @@ describe("컴포넌트 테스트", () => {
     expect(spyWatch).toHaveBeenCalledWith(2, 4);
   });
 
-  test("동일한 컴포넌트는 재사용 가능하여야 한다.", () => {
-    const div = document.createElement('div');
-    div.id = 'root';
-    document.body.appendChild(div);
-
+  test("props를 보여주고 컴포넌트는 재사용 가능한 새로운 인스턴스여야 한다.", () => {
     const child = component<{ value: string; }>({
-      template(props) {
-        return html`<div id="${props?.value}">child</div>`;
+      template() {
+        return html`<div id="${this.$props.value}">child</div>`;
       },
     });
 
     const parent = component({
       template() {
         return html`
-            <div id="app">
-              ${createComponent(child, {
-                props: {
-                  value: 'props1',
-                },
-              })}
-              ${createComponent(child, {
-                props: {
-                  value: 'props2',
-                },
-              })}
-              ${createComponent(child, {
-                props: {
-                  value: 'props3',
-                },
-              })}
-            </div>
-          `;
+          <div id="app">
+            ${createComponent(child, {
+          props: {
+            value: 'props1',
+          },
+        })}
+            ${createComponent(child, {
+          props: {
+            value: 'props2',
+          },
+        })}
+            ${createComponent(child, {
+          props: {
+            value: 'props3',
+          },
+        })}
+          </div>
+        `;
       },
     });
 
@@ -63,5 +73,45 @@ describe("컴포넌트 테스트", () => {
     expect(document.getElementById('props1')).toBeInTheDocument();
     expect(document.getElementById('props2')).toBeInTheDocument();
     expect(document.getElementById('props3')).toBeInTheDocument();
+  });
+
+  test("여러겹으로 중첩된 컴포넌트를 테스트한다.", async () => {
+    rootRender(document.getElementById("root")!, nested);
+
+    expect(document.getElementById('son')?.textContent).toBe('4');
+    expect(document.getElementById('grand-son')?.textContent).toBe('8');
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(document.getElementById('son')?.textContent).toBe('8');
+    expect(document.getElementById('grand-son')?.textContent).toBe('16');
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(document.getElementById('son')?.textContent).toBe('12');
+    expect(document.getElementById('grand-son')?.textContent).toBe('24');
+  });
+
+  test("ref 값을 테스트 한다.", async () => {
+    let result: unknown;
+    const ref =  component({
+      name: "counter",
+
+      mounted() {
+        result = this.$refs.hh;
+      },
+
+      template() {
+        return html`
+          <div id="app">
+            <h1 $$ref="hh">hh</h1>
+          </div>`;
+      },
+    });
+
+    rootRender(document.getElementById("root")!, ref);
+    await flushMicrotasks();
+    expect((result as HTMLHeadingElement).tagName).toBe('H1');
+    expect((result as HTMLHeadingElement).textContent).toBe('hh');
   });
 });

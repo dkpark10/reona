@@ -107,7 +107,7 @@ describe("파서 테스트", () => {
       },
 
       methods: {
-        foo() {},
+        foo() { },
       },
 
       template() {
@@ -130,13 +130,14 @@ describe("파서 테스트", () => {
 
   test('배열 vdom 값을 테스트 한다.', () => {
     const template = html`
-      <ul>
+      <ul id="list">
         ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
       </ul>`;
 
     expect(new Parser(template).parse()).toEqual({
       type: 'element',
       tag: 'ul',
+      attr: { id: 'list' },
       children: [
         {
           type: 'element',
@@ -165,6 +166,87 @@ describe("파서 테스트", () => {
             {
               type: 'text',
               value: '3',
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('중첩 컴포넌트 배열 vdom 값을 테스트 한다.', () => {
+    const child = component<{ value: number; }>({
+      template() {
+        return html`<li>${this.$props.value}</li>`;
+      }
+    });
+
+    const template = html`
+      <div id="app">
+        <ul>
+          ${[1, 2, 3].map((item) => createComponent(child, {
+            props: {
+              value: item,
+            },
+    }))}
+        </ul>
+        <ul>
+          ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
+        </ul>                  
+      </div>`;
+
+    expect(new Parser(template).parse()).toEqual({
+      type: 'element',
+      tag: 'div',
+      attr: { id: 'app' },
+      children: [
+        {
+          type: 'element',
+          tag: 'ul',
+          children: [
+            {
+              type: 'component', fiber: expect.any(Fiber),
+            },
+            {
+              type: 'component', fiber: expect.any(Fiber),
+            },
+            {
+              type: 'component', fiber: expect.any(Fiber),
+            },
+          ],
+        },
+        {
+          type: 'element',
+          tag: 'ul',
+          children: [
+            {
+              type: 'element',
+              tag: 'li',
+              children: [
+                {
+                  type: 'text',
+                  value: '1',
+                },
+              ],
+            },
+            {
+              type: 'element',
+              tag: 'li',
+              children: [
+                {
+                  type: 'text',
+                  value: '2',
+                },
+              ],
+            },
+            {
+              type: 'element',
+              tag: 'li',
+              children: [
+                {
+                  type: 'text',
+                  value: '3',
+                },
+              ],
             },
           ],
         },
