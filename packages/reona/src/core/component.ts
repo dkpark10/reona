@@ -83,6 +83,7 @@ function getInstance<
 >(options: ComponentOptions<P, D, M, C>) {
   // data 함수에서 내부 메소드 사용에 따른 call 호출
   const raw = options.data?.call(options.methods) || {};
+  const dataKey = Object.keys(raw);
   if (raw && isPrimitive(raw)) {
     throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
   }
@@ -134,6 +135,11 @@ function getInstance<
     },
 
     set(target, key, value, receiver) {
+      if (!dataKey.includes(key as string)) {
+        console.warn('데이터 객체만 쓸 수 있습니다.');
+        return false;
+      }
+
       const $prevData: D[keyof D] = Reflect.get(receiver, key);
 
       const result = Reflect.set(target, key, value, receiver);

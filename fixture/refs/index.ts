@@ -1,4 +1,4 @@
-import { component, html } from "../../packages/reona2/src/core/component";
+import { html, component } from "../../packages/reona/src/core/component";
 
 export default component({
   name: "counter",

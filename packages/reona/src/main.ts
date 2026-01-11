@@ -1,6 +1,6 @@
 import { rootRender } from "./core/runtime-dom";
-// import counter from "../../../fixture/counter";
-// rootRender(document.getElementById("root")!, counter);
+import counter from "../../../fixture/counter";
+rootRender(document.getElementById("root")!, counter);
 
 // import store from "../../../fixture/store";
 // rootRender(document.getElementById("root")!, store);
@@ -20,5 +20,5 @@ import { rootRender } from "./core/runtime-dom";
 // import refs from "../../../fixture/refs";
 // rootRender(document.getElementById("root")!, refs);
 
-import array from "../../../fixture/array";
-rootRender(document.getElementById("root")!, array);
+// import array from "../../../fixture/array";
+// rootRender(document.getElementById("root")!, array);
