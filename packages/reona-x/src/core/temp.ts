@@ -4,7 +4,6 @@ import type {
   Props,
   Data,
 } from "../utils/types";
-import { reactive, Effect } from "./reactivity";
 import { isHtmlString } from "../utils";
 import { createKey, getDepth } from "../../../shared";
 import Parser, { type VNode } from "./parser";
@@ -13,22 +12,34 @@ import { createDOM } from "./dom";
 /** @description 전역 컴포넌트 관리 map */
 const instanceMap = new WeakMap<Component, Map<string, Fiber>>();
 
-/** @description 함수형 컴포넌트에서 재호출 시 싱글톤을 유지하기 위한 상태 리스트 */
-let currentComponent: number | null = null;
-const states = new Map<number, Record<string, any>>();
+let currentFiber: Fiber | null = null;
+
+const states = new Map<Fiber, Record<string, any>>();
+const mountList = new Map<Fiber, () => void>();
 
 export function state<D extends Data>(initial: D) {
-  if (currentComponent === null) {
+  if (currentFiber === null) {
     throw new Error('상태 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  const existState = states.get(currentComponent);
+  const existState = states.get(currentFiber);
   if (existState) {
     return existState as D;
   }
 
-  const data = reactive(initial);
-  states.set(currentComponent, data);
+  let fiber = currentFiber;
+  const data = new Proxy(initial, {
+    get(target, key, receiver) {
+      return Reflect.get(target, key, receiver);
+    },
+
+    set(target, key, value, receiver) {
+      const result = Reflect.set(target, key, value, receiver);
+      fiber?.reRender();
+      return result;
+    },
+  });
+  states.set(currentFiber, data);
   return data as D;
 }
 
@@ -84,6 +95,8 @@ type FiberOption = {
 export class Fiber {
   private key: string;
 
+  private parentElement: Element;
+
   private component: Component;
 
   private vnodeTree: VNode;
@@ -100,17 +113,34 @@ export class Fiber {
   }
 
   public render(parentElement: Element) {
-    new Effect(() => {
-      const depth = getDepth(this.key);
-      currentComponent = depth;
-      const template = this.component(this.props);
-      const parser = new Parser(template, depth + 1);
+    const depth = getDepth(this.key);
+    currentFiber = this;
 
-      this.vnodeTree = parser.parse();
-      this.vdom = createDOM(this.vnodeTree, parentElement);
-      parentElement.replaceChildren(this.vdom);
+    const template = this.component(this.props);
+    const parser = new Parser(template, depth + 1);
+
+    this.parentElement = parentElement;
+
+    this.vnodeTree = parser.parse();
+    this.vdom = createDOM(this.vnodeTree, parentElement);
+    parentElement.replaceChildren(this.vdom);
+
+    if (!this.isMounted) {
+      const fn = mountList.get(this);
+      fn?.();
       this.isMounted = true;
-    });
+    }
+  }
+
+  public reRender() {
+    const depth = getDepth(this.key);
+    currentFiber = this;
+    const template = this.component(this.props);
+    const parser = new Parser(template, depth + 1);
+
+    this.vnodeTree = parser.parse();
+    this.vdom = createDOM(this.vnodeTree, this.parentElement);
+    this.parentElement.replaceChildren(this.vdom);
   }
 }
 
@@ -127,9 +157,10 @@ export function html(
   return { template: rawString, values };
 }
 
-export function watch<D extends Data>(value: D,
-  callback: (current: D) => void) {
-  new Effect(() => {
-    callback(value);
-  });
+export function mounted(callback: () => void) {
+  if (currentFiber === null) {
+    throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  mountList.set(currentFiber, callback);
 }
