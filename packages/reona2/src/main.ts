@@ -11,8 +11,8 @@ import { rootRender } from "./core/runtime-dom";
 // import optimize from "../../../fixture/render-optimize";
 // rootRender(document.getElementById("root")!, optimize);
 
-// import nested from "../../../fixture/nested";
-// rootRender(document.getElementById("root")!, nested);
+import nested from "../../../fixture/nested";
+rootRender(document.getElementById("root")!, nested);
 
 // import refs from "../../../fixture/refs";
 // rootRender(document.getElementById("root")!, refs);
@@ -20,5 +20,5 @@ import { rootRender } from "./core/runtime-dom";
 // import refs from "../../../fixture/refs";
 // rootRender(document.getElementById("root")!, refs);
 
-import array from "../../../fixture/array";
-rootRender(document.getElementById("root")!, array);
+// import array from "../../../fixture/array";
+// rootRender(document.getElementById("root")!, array);

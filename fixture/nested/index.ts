@@ -1,5 +1,5 @@
 import { html, component, createComponent } from "../../packages/reona2/src/core/component";
-import timer from "./timer";
+import son from "./son";
 
 export default component<
   {},
@@ -26,16 +26,9 @@ export default component<
         <button type="button" @click=${this.trigger}>트리거</button>
         <div>값: ${this.value}</div>
         ${createComponent(
-          timer, {
+          son, {
             props: {
-              quantity: this.value,
-            },
-          },
-        )}
-        ${createComponent(
-          timer, {
-            props: {
-              quantity: 12345,
+              value: this.value,
             },
           },
         )}
