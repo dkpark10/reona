@@ -1,9 +1,9 @@
 import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
-import counter from "../../../../fixture/counter";
-import nested from "../../../../fixture/nested";
 import { html, component, createComponent } from "../core/component";
 import { rootRender } from "../core/runtime-dom";
-import { flushRaf } from './utils';
+import { flushMicrotasks, flushRaf } from './utils';
+import counter from "../../../../fixture/counter";
+import nested from "../../../../fixture/nested";
 
 beforeEach(() => {
   const div = document.createElement('div');
@@ -50,20 +50,20 @@ describe("컴포넌트 테스트", () => {
         return html`
           <div id="app">
             ${createComponent(child, {
-              props: {
-                value: 'props1',
-              },
-            })}
+          props: {
+            value: 'props1',
+          },
+        })}
             ${createComponent(child, {
-              props: {
-                value: 'props2',
-              },
-            })}
+          props: {
+            value: 'props2',
+          },
+        })}
             ${createComponent(child, {
-              props: {
-                value: 'props3',
-              },
-            })}
+          props: {
+            value: 'props3',
+          },
+        })}
           </div>
         `;
       },
@@ -77,7 +77,7 @@ describe("컴포넌트 테스트", () => {
 
   test("여러겹으로 중첩된 컴포넌트를 테스트한다.", async () => {
     rootRender(document.getElementById("root")!, nested);
-    
+
     expect(document.getElementById('son')?.textContent).toBe('4');
     expect(document.getElementById('grand-son')?.textContent).toBe('8');
 
@@ -90,5 +90,28 @@ describe("컴포넌트 테스트", () => {
     await flushRaf();
     expect(document.getElementById('son')?.textContent).toBe('12');
     expect(document.getElementById('grand-son')?.textContent).toBe('24');
+  });
+
+  test("ref 값을 테스트 한다.", async () => {
+    let result: unknown;
+    const ref =  component({
+      name: "counter",
+
+      mounted() {
+        result = this.$refs.hh;
+      },
+
+      template() {
+        return html`
+          <div id="app">
+            <h1 $$ref="hh">hh</h1>
+          </div>`;
+      },
+    });
+
+    rootRender(document.getElementById("root")!, ref);
+    await flushMicrotasks();
+    expect((result as HTMLHeadingElement).tagName).toBe('H1');
+    expect((result as HTMLHeadingElement).textContent).toBe('hh');
   });
 });

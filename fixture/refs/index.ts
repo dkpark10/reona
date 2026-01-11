@@ -1,10 +1,6 @@
 import { component, html } from "../../packages/reona2/src/core/component";
 
-export default component<
-  {},
-  { val1: number; val2: number; },
-  { trigger: () => void; }
->({
+export default component({
   name: "counter",
 
   mounted() {
