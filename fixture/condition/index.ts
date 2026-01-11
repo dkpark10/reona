@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { createComponent, component, html } from "../../packages/reona/src/core/component";
-=======
-import { html, component, createComponent } from "../../packages/reona/src/core/component";
->>>>>>> master
 import condi1 from './condi1';
 import condi2 from './condi2';
 

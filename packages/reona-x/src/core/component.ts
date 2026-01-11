@@ -9,7 +9,6 @@ import { createKey, getDepth } from "../../../shared";
 import Parser, { type VNode } from "./parser";
 import { createDOM } from "./runtime-dom";
 
-
 /** @description 전역 컴포넌트 관리 map */
 let instanceMap: Map<Component, Map<string, Fiber>>;
 
@@ -21,7 +20,6 @@ if (NOT_PRODUCTION) {
   // @ts-ignore
   instanceMap = new WeakMap<Component, Map<string, Fiber>>();
 }
-
 
 let currentFiber: Fiber | null = null;
 const states = new WeakMap<Fiber, Record<string, any>>();
