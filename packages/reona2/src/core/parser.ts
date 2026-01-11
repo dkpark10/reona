@@ -23,6 +23,10 @@ export type VComponent = {
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
+function isCreateComponentFunc(func: any): func is ((depth: number) => Fiber) {
+  return typeof func === 'function' && func.__isCreateComponent;
+}
+
 /** @description 받은 html을 vnode tree로 만듬 */
 export default class Parser {
   private renderResult: RenderResult;
@@ -110,8 +114,16 @@ export default class Parser {
           const value = values[this.valueIndex];
 
           // createComponent 반환 함수일 시
-          if (typeof value === 'function' && value.__isCreateComponent) {
-            return this.convertFiber(value);
+          if (isCreateComponentFunc(value)) {
+            const getFiber = value;
+            const fiber = getFiber(this.depth!);
+            this.depth!++;
+            this.valueIndex++;
+
+            return {
+              type: 'component',
+              fiber,
+            };
           }
 
           // 배열이 들어 왔다면
@@ -121,8 +133,15 @@ export default class Parser {
                 const vdom = new Parser(value).parse();
                 return vdom;
               }
-              if (typeof value === 'function' && value.__isCreateComponent) {
-                return this.convertFiber(value);
+            if (isCreateComponentFunc(value)) {
+                const getFiber = value;
+                const fiber = getFiber(this.depth!);
+                this.depth!++;
+
+                return {
+                  type: 'component',
+                  fiber,
+                };
               }
             });
             return result;
@@ -160,16 +179,5 @@ export default class Parser {
       const v = values[this.valueIndex++];
       return v !== undefined ? String(v) : "";
     });
-  }
-
-  public convertFiber(getFiber: (depth: number) => Fiber) {
-    const fiber = getFiber(this.depth!);
-    this.depth!++;
-    this.valueIndex++;
-
-    return {
-      type: 'component',
-      fiber,
-    };
   }
 }

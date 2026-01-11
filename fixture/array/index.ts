@@ -22,7 +22,7 @@ export default component({
         </ul>
         <ul>
           ${this.arr.map((item) => html`<li>${item}</li>`)}
-        </ul>                
+        </ul>                  
       </div>
     `;
   },
