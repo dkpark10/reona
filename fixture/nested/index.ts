@@ -1,4 +1,4 @@
-import { html, component, createComponent } from "../../packages/reona2/src/core/component";
+import { html, component, createComponent } from "../../packages/reona/src/core/component";
 import son from "./son";
 
 export default component<

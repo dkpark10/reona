@@ -1,4 +1,4 @@
-import { component, html, createComponent } from "../../packages/reona2/src/core/component";
+import { component, html, createComponent } from "../../packages/reona/src/core/component";
 import arrayChild from "./array-child";
 
 export default component({
