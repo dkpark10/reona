@@ -1,6 +1,6 @@
 import type { RenderResult, Props } from "../utils/types";
 import { isEmpty } from "../../../shared";
-import { Fiber } from "./temp";
+import { Fiber } from "./component";
 
 export function isRenderResultObject(obj: any): obj is RenderResult {
   return (
@@ -31,14 +31,18 @@ export type VComponent = {
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
+function isCreateComponentFunc(func: any): func is ((depth: number) => Fiber) {
+  return typeof func === 'function' && func.__isCreateComponent;
+}
+
 /** @description 받은 html을 vnode tree로 만듬 */
 export default class Parser {
   private renderResult: RenderResult;
 
   private valueIndex = 0;
-  
+
   private depth: number | undefined;
-  
+
   constructor(renderResult: RenderResult, depth?: number) {
     this.renderResult = renderResult;
     this.depth = depth;
@@ -49,7 +53,7 @@ export default class Parser {
     const template = document.createElement("template");
 
     template.innerHTML = t.trim();
-    
+
     if (template.content.childNodes.length > 1) {
       throw new Error('루트 엘리먼트는 1개여야 합니다.');
     }
@@ -137,6 +141,16 @@ export default class Parser {
               if (isRenderResultObject(value)) {
                 const vdom = new Parser(value).parse();
                 return vdom;
+              }
+              if (isCreateComponentFunc(value)) {
+                const getFiber = value;
+                const fiber = getFiber(this.depth!);
+                this.depth!++;
+
+                return {
+                  type: 'component',
+                  fiber,
+                };
               }
             });
             return result;

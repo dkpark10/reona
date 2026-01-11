@@ -1,10 +1,7 @@
 import type { Primitive } from "../utils/types";
 import { isPrimitive } from "../utils";
-import { Observable } from "../../../shared";
 
 let activeEffect: null | Function = null;
-
-const observable = new Observable<'enalbe' | 'disable'>();
 
 export function effect(fn: Function) {
   activeEffect = fn;

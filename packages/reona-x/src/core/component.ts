@@ -7,15 +7,26 @@ import type {
 import { isHtmlString } from "../utils";
 import { createKey, getDepth } from "../../../shared";
 import Parser, { type VNode } from "./parser";
-import { createDOM } from "./dom";
+import { createDOM } from "./runtime-dom";
+
 
 /** @description 전역 컴포넌트 관리 map */
-const instanceMap = new WeakMap<Component, Map<string, Fiber>>();
+let instanceMap: Map<Component, Map<string, Fiber>>;
+
+const NOT_PRODUCTION = __DEV__ || __TEST__;
+
+if (NOT_PRODUCTION) {
+  instanceMap = new Map<Component, Map<string, Fiber>>();
+} else {
+  // @ts-ignore
+  instanceMap = new WeakMap<Component, Map<string, Fiber>>();
+}
+
 
 let currentFiber: Fiber | null = null;
-
-const states = new Map<Fiber, Record<string, any>>();
-const mountList = new Map<Fiber, () => void>();
+const states = new WeakMap<Fiber, Record<string, any>>();
+const mountList = new WeakMap<Fiber, () => void>();
+const unMountList = new WeakMap<Fiber, () => void>();
 
 export function state<D extends Data>(initial: D) {
   if (currentFiber === null) {
@@ -99,9 +110,13 @@ export class Fiber {
 
   private component: Component;
 
-  private vnodeTree: VNode;
+  private prevVnodeTree: VNode;
 
-  private vdom: HTMLElement;
+  private nextVnodeTree: VNode;
+
+  private prevDom: HTMLElement;
+
+  private nextDom: HTMLElement;
 
   public isMounted = false;
 
@@ -121,9 +136,10 @@ export class Fiber {
 
     this.parentElement = parentElement;
 
-    this.vnodeTree = parser.parse();
-    this.vdom = createDOM(this.vnodeTree, parentElement);
-    parentElement.replaceChildren(this.vdom);
+    this.prevVnodeTree = parser.parse();
+    this.prevDom = createDOM(this.prevVnodeTree, parentElement);
+
+    this.parentElement.insertBefore(this.prevDom, null);
 
     if (!this.isMounted) {
       const fn = mountList.get(this);
@@ -137,10 +153,47 @@ export class Fiber {
     currentFiber = this;
     const template = this.component(this.props);
     const parser = new Parser(template, depth + 1);
+    this.nextVnodeTree = parser.parse();
 
-    this.vnodeTree = parser.parse();
-    this.vdom = createDOM(this.vnodeTree, this.parentElement);
-    this.parentElement.replaceChildren(this.vdom);
+    this.ummount();
+
+    this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
+    this.parentElement.replaceChildren(this.nextDom);
+
+    this.prevVnodeTree = this.nextVnodeTree;
+    this.prevDom = this.nextDom;
+  }
+
+  // todo 부분 최적화 방법??
+  private ummount() {
+    const prevFibers = this.collectFibers(this.prevVnodeTree);
+    const nextFibers = this.collectFibers(this.nextVnodeTree);
+
+    for (const fiber of prevFibers) {
+      if (!nextFibers.has(fiber)) {
+        const fn = unMountList.get(fiber);
+        fn?.();
+        instanceMap.get(fiber.component)?.delete(fiber.key);
+      }
+    }
+  }
+
+  private collectFibers(
+    vnode: VNode | undefined,
+    set: Set<Fiber> = new Set()
+  ): Set<Fiber> {
+    if (!vnode) return set;
+    switch (vnode.type) {
+      case 'component':
+        set.add(vnode.fiber);
+        break;
+      case 'element':
+        vnode.children.forEach((child) => this.collectFibers(child, set));
+        break;
+      case 'text':
+        break;
+    }
+    return set;
   }
 }
 
@@ -161,6 +214,12 @@ export function mounted(callback: () => void) {
   if (currentFiber === null) {
     throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-
   mountList.set(currentFiber, callback);
+}
+
+export function unMounted(callback: () => void) {
+  if (currentFiber === null) {
+    throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+  unMountList.set(currentFiber, callback);
 }

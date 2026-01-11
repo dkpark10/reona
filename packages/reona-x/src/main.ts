@@ -1,4 +1,4 @@
-import { rootRender } from "./core/temp";
-import Counter from "./components/counter";
+import { rootRender } from "./core/component";
+import Counter from "../../../fixture/reona-x";
 
 rootRender(document.getElementById("root")!, Counter, { value: 123 });
