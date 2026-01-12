@@ -95,18 +95,16 @@ function getInstance<
   let $fiberKey = options.fiberKey;
   let $refs = {} as Record<string, Element | null>;
 
-  function rerRender() {
-    update(() => {
-      if ($fiberKey) {
-        const fiber = instanceMap.get($fiberKey)?.get($componentKey);
-        fiber?.reRender();
-      }
-    });
+  function reRender() {
+    const fiber = instanceMap.get($fiberKey)?.get($componentKey);
+    if (fiber) {
+      update(fiber);
+    }
   };
 
   if (options.connect) {
     $unsubscribes = options.connect.map((subscribe) =>
-      subscribe(rerRender)
+      subscribe(reRender)
     );
   }
 
@@ -148,7 +146,7 @@ function getInstance<
       }
 
       if ($prevData !== value) {
-        rerRender();
+        reRender();
         instance.watch?.[key as string]?.(value, $prevData);
       }
       return result;
