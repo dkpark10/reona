@@ -1,4 +1,4 @@
-import { html, mounted, state, createComponent } from "../../packages/reona-x/src/core/component";
+import { html, mounted, state, createComponent, updated } from "../../packages/reona-x/src/core/component";
 import Child from "./child";
 import Child2 from "./child2";
 
@@ -17,6 +17,10 @@ export default function Counter({ value }: CounterProps) {
 
   mounted(() => {
     console.log('mounted', document.getElementById('app'));
+  });
+
+  updated<typeof data>((next, prev) => {
+    console.log(next, prev);
   });
 
   return html`

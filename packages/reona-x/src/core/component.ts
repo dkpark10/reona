@@ -5,7 +5,7 @@ import type {
   Data,
 } from "../utils/types";
 import { isHtmlString } from "../utils";
-import { createKey, getDepth } from "../../../shared";
+import { createKey, getDepth, isPrimitive } from "../../../shared";
 import Parser, { type VNode } from "./parser";
 import { createDOM } from "./runtime-dom";
 
@@ -25,6 +25,7 @@ let currentFiber: Fiber | null = null;
 const states = new WeakMap<Fiber, Record<string, any>>();
 const mountList = new WeakMap<Fiber, () => void>();
 const unMountList = new WeakMap<Fiber, () => void>();
+const updatedList = new WeakMap<Fiber, <D extends Data>(next: D, prev: D) => void>();
 
 export function state<D extends Data>(initial: D) {
   if (currentFiber === null) {
@@ -36,6 +37,10 @@ export function state<D extends Data>(initial: D) {
     return existState as D;
   }
 
+  if (initial && isPrimitive(initial)) {
+    throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
+  }
+
   let fiber = currentFiber;
   const data = new Proxy(initial, {
     get(target, key, receiver) {
@@ -43,8 +48,15 @@ export function state<D extends Data>(initial: D) {
     },
 
     set(target, key, value, receiver) {
+      const prevState = { ...target };
+      const prevValue = Reflect.get(receiver, key);
+
       const result = Reflect.set(target, key, value, receiver);
-      fiber?.reRender();
+      if (prevValue !== value) {
+        fiber.nextState = target;
+        fiber.prevState = prevState;
+        fiber?.reRender();
+      }
       return result;
     },
   });
@@ -119,6 +131,10 @@ export class Fiber {
   public isMounted = false;
 
   public props?: Props;
+  
+  public nextState: Record<string, any>;
+  
+  public prevState: Record<string, any>;
 
   constructor(component: Component, options: FiberOption) {
     this.component = component;
@@ -160,6 +176,9 @@ export class Fiber {
 
     this.prevVnodeTree = this.nextVnodeTree;
     this.prevDom = this.nextDom;
+
+    const fn = updatedList.get(this);
+    fn?.(this.nextState, this.prevState);
   }
 
   // todo 부분 최적화 방법??
@@ -217,7 +236,15 @@ export function mounted(callback: () => void) {
 
 export function unMounted(callback: () => void) {
   if (currentFiber === null) {
-    throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
+    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
   unMountList.set(currentFiber, callback);
+}
+
+export function updated<D extends Data>(callback:(next: D, prev: D) => void) {
+  if (currentFiber === null) {
+    throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+  // @ts-ignore
+  updatedList.set(currentFiber, callback);
 }
