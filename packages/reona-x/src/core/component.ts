@@ -21,6 +21,26 @@ if (NOT_PRODUCTION) {
   instanceMap = new WeakMap<Component, Map<string, Fiber>>();
 }
 
+const renderQueue = new Set<Fiber>();
+let rafId: number | null = null;
+
+export function update(fiber: Fiber) {
+  renderQueue.add(fiber);
+
+  if (rafId !== null) return;
+
+  rafId = requestAnimationFrame(() => {
+    try {
+      renderQueue.forEach((fiber) => {
+        fiber.reRender();
+      });
+    } finally {
+      renderQueue.clear();
+      rafId = null;
+    }
+  });
+}
+
 let currentFiber: Fiber | null = null;
 const states = new WeakMap<Fiber, Record<string, any>>();
 const mountList = new WeakMap<Fiber, Set<() => void>>();
@@ -55,7 +75,7 @@ export function state<D extends Data>(initial: D) {
       if (prevValue !== value) {
         fiber.nextState = target;
         fiber.prevState = prevState;
-        fiber?.reRender();
+        update(fiber);
       }
       return result;
     },
@@ -81,7 +101,7 @@ export function createStore<D extends Data>(initial: D) {
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
         listeners.forEach(function (fiber) {
-          fiber.reRender();
+          update(fiber);
         });
       }
       return result;
