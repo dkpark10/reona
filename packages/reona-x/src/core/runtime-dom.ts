@@ -34,7 +34,12 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
         const eventName = key.slice(1);
         el.addEventListener(eventName, value);
       } else {
-        el.setAttribute(key, value);
+        if (/^\$\$ref\b/.test(key)) {
+          const setRef = value as Function;
+          setRef(el);
+        } else {
+          el.setAttribute(key, value);
+        }
       }
     }
   }

@@ -1,4 +1,4 @@
-import { html, createComponent } from '../../../packages/reona-x/src/core/component';
+import { html, createComponent } from '../../../packages/reona-x/src/core';
 import child1 from './child1';
 import child2 from './child2';
 

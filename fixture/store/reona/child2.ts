@@ -1,5 +1,5 @@
-import { component, html } from "../../packages/reona/src/core/component";
-import { counterStore } from "../../packages/reona/src/core/store";
+import { component, html } from '../../../packages/reona/src/core/component';
+import { counterStore } from '../../../packages/reona/src/core/store';
 
 export default component<
   {},
@@ -7,7 +7,7 @@ export default component<
   {},
   { globalState: number; }
 >({
-  name: "child2",
+  name: 'child2',
 
   connect: [counterStore.subscribe],
 

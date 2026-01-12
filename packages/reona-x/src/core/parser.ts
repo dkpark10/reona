@@ -1,6 +1,6 @@
 import type { RenderResult, Props } from "../utils/types";
 import { isEmpty } from "../../../shared";
-import { Fiber } from "./component";
+import Fiber from "./fiber";
 
 export function isRenderResultObject(obj: any): obj is RenderResult {
   return (

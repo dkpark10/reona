@@ -1,6 +1,6 @@
-import { html, mounted, state, createComponent, updated } from "../../packages/reona-x/src/core/component";
-import Child from "./child";
-import Child2 from "./child2";
+import { html, mounted, state, createComponent, updated } from '../../packages/reona-x/src/core';
+import Child from './child';
+import Child2 from './child2';
 
 interface CounterProps {
   value: number;
