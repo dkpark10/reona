@@ -1,5 +1,5 @@
 import { expect, test, beforeEach, afterEach } from "vitest";
-import store from "../../../../fixture/store";
+import store from "../../../../fixture/store/reona";
 import { rootRender } from "../core/runtime-dom";
 import { flushRaf } from "./utils";
 

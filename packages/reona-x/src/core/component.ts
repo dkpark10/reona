@@ -23,9 +23,9 @@ if (NOT_PRODUCTION) {
 
 let currentFiber: Fiber | null = null;
 const states = new WeakMap<Fiber, Record<string, any>>();
-const mountList = new WeakMap<Fiber, () => void>();
-const unMountList = new WeakMap<Fiber, () => void>();
-const updatedList = new WeakMap<Fiber, <D extends Data>(next: D, prev: D) => void>();
+const mountList = new WeakMap<Fiber, Set<() => void>>();
+const unMountList = new WeakMap<Fiber, Set<() => void>>();
+const updatedList = new WeakMap<Fiber, Set<<D extends Data>(next: D, prev: D) => void>>();
 
 export function state<D extends Data>(initial: D) {
   if (currentFiber === null) {
@@ -64,6 +64,71 @@ export function state<D extends Data>(initial: D) {
   return data as D;
 }
 
+export function createStore<D extends Data>(initial: D) {
+  if (initial && isPrimitive(initial)) {
+    throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
+  }
+
+  const listeners = new Set<Fiber>();
+
+  const data = new Proxy(initial, {
+    get(target, key, receiver) {
+      return Reflect.get(target, key, receiver);
+    },
+
+    set(target, key, value, receiver) {
+      const prevValue = Reflect.get(receiver, key);
+      const result = Reflect.set(target, key, value, receiver);
+      if (prevValue !== value) {
+        listeners.forEach(function (fiber) {
+          fiber.reRender();
+        });
+      }
+      return result;
+    },
+  });
+
+  return {
+    data,
+    listeners,
+    subscribe(fiber: Fiber) {
+      listeners.add(fiber);
+      return function () {
+        listeners.delete(fiber);
+      };
+    },
+  };
+}
+
+interface StoreOption<D extends Data> {
+  data: D,
+  subscribe: (fiber: Fiber) => () => void;
+  listeners: Set<Fiber>;
+}
+
+export function store<D extends Data>(storeOption: StoreOption<D>) {
+  const { data, subscribe } = storeOption;
+  let fiber = currentFiber;
+  if (!fiber) {
+    throw new Error('스토어 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  const unSubscribe = subscribe(fiber);
+  let dep = unMountList.get(fiber);
+  if (!dep) {
+    dep = new Set();
+    dep.add(unSubscribe);
+    unMountList.set(fiber, dep);
+  } else {
+    dep.add(unSubscribe);
+  }
+  return data;
+}
+
+export const countStore = createStore({
+  count: 0,
+});
+
 export function rootRender(
   container: Element,
   component: Component,
@@ -82,7 +147,7 @@ interface CreateComponentOption<P extends Props> {
   props?: P;
 }
 
-export function createComponent<P extends Props>(component: Component, options: CreateComponentOption<P>) {
+export function createComponent<P extends Props>(component: Component, options?: CreateComponentOption<P>) {
   /** @description 컴포넌트의 depth */
   const func = function getFiber(depth: number) {
     const key = createKey(depth, options?.key);
@@ -114,8 +179,6 @@ type FiberOption = {
 }
 
 export class Fiber {
-  private key: string;
-
   private parentElement: Element;
 
   private component: Component;
@@ -130,10 +193,12 @@ export class Fiber {
 
   public isMounted = false;
 
+  public key: string;
+
   public props?: Props;
-  
+
   public nextState: Record<string, any>;
-  
+
   public prevState: Record<string, any>;
 
   constructor(component: Component, options: FiberOption) {
@@ -156,8 +221,12 @@ export class Fiber {
     this.parentElement.insertBefore(this.prevDom, null);
 
     if (!this.isMounted) {
-      const fn = mountList.get(this);
-      fn?.();
+      const dep = mountList.get(this);
+      if (dep) {
+        for (const fn of dep) {
+          fn();
+        }
+      }
       this.isMounted = true;
     }
   }
@@ -165,6 +234,7 @@ export class Fiber {
   public reRender() {
     const depth = getDepth(this.key);
     currentFiber = this;
+
     const template = this.component(this.props);
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();
@@ -172,13 +242,17 @@ export class Fiber {
     this.ummount();
 
     this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
-    this.parentElement.replaceChildren(this.nextDom);
+    this.prevDom.replaceWith(this.nextDom);
 
     this.prevVnodeTree = this.nextVnodeTree;
     this.prevDom = this.nextDom;
 
-    const fn = updatedList.get(this);
-    fn?.(this.nextState, this.prevState);
+    const dep = updatedList.get(this);
+    if (dep) {
+      for (const fn of dep) {
+        fn?.(this.nextState, this.prevState);
+      }
+    }
   }
 
   // todo 부분 최적화 방법??
@@ -188,8 +262,11 @@ export class Fiber {
 
     for (const fiber of prevFibers) {
       if (!nextFibers.has(fiber)) {
-        const fn = unMountList.get(fiber);
-        fn?.();
+        const dep = unMountList.get(fiber);
+        if (!dep) continue;
+        for (const fn of dep) {
+          fn();
+        }
         instanceMap.get(fiber.component)?.delete(fiber.key);
       }
     }
@@ -231,17 +308,31 @@ export function mounted(callback: () => void) {
   if (currentFiber === null) {
     throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-  mountList.set(currentFiber, callback);
+  let dep = mountList.get(currentFiber);
+  if (!dep) {
+    dep = new Set();
+    dep.add(callback);
+    mountList.set(currentFiber, dep);
+  } else {
+    dep.add(callback);
+  }
 }
 
 export function unMounted(callback: () => void) {
   if (currentFiber === null) {
     throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-  unMountList.set(currentFiber, callback);
+  let dep = unMountList.get(currentFiber);
+  if (!dep) {
+    dep = new Set();
+    dep.add(callback);
+    unMountList.set(currentFiber, dep);
+  } else {
+    dep.add(callback);
+  }
 }
 
-export function updated<D extends Data>(callback:(next: D, prev: D) => void) {
+export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
   if (currentFiber === null) {
     throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
