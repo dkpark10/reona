@@ -10,7 +10,7 @@ export default function Child1() {
   return html`
     <div>
       <button type="button" @click=${trigger}>trigger</button>
-      ${storeData.count}
+      <div id="store1">${storeData.count}</div>
     </div>
   `;
 }

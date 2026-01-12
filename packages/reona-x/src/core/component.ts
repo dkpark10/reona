@@ -90,7 +90,6 @@ export function createStore<D extends Data>(initial: D) {
 
   return {
     data,
-    listeners,
     subscribe(fiber: Fiber) {
       listeners.add(fiber);
       return function () {
@@ -103,7 +102,6 @@ export function createStore<D extends Data>(initial: D) {
 interface StoreOption<D extends Data> {
   data: D,
   subscribe: (fiber: Fiber) => () => void;
-  listeners: Set<Fiber>;
 }
 
 export function store<D extends Data>(storeOption: StoreOption<D>) {
@@ -126,7 +124,7 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
 }
 
 export const countStore = createStore({
-  count: 0,
+  count: 10000,
 });
 
 export function rootRender(
@@ -336,6 +334,17 @@ export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
   if (currentFiber === null) {
     throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-  // @ts-ignore
-  updatedList.set(currentFiber, callback);
+  if (currentFiber === null) {
+    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+  let dep = updatedList.get(currentFiber);
+  if (!dep) {
+    dep = new Set();
+    // @ts-ignore
+    dep.add(callback);
+    updatedList.set(currentFiber, dep);
+  } else {
+    // @ts-ignore
+    dep.add(callback);
+  }
 }
