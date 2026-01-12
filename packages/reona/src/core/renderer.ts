@@ -1,14 +1,18 @@
-const renderQueue = new Set<() => void>();
+import Fiber from "./fiber";
+
+const renderQueue = new Set<Fiber>();
 let rafId: number | null = null;
 
-export function update(renderCallback: () => void) {
-  renderQueue.add(renderCallback);
+export function update(fiber: Fiber) {
+  renderQueue.add(fiber);
 
   if (rafId !== null) return;
 
   rafId = requestAnimationFrame(() => {
     try {
-      renderQueue.forEach(fn => fn());
+      renderQueue.forEach((fiber) => {
+        fiber.reRender();
+      });
     } finally {
       renderQueue.clear();
       rafId = null;

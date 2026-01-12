@@ -22,6 +22,7 @@ export function rootRender<P extends Props>(
 
   const fiber = getFiber(0);
   fiber.render(container);
+  return fiber;
 }
 
 /** @description 가장 가까운 부모 찾음  */
