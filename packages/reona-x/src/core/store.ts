@@ -1,6 +1,6 @@
 import type { Data } from "../utils/types";
 import { isPrimitive } from "../../../shared";
-import Fiber, { getCurrentFiber, unMountList } from "./fiber";
+import Fiber, { getCurrentFiber, unMountHooks } from "./fiber";
 import { update } from "./renderer";
 
 export function createStore<D extends Data>(initial: D) {
@@ -51,11 +51,11 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
   }
 
   const unSubscribe = subscribe(fiber);
-  let dep = unMountList.get(fiber);
+  let dep = unMountHooks.get(fiber);
   if (!dep) {
     dep = new Set();
     dep.add(unSubscribe);
-    unMountList.set(fiber, dep);
+    unMountHooks.set(fiber, dep);
   } else {
     dep.add(unSubscribe);
   }

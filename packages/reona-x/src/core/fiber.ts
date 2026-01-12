@@ -27,9 +27,9 @@ export function getCurrentFiber() {
   return currentFiber;
 }
 
-export const mountList = new WeakMap<Fiber, Set<() => void>>();
-export const unMountList = new WeakMap<Fiber, Set<() => void>>();
-export const updatedList = new WeakMap<Fiber, Set<<D extends Data>(next: D, prev: D) => void>>();
+export const mountHooks = new WeakMap<Fiber, Set<() => void>>();
+export const unMountHooks = new WeakMap<Fiber, Set<() => void>>();
+export const updatedHooks = new WeakMap<Fiber, Set<<D extends Data>(next: D, prev: D) => void>>();
 
 type FiberOption = {
   key: string;
@@ -57,6 +57,10 @@ export default class Fiber {
   public nextState: Record<string, any>;
 
   public prevState: Record<string, any>;
+  
+  public hookIndex = 0;
+
+  public hookLimit = 0;
 
   constructor(component: Component, options: FiberOption) {
     this.component = component;
@@ -79,13 +83,14 @@ export default class Fiber {
     this.parentElement.insertBefore(this.prevDom, null);
 
     if (!this.isMounted) {
-      const dep = mountList.get(this);
+      const dep = mountHooks.get(this);
       if (dep) {
         for (const fn of dep) {
           fn();
         }
       }
       this.isMounted = true;
+      this.hookLimit = this.hookIndex;
     }
   }
 
@@ -106,7 +111,7 @@ export default class Fiber {
     this.prevVnodeTree = this.nextVnodeTree;
     this.prevDom = this.nextDom;
 
-    const dep = updatedList.get(this);
+    const dep = updatedHooks.get(this);
     if (dep) {
       for (const fn of dep) {
         fn?.(this.nextState, this.prevState);
@@ -121,12 +126,15 @@ export default class Fiber {
 
     for (const fiber of prevFibers) {
       if (!nextFibers.has(fiber)) {
-        const dep = unMountList.get(fiber);
+        const dep = unMountHooks.get(fiber);
         if (!dep) continue;
         for (const fn of dep) {
           fn();
         }
         instanceMap.get(fiber.component)?.delete(fiber.key);
+        mountHooks.delete(fiber);
+        unMountHooks.delete(fiber);
+        updatedHooks.delete(fiber);
       }
     }
   }

@@ -6,7 +6,13 @@ import type {
 } from '../utils/types';
 import { isHtmlString } from '../utils';
 import { createKey, isPrimitive } from '../../../shared';
-import Fiber, { getInstanceMap, getCurrentFiber, mountList, unMountList, updatedList } from './fiber';
+import Fiber, { 
+  getInstanceMap,
+  getCurrentFiber,
+  mountHooks,
+  unMountHooks,
+  updatedHooks
+} from './fiber';
 import { update } from './renderer';
 
 const states = new WeakMap<Fiber, Record<string, any>>();
@@ -113,26 +119,17 @@ export function mounted(callback: () => void) {
   if (currentFiber === null) {
     throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-  let dep = mountList.get(currentFiber);
-  if (!dep) {
-    dep = new Set();
-    dep.add(callback);
-    mountList.set(currentFiber, dep);
-  } else {
-    dep.add(callback);
-  }
-}
 
-export function unMounted(callback: () => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
-    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
+  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+    return;
   }
-  let dep = unMountList.get(currentFiber);
+
+  currentFiber.hookIndex += 1;
+  let dep = mountHooks.get(currentFiber);
   if (!dep) {
     dep = new Set();
     dep.add(callback);
-    unMountList.set(currentFiber, dep);
+    mountHooks.set(currentFiber, dep);
   } else {
     dep.add(callback);
   }
@@ -143,14 +140,41 @@ export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
   if (currentFiber === null) {
     throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-  let dep = updatedList.get(currentFiber);
+
+  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+    return;
+  }
+
+  currentFiber.hookIndex += 1;
+  let dep = updatedHooks.get(currentFiber);
   if (!dep) {
     dep = new Set();
     // @ts-ignore
     dep.add(callback);
-    updatedList.set(currentFiber, dep);
+    updatedHooks.set(currentFiber, dep);
   } else {
     // @ts-ignore
+    dep.add(callback);
+  }
+}
+
+export function unMounted(callback: () => void) {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+    return;
+  }
+
+  currentFiber.hookIndex += 1;
+  let dep = unMountHooks.get(currentFiber);
+  if (!dep) {
+    dep = new Set();
+    dep.add(callback);
+    unMountHooks.set(currentFiber, dep);
+  } else {
     dep.add(callback);
   }
 }
