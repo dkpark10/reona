@@ -26,6 +26,7 @@ export function getCurrentFiber() {
 export const mountHooks = new WeakMap<Fiber, Set<() => void>>();
 export const unMountHooks = new WeakMap<Fiber, Set<() => void>>();
 export const updatedHooks = new WeakMap<Fiber, Set<<D extends Data>(next: D, prev: D) => void>>();
+export const watchPropsHooks = new WeakMap<Fiber, Set<<P extends Props>(prev: P) => void>>();
 
 type FiberOption = {
   key: string;
@@ -48,7 +49,9 @@ export default class Fiber {
 
   public key: string;
 
-  public props?: Props;
+  public nextProps?: Props;
+  
+  public prevProps?: Props;
 
   public nextState: Record<string, any>;
 
@@ -57,6 +60,8 @@ export default class Fiber {
   public hookIndex = 0;
 
   public hookLimit = 0;
+
+  public watchPropsTrigger = false;
 
   constructor(component: Component, options: FiberOption) {
     this.component = component;
@@ -67,7 +72,7 @@ export default class Fiber {
     const depth = getDepth(this.key);
 
     currentFiber = this;
-    const template = this.component(this.props);
+    const template = this.component(this.nextProps);
 
     const parser = new Parser(template, depth + 1);
 
@@ -77,6 +82,19 @@ export default class Fiber {
     this.prevDom = createDOM(this.prevVnodeTree, parentElement);
 
     this.parentElement.insertBefore(this.prevDom, null);
+
+    if (this.watchPropsTrigger) {
+      const dep = watchPropsHooks.get(this);
+      if (dep) {
+        for (const fn of dep) {
+          if (this.prevProps) {
+            fn(this.prevProps);
+          }
+        }
+      }
+    }
+
+    this.prevProps = this.nextProps;
 
     if (!this.isMounted) {
       const dep = mountHooks.get(this);
@@ -94,7 +112,7 @@ export default class Fiber {
     const depth = getDepth(this.key);
 
     currentFiber = this;
-    const template = this.component(this.props);
+    const template = this.component(this.nextProps);
 
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();

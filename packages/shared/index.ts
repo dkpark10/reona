@@ -101,3 +101,31 @@ export function createKey(depth: number, key?: string | number) {
 export function getDepth(key: string) {
   return Number(key.match(/^\d+/)![0]);
 }
+
+export function shallowEqual(
+  objA: Record<string, any>,
+  objB: Record<string, any>
+): boolean {
+  if (Object.is(objA, objB)) return true;
+
+  if (
+    typeof objA !== 'object' ||
+    typeof objB !== 'object' ||
+    objA === null ||
+    objB === null
+  ) {
+    return false;
+  }
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(objB, key)) return false;
+    if (!Object.is(objA[key], objB[key])) return false;
+  }
+
+  return true;
+}

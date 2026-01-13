@@ -1,8 +1,6 @@
-import type { RenderResult, Component, Props, Data } from '../utils/types';
-import { isHtmlString } from '../utils';
-import { createKey, isPrimitive, shallowEqual } from '../../../shared';
+import type { Props, Data } from '../utils/types';
+import { isPrimitive } from '../../../shared';
 import Fiber, {
-  getInstanceMap,
   getCurrentFiber,
   mountHooks,
   unMountHooks,
@@ -17,6 +15,10 @@ export function state<D extends Data>(initial: D) {
   const currentFiber = getCurrentFiber();
   if (currentFiber === null) {
     throw new Error('상태 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+    throw new Error('훅은 함수 최상단에 선언해야 합니다.');
   }
 
   const existState = states.get(currentFiber);
@@ -49,67 +51,6 @@ export function state<D extends Data>(initial: D) {
   });
   states.set(fiber, data);
   return data as D;
-}
-
-export function rootRender(
-  container: Element,
-  component: Component,
-  props?: Parameters<typeof component>[0]
-) {
-  const getFiber = createComponent(component, {
-    props,
-  });
-
-  const fiber = getFiber(0);
-  fiber.render(container);
-}
-
-interface CreateComponentOption<P extends Props> {
-  key?: string | number;
-  props?: P;
-}
-
-export function createComponent<P extends Props>(
-  component: Component,
-  options?: CreateComponentOption<P>
-) {
-  const instanceMap = getInstanceMap();
-  /** @description 컴포넌트의 depth */
-  const func = function getFiber(depth: number) {
-    const key = createKey(depth, options?.key);
-
-    let instanceDeps = instanceMap.get(component);
-    if (!instanceDeps) {
-      instanceDeps = new Map();
-    }
-
-    let fiber: Fiber | undefined = instanceDeps.get(key);
-    if (!fiber) {
-      fiber = new Fiber(component, { key });
-      instanceDeps.set(key, fiber);
-      instanceMap.set(component, instanceDeps);
-    }
-
-    if (options && options.props) {
-      fiber.nextProps = options.props;
-      if ((fiber.nextProps && fiber.prevProps) && !shallowEqual(fiber.nextProps, fiber.prevProps)) {
-        fiber.watchPropsTrigger = true;
-      }
-    }
-    return fiber;
-  };
-  func.__isCreateComponent = true;
-  return func;
-}
-
-export function html(strings: TemplateStringsArray, ...values: any[]): RenderResult {
-  let idx = 0;
-  const rawString = strings
-    .join('%%identifier%%')
-    .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
-
-  if (!isHtmlString(rawString)) throw new Error('잘못된 html 형식입니다.');
-  return { template: rawString, values };
 }
 
 export function mounted(callback: () => void) {
