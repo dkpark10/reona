@@ -1,11 +1,11 @@
-import type { Data } from "../utils/types";
-import { isPrimitive } from "../../../shared";
-import Fiber, { getCurrentFiber, unMountHooks } from "./fiber";
-import { update } from "./renderer";
+import type { Data } from '../utils/types';
+import { isPrimitive } from '../../../shared';
+import Fiber, { getCurrentFiber, unMountHooks } from './fiber';
+import { update } from './renderer';
 
 export function createStore<D extends Data>(initial: D) {
   if (initial && isPrimitive(initial)) {
-    throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
+    throw new Error('원시객체 입니다. 데이터에 객체 형식이어야 합니다.');
   }
 
   const listeners = new Set<Fiber>();
@@ -39,7 +39,7 @@ export function createStore<D extends Data>(initial: D) {
 }
 
 interface StoreOption<D extends Data> {
-  data: D,
+  data: D;
   subscribe: (fiber: Fiber) => () => void;
 }
 

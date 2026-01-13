@@ -1,7 +1,6 @@
-import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
+import { beforeEach, afterEach, expect, test, describe } from 'vitest';
 import { mounted, state, html, rootRender, ref, setRef } from '../core';
 import { flushRaf } from './utils';
-import Refs from '../../../../fixture/refs/reona-x';
 
 beforeEach(() => {
   const div = document.createElement('div');
@@ -17,7 +16,33 @@ afterEach(() => {
 
 describe('refs 테스트', () => {
   test('refs 값 변경 시 리렌더링이 되어서는 안된다.', async () => {
-    rootRender(document.getElementById("root")!, Refs);
+    function Ref() {
+      const data = state({
+        value: 0,
+      });
+
+      const unStateless = ref({
+        value: 9999,
+      });
+
+      const trigger = () => {
+        data.value += 1;
+      };
+
+      const noop = () => {
+        unStateless.current.value += 1;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" data-testid="trigger" @click=${trigger}>trigger</button>
+          <button type="button" data-testid="noop" @click=${noop}>noop</button>
+          <div id="value">${unStateless.current.value}</div>
+        </div>
+      `;
+    }
+
+    rootRender(document.getElementById('root')!, Ref);
 
     (document.querySelector('button[data-testid="noop"]') as HTMLButtonElement)?.click();
     await flushRaf();
@@ -38,7 +63,7 @@ describe('refs 테스트', () => {
       mounted(() => {
         result = headingElement.current.element;
       });
-    
+
       return html`
         <div id="app">
           <h1 $$ref="${setRef(headingElement, 'element')}">hh</h1>
@@ -46,9 +71,9 @@ describe('refs 테스트', () => {
       `;
     }
 
-    rootRender(document.getElementById("root")!, RefElement);
+    rootRender(document.getElementById('root')!, RefElement);
     await flushRaf();
     expect((result as HTMLHeadingElement).tagName).toBe('H1');
     expect((result as HTMLHeadingElement).textContent).toBe('hh');
   });
-})
+});

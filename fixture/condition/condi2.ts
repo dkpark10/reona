@@ -1,4 +1,4 @@
-import { html, component } from "../../packages/reona/src/core/component";
+import { component, html } from '../../packages/reona/src/core';
 
 export default component({
   name: 'condi2',

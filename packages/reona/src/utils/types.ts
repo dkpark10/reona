@@ -42,12 +42,12 @@ export type ComponentInstance<
   state: D;
 
   $fiberKey: Function;
-  
+
   setProps: (props: P) => void;
 
   setComponentKey: (key: string) => void;
-  
+
   getComponentKey: () => string;
 
-  setRefs:(key: string, el: Element) => void;
+  setRefs: (key: string, el: Element) => void;
 };

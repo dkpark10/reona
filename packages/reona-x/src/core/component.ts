@@ -1,17 +1,12 @@
-import type {
-  RenderResult,
-  Component,
-  Props,
-  Data,
-} from '../utils/types';
+import type { RenderResult, Component, Props, Data } from '../utils/types';
 import { isHtmlString } from '../utils';
 import { createKey, isPrimitive } from '../../../shared';
-import Fiber, { 
+import Fiber, {
   getInstanceMap,
   getCurrentFiber,
   mountHooks,
   unMountHooks,
-  updatedHooks
+  updatedHooks,
 } from './fiber';
 import { update } from './renderer';
 
@@ -73,7 +68,10 @@ interface CreateComponentOption<P extends Props> {
   props?: P;
 }
 
-export function createComponent<P extends Props>(component: Component, options?: CreateComponentOption<P>) {
+export function createComponent<P extends Props>(
+  component: Component,
+  options?: CreateComponentOption<P>
+) {
   const instanceMap = getInstanceMap();
   /** @description 컴포넌트의 depth */
   const func = function getFiber(depth: number) {
@@ -96,15 +94,12 @@ export function createComponent<P extends Props>(component: Component, options?:
     }
     // fiber.instance.$componentKey = key;
     return fiber;
-  }
+  };
   func.__isCreateComponent = true;
   return func;
 }
 
-export function html(
-  strings: TemplateStringsArray,
-  ...values: any[]
-): RenderResult {
+export function html(strings: TemplateStringsArray, ...values: any[]): RenderResult {
   let idx = 0;
   const rawString = strings
     .join('%%identifier%%')

@@ -1,4 +1,4 @@
-import { isPrimitive, createKey } from "../../../shared";
+import { isPrimitive, createKey } from '../../../shared';
 import type {
   ComponentKey,
   Props,
@@ -8,18 +8,15 @@ import type {
   ComponentInstance,
   Computed,
   RenderResult,
-} from "../utils/types";
-import Fiber from "./fiber";
-import { instanceMap } from "./instances";
-import { update } from "./renderer";
+} from '../utils/types';
+import Fiber from './fiber';
+import { instanceMap } from './instances';
+import { update } from './renderer';
 
-export function html(
-  strings: TemplateStringsArray,
-  ...values: any[]
-): RenderResult {
+export function html(strings: TemplateStringsArray, ...values: any[]): RenderResult {
   let idx = 0;
   const rawString = strings
-    .join("%%identifier%%")
+    .join('%%identifier%%')
     .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
   return { template: rawString, values };
 }
@@ -30,7 +27,9 @@ interface CreateComponentOption<P extends Props> {
 }
 
 export function createComponent<P extends Props>(
-  getInstance: () => any, options?: CreateComponentOption<P>) {
+  getInstance: () => any,
+  options?: CreateComponentOption<P>
+) {
   /** @description 컴포넌트의 depth */
   const func = function getFiber(depth: number) {
     const key = createKey(depth, options?.key);
@@ -55,7 +54,7 @@ export function createComponent<P extends Props>(
 
     fiber.instance.setComponentKey(key);
     return fiber;
-  }
+  };
   func.__isCreateComponent = true;
   return func;
 }
@@ -64,14 +63,14 @@ export function component<
   P extends Props = Props,
   D extends Data = Data,
   M extends Methods = Methods,
-  C extends Computed = Computed
+  C extends Computed = Computed,
 >(options: ComponentOptions<P, D, M, C>) {
   const func = function () {
     Object.assign(options, {
       fiberKey: func,
-    })
+    });
     return getInstance(options);
-  }
+  };
   return func;
 }
 
@@ -79,13 +78,13 @@ function getInstance<
   P extends Props = Props,
   D extends Data = Data,
   M extends Methods = Methods,
-  C extends Computed = Computed
+  C extends Computed = Computed,
 >(options: ComponentOptions<P, D, M, C>) {
   // data 함수에서 내부 메소드 사용에 따른 call 호출
   const raw = options.data?.call(options.methods) || {};
   const dataKey = Object.keys(raw);
   if (raw && isPrimitive(raw)) {
-    throw new Error("원시객체 입니다. 데이터에 객체 형식이어야 합니다.");
+    throw new Error('원시객체 입니다. 데이터에 객체 형식이어야 합니다.');
   }
 
   let $componentKey: ComponentKey = '';
@@ -100,12 +99,10 @@ function getInstance<
     if (fiber) {
       update(fiber);
     }
-  };
+  }
 
   if (options.connect) {
-    $unsubscribes = options.connect.map((subscribe) =>
-      subscribe(reRender)
-    );
+    $unsubscribes = options.connect.map((subscribe) => subscribe(reRender));
   }
 
   const proxiedState = new Proxy(raw as D, {
@@ -162,6 +159,7 @@ function getInstance<
   const NOT_PRODUCTION = __DEV__ || __TEST__;
 
   const instance = {
+    name: options.name,
     ...options,
     ...binddMethods,
     // ...(NOT_PRODUCTION && boundMethods),
@@ -190,7 +188,7 @@ function getInstance<
     getComponentKey: function () {
       return $componentKey;
     },
-    setRefs: function(key: string, el: Element) {
+    setRefs: function (key: string, el: Element) {
       $refs[key] = el;
     },
     $fiberKey,

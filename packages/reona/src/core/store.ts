@@ -9,9 +9,7 @@ type StoreOption<S, M> = {
   mutation: M;
 } & ThisType<S & M>;
 
-export function createStore<S extends State, M extends Mutation>(
-  storeOptions: StoreOption<S, M>
-) {
+export function createStore<S extends State, M extends Mutation>(storeOptions: StoreOption<S, M>) {
   const rawState = storeOptions.state();
 
   const listeners = new Set<() => void>();
@@ -23,7 +21,7 @@ export function createStore<S extends State, M extends Mutation>(
 
     set(target, key, value, receiver) {
       const result = Reflect.set(target, key, value, receiver);
-      listeners.forEach(function(fn) {
+      listeners.forEach(function (fn) {
         fn();
       });
       return result;
@@ -42,23 +40,9 @@ export function createStore<S extends State, M extends Mutation>(
     subscribe(fn: () => void) {
       // fiber.rerender 함수를 받아야 한다.
       listeners.add(fn);
-      return function() {
+      return function () {
         listeners.delete(fn);
       };
     },
   };
 }
-
-export const counterStore = createStore({
-  state() {
-    return {
-      globalState: 9999,
-    };
-  },
-
-  mutation: {
-    trigger() {
-      this.globalState += 1;
-    },
-  },
-});

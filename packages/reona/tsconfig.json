@@ -1,36 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "es2015",
+    "removeComments": true,
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-
-    /* Bundler mode */
+    "declaration": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
-
+    "noEmit": false, // 아웃풋 생성여부
     "experimentalDecorators": true,
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
     // 생성자 초기화 여부
     "strictPropertyInitialization": false,
-
-    "types": ["vite/client", "@testing-library/jest-dom/vitest"],
-
-    "paths": {
-      "@/*": ["./src/*"],
-    }
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
   },
-  "include": ["src", "env.d.ts"]
+  "include": ["./src", "env.d.ts"],
+  "exclude": ["./src/tests"]
 }

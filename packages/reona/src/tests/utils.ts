@@ -1,5 +1,5 @@
 export function flushRaf() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     requestAnimationFrame(() => {
       resolve(null);
     });
@@ -7,5 +7,5 @@ export function flushRaf() {
 }
 
 export function flushMicrotasks() {
-  return new Promise<void>(resolve => queueMicrotask(resolve));
+  return new Promise<void>((resolve) => queueMicrotask(resolve));
 }

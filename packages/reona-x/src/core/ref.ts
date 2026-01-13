@@ -22,16 +22,22 @@ export function ref<D extends Data>(initial: D) {
   let fiber = currentFiber;
   refs.set(fiber, { current: initial });
   return { current: initial } as { current: D };
-
 }
 
-export const setRef = function <D extends { current: Record<string, any> }>(ref: D,
-  key: keyof D['current']) {
+export const setRef = function <D extends { current: Record<string, any> }>(
+  ref: D,
+  key: keyof D['current']
+) {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
   if (!ref.current) {
     throw new Error('ref 객체가 아닙니다.');
   }
 
   return function (value: unknown) {
     ref.current[key as string] = value;
-  }
-}
+  };
+};

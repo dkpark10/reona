@@ -48,9 +48,9 @@ export class Stack<T> {
 
 export function supportsMoveBefore() {
   return (
-    typeof window !== "undefined" &&
+    typeof window !== 'undefined' &&
     // @ts-ignore
-    typeof window.Element.prototype.moveBefore === "function"
+    typeof window.Element.prototype.moveBefore === 'function'
   );
 }
 
@@ -66,9 +66,7 @@ export const generateId = (() => {
 })();
 
 export function isPrimitive(value: unknown) {
-  return (
-    value === null || (typeof value !== "object" && typeof value !== "function")
-  );
+  return value === null || (typeof value !== 'object' && typeof value !== 'function');
 }
 
 type Observer<T> = (value: T) => void;

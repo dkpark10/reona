@@ -1,12 +1,12 @@
-import type { RenderResult, Props } from "../utils/types";
-import { isEmpty } from "../../../shared";
-import Fiber from "./fiber";
+import type { RenderResult, Props } from '../utils/types';
+import { isEmpty } from '../../../shared';
+import Fiber from './fiber';
 
 export function isRenderResultObject(obj: any): obj is RenderResult {
   return (
     obj !== null &&
-    typeof obj === "object" &&
-    typeof obj.template === "string" &&
+    typeof obj === 'object' &&
+    typeof obj.template === 'string' &&
     Array.isArray(obj.values)
   );
 }
@@ -14,24 +14,24 @@ export function isRenderResultObject(obj: any): obj is RenderResult {
 export type VTextNode = {
   type: 'text';
   value: string;
-}
+};
 
 export type VElementNode = {
   type: 'element';
   tag: keyof HTMLElementTagNameMap;
   attr?: Props;
   children: VNode[];
-}
+};
 
 // fiber
 export type VComponent = {
   type: 'component';
   fiber: Fiber;
-}
+};
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
-function isCreateComponentFunc(func: any): func is ((depth: number) => Fiber) {
+function isCreateComponentFunc(func: any): func is (depth: number) => Fiber {
   return typeof func === 'function' && func.__isCreateComponent;
 }
 
@@ -50,7 +50,7 @@ export default class Parser {
 
   public parse(): VNode {
     const { template: t } = this.renderResult;
-    const template = document.createElement("template");
+    const template = document.createElement('template');
 
     template.innerHTML = t.trim();
 
@@ -78,7 +78,7 @@ export default class Parser {
           );
         } else {
           attrs[attr.name] = markers.reduce((acc) => {
-            return acc += values[this.valueIndex++]
+            return (acc += values[this.valueIndex++]);
           }, '');
         }
       } else {
@@ -109,7 +109,7 @@ export default class Parser {
 
   private convertChild(node: ChildNode): VNode | Array<VNode | null> | null {
     if (node.nodeType === Node.TEXT_NODE) {
-      let text = node.textContent ?? "";
+      let text = node.textContent ?? '';
 
       // 공백제거
       if (/^\s*$/.test(text)) return null;
@@ -160,7 +160,7 @@ export default class Parser {
           if (/__marker_(\d+)__/.test(text)) {
             text = this.replaceMarkers(text);
             return {
-              type: "text",
+              type: 'text',
               value: text,
             };
           }
@@ -170,8 +170,8 @@ export default class Parser {
       }
 
       return {
-        type: "text",
-        value: text
+        type: 'text',
+        value: text,
       };
     }
 
@@ -186,7 +186,7 @@ export default class Parser {
     const { values } = this.renderResult;
     return str.replace(/__marker_(\d+)__/g, () => {
       const v = values[this.valueIndex++];
-      return v !== undefined ? String(v) : "";
+      return v !== undefined ? String(v) : '';
     });
   }
 }

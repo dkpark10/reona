@@ -1,4 +1,4 @@
-import { component, html } from "../../packages/reona/src/core/component";
+import { component, html } from '../../packages/reona/src/core';
 
 export default component<
   {},
@@ -6,7 +6,7 @@ export default component<
   { increase: () => void; decrease: () => void },
   { double: number; }
 >({
-  name: "counter",
+  name: 'counter',
 
   data() {
     return {
@@ -16,11 +16,11 @@ export default component<
   },
 
   mounted() {
-    console.log("counter mounted", document.getElementById("app"));
+    console.log('counter mounted', document.getElementById('app'));
   },
 
   updated() {
-    console.log("counter updated");
+    console.log('counter updated');
   },
 
   computed: {
@@ -64,4 +64,3 @@ export default component<
     `;
   },
 });
-

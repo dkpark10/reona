@@ -1,12 +1,12 @@
-import { html, component, createComponent } from "../../packages/reona/src/core/component";
-import son from "./son";
+import { createComponent, component, html } from '../../packages/reona/src/core';
+import son from './son';
 
 export default component<
   {},
   { value: number; },
   { trigger: () => void; }
 >({
-  name: "nested",
+  name: 'nested',
 
   data() {
     return {

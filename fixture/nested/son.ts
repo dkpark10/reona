@@ -1,5 +1,5 @@
-import { createComponent, component, html } from "../../packages/reona/src/core/component";
-import grandSon from "./grand-son";
+import { createComponent, component, html } from '../../packages/reona/src/core';
+import grandSon from './grand-son';
 
 export default component<
   { value: number }

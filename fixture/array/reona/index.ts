@@ -1,8 +1,8 @@
-import { component, html, createComponent } from "../../packages/reona/src/core/component";
-import arrayChild from "./array-child";
+import { component, html, createComponent } from '../../../packages/reona/src/core';
+import arrayChild from './array-child';
 
 export default component({
-  name: "array",
+  name: 'array',
 
   data() {
     return {

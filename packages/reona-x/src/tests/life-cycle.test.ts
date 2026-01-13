@@ -1,5 +1,13 @@
 import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
-import { mounted, unMounted, state, html, createComponent, rootRender, updated } from '../core/component';
+import {
+  mounted,
+  unMounted,
+  state,
+  html,
+  createComponent,
+  rootRender,
+  updated,
+} from '../core/component';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -35,7 +43,7 @@ describe('라이프 사이클 훅 테스트', () => {
         </div>
       `;
     }
-    rootRender(document.getElementById("root")!, Component);
+    rootRender(document.getElementById('root')!, Component);
 
     document.querySelector('button')?.click();
     await flushRaf();
@@ -47,7 +55,7 @@ describe('라이프 사이클 훅 테스트', () => {
   });
 
   test('업데이트 훅 실행을 테스트 한다.', async () => {
-    const expectedValue: any[] = []; 
+    const expectedValue: any[] = [];
     const updatedFn = vi.fn((next, prev) => {
       expectedValue[0] = next;
       expectedValue[1] = prev;
@@ -70,17 +78,17 @@ describe('라이프 사이클 훅 테스트', () => {
         </div>
       `;
     }
-    rootRender(document.getElementById("root")!, Component);
+    rootRender(document.getElementById('root')!, Component);
 
     document.querySelector('button')?.click();
     await flushRaf();
     expect(updatedFn).toHaveBeenCalled();
-    expect(expectedValue).toEqual([{ value: 2 }, { value: 1 }])
+    expect(expectedValue).toEqual([{ value: 2 }, { value: 1 }]);
 
     document.querySelector('button')?.click();
     await flushRaf();
     expect(updatedFn).toHaveBeenCalled();
-    expect(expectedValue).toEqual([{ value: 3 }, { value: 2 }])
+    expect(expectedValue).toEqual([{ value: 3 }, { value: 2 }]);
   });
 
   test('조건부 렌더링에 따른 라이프 사이클 훅을 테스트를 한다.', async () => {
@@ -120,23 +128,22 @@ describe('라이프 사이클 훅 테스트', () => {
       return html`
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
-          ${data.bool ?
-          createComponent(Child, {
-            props: {
-              value: 1,
-            },
-          })
-          : createComponent(Child2, {
-            props: {
-              value: 2
-            },
-          })
-        }
+          ${data.bool
+            ? createComponent(Child, {
+                props: {
+                  value: 1,
+                },
+              })
+            : createComponent(Child2, {
+                props: {
+                  value: 2,
+                },
+              })}
         </div>
       `;
     }
 
-    rootRender(document.getElementById("root")!, Parent);
+    rootRender(document.getElementById('root')!, Parent);
 
     document.querySelector('button')?.click();
     await flushRaf();
@@ -157,5 +164,4 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(unMountFn2).toHaveBeenCalled();
     expect(mountFn1).toHaveBeenCalled();
   });
-})
-
+});

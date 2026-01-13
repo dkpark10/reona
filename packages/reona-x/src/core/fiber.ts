@@ -1,11 +1,7 @@
-import type {
-  Component,
-  Props,
-  Data,
-} from "../utils/types";
-import { getDepth } from "../../../shared";
-import Parser, { type VNode } from "./parser";
-import { createDOM } from "./runtime-dom";
+import type { Component, Props, Data } from '../utils/types';
+import { getDepth } from '../../../shared';
+import Parser, { type VNode } from './parser';
+import { createDOM } from './runtime-dom';
 
 /** @description 전역 컴포넌트 관리 map */
 let instanceMap: Map<Component, Map<string, Fiber>>;
@@ -33,7 +29,7 @@ export const updatedHooks = new WeakMap<Fiber, Set<<D extends Data>(next: D, pre
 
 type FiberOption = {
   key: string;
-}
+};
 
 export default class Fiber {
   private parentElement: Element;
@@ -57,7 +53,7 @@ export default class Fiber {
   public nextState: Record<string, any>;
 
   public prevState: Record<string, any>;
-  
+
   public hookIndex = 0;
 
   public hookLimit = 0;
@@ -69,7 +65,7 @@ export default class Fiber {
 
   public render(parentElement: Element) {
     const depth = getDepth(this.key);
-    
+
     currentFiber = this;
     const template = this.component(this.props);
 
@@ -139,10 +135,7 @@ export default class Fiber {
     }
   }
 
-  private collectFibers(
-    vnode: VNode | undefined,
-    set: Set<Fiber> = new Set()
-  ): Set<Fiber> {
+  private collectFibers(vnode: VNode | undefined, set: Set<Fiber> = new Set()): Set<Fiber> {
     if (!vnode) return set;
     switch (vnode.type) {
       case 'component':

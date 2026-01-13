@@ -1,12 +1,12 @@
-import type { Props, Data, Methods, ComponentInstance, ComponentKey } from "../utils/types";
-import Parser, { type VNode } from "./parser";
-import { createDOM } from "./runtime-dom";
-import { getDepth } from "../../../shared";
-import { instanceMap } from "./instances";
+import type { Props, Data, Methods, ComponentInstance, ComponentKey } from '../utils/types';
+import Parser, { type VNode } from './parser';
+import { createDOM } from './runtime-dom';
+import { getDepth } from '../../../shared';
+import { instanceMap } from './instances';
 
 type FiberOption = {
   key: ComponentKey;
-}
+};
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
 export default class Fiber {
@@ -87,10 +87,7 @@ export default class Fiber {
     }
   }
 
-  private collectFibers(
-    vnode: VNode | undefined,
-    set: Set<Fiber> = new Set()
-  ): Set<Fiber> {
+  private collectFibers(vnode: VNode | undefined, set: Set<Fiber> = new Set()): Set<Fiber> {
     if (!vnode) return set;
     switch (vnode.type) {
       case 'component':
@@ -109,10 +106,10 @@ export default class Fiber {
    * todo
    *  @see {@link https://ko.legacy.reactjs.org/docs/reconciliation.html}
    *  */
-  private reconciliate() {
-    // 루트 엘리먼트 타입이 다르다면
-    if (this.nextVnodeTree.type !== this.prevVnodeTree.type) {
-      return;
-    }
-  }
+  // private reconciliate() {
+  //   // 루트 엘리먼트 타입이 다르다면
+  //   if (this.nextVnodeTree.type !== this.prevVnodeTree.type) {
+  //     return;
+  //   }
+  // }
 }

@@ -1,4 +1,4 @@
-import Fiber from "./fiber";
+import Fiber from './fiber';
 
 const renderQueue = new Set<Fiber>();
 let rafId: number | null = null;

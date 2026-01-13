@@ -79,10 +79,10 @@ describe('라이프 사이클 훅 테스트', () => {
 
       template() {
         return html`
-        <div id="app">
-          <div data-testid="count">${this.count}</div>
-          <button type="button" @click=${this.trigger}>btn</button>
-        </div>
+          <div id="app">
+            <div data-testid="count">${this.count}</div>
+            <button type="button" @click=${this.trigger}>btn</button>
+          </div>
         `;
       },
     });
@@ -105,7 +105,7 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
-  test("unmount 훅 테스트를 한다.", async () => {
+  test('unmount 훅 테스트를 한다.', async () => {
     const div = document.createElement('div');
     div.id = 'root';
     document.body.appendChild(div);
@@ -124,7 +124,7 @@ describe('라이프 사이클 훅 테스트', () => {
     });
 
     const child1 = component({
-      name: "child1",
+      name: 'child1',
 
       mounted: mountFn1,
 
@@ -136,7 +136,7 @@ describe('라이프 사이클 훅 테스트', () => {
     });
 
     const child2 = component({
-      name: "child2",
+      name: 'child2',
 
       mounted: mountFn2,
 
@@ -148,7 +148,7 @@ describe('라이프 사이클 훅 테스트', () => {
     });
 
     const parent = component({
-      name: "condition",
+      name: 'condition',
 
       data() {
         return {
@@ -173,7 +173,7 @@ describe('라이프 사이클 훅 테스트', () => {
       },
     });
 
-    rootRender(document.getElementById("root")!, parent);
+    rootRender(document.getElementById('root')!, parent);
 
     document.querySelector('button')?.click();
     await flushRaf();
@@ -194,5 +194,4 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(unMountFn2).toHaveBeenCalled();
     expect(mountFn1).toHaveBeenCalled();
   });
-})
-
+});

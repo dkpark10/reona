@@ -13,8 +13,8 @@ afterEach(() => {
   document.body.removeChild(document.getElementById('root')!);
 });
 
-test("전역 스토어 값 업데이트 시 형제 컴포넌트 값도 변경되어야 한다.", async () => {
-  rootRender(document.getElementById("root")!, store);
+test('전역 스토어 값 업데이트 시 형제 컴포넌트 값도 변경되어야 한다.', async () => {
+  rootRender(document.getElementById('root')!, store);
 
   (document.querySelector('button') as HTMLButtonElement)?.click();
   await flushRaf();
