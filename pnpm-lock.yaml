@@ -33,81 +33,13 @@ importers:
         specifier: ^4.0.14
         version: 4.0.17(jsdom@24.1.3)(tsx@4.21.0)
 
-  fixture/array:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/condition:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/counter:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/nested:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/refs:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/render-optimize:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/reona-x:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
-  fixture/store:
-    dependencies:
-      reona:
-        specifier: workspace:*
-        version: link:../../packages/reona
-      reona-x:
-        specifier: workspace:*
-        version: link:../../packages/reona-x
-
   packages/reona: {}
 
-  packages/reona-x: {}
+  packages/reona-x:
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
 
 packages:
 

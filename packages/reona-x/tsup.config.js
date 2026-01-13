@@ -6,7 +6,7 @@ export default defineConfig({
   dts: true,
   format: ['esm', 'cjs'],
   clean: true,
-  entry: ['src/core/index.ts'],
+  entry: ['src/core/index.ts', '!src/tests/**', '!src/**/*.test.*', '!src/**/*.spec.*'],
   outDir: 'dist',
   platform: 'browser',
   define: {

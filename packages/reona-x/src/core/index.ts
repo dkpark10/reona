@@ -2,15 +2,19 @@ import Fiber from './fiber';
 import { createStore, store } from './store';
 import { ref, setRef } from './ref';
 import {
-  state,
-  rootRender,
   createComponent,
   html,
+} from './component';
+import {
+  state,
   mounted,
   unMounted,
   updated,
   watchProps,
-} from './component';
+} from './hooks';
+import {
+  rootRender
+} from './runtime-dom';
 
 export {
   Fiber,

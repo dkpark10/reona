@@ -7,7 +7,7 @@ import {
   createComponent,
   rootRender,
   updated,
-} from '../core/component';
+} from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {

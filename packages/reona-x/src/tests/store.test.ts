@@ -1,6 +1,6 @@
 import { expect, test, beforeEach, afterEach } from 'vitest';
 import store from '../../../../fixture/store/reona-x';
-import { rootRender } from '../core/component';
+import { rootRender } from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {

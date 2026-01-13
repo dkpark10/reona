@@ -1,6 +1,22 @@
 /** @description 실제 dom 조작 로직을 여기다 작성 */
 
 import type { VNode } from './parser';
+import type { Component } from '../utils/types';
+import { createComponent } from './component';
+
+export function rootRender(
+  container: Element,
+  component: Component,
+  props?: Parameters<typeof component>[0]
+) {
+  const getFiber = createComponent(component, {
+    props,
+  });
+
+  const fiber = getFiber(0);
+  fiber.render(container);
+}
+
 
 /** @description vnode 객체를 실제 dom 으로 만듬 */
 export function createDOM(vnode: VNode): HTMLElement;
