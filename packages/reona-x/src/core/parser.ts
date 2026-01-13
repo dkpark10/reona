@@ -135,6 +135,11 @@ export default class Parser {
             };
           }
 
+          if (isRenderResultObject(value)) {
+            const vdom = new Parser(value).parse();
+            return vdom;
+          }
+
           // 배열이 들어 왔다면
           if (Array.isArray(value)) {
             const result = values[this.valueIndex++].map((value: any) => {

@@ -144,7 +144,7 @@ function getInstance<
 
       if ($prevData !== value) {
         reRender();
-        instance.watch?.[key as string]?.(value, $prevData);
+        options.watch?.[key as string]?.(value, $prevData);
       }
       return result;
     },
