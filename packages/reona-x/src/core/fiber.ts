@@ -68,12 +68,10 @@ export default class Fiber {
   public watchPropsTrigger = false;
 
   public stateHookIndex = 0;
-
   public updatedHookIndex = 0;
-
   public watchPropsHookIndex = 0;
-
   public refHookIndex = 0;
+  public memoHookIndex = 0;
 
   constructor(component: Component, options: FiberOption) {
     this.component = component;
@@ -81,13 +79,18 @@ export default class Fiber {
     this.sequence = options.sequence;
   }
 
+  public hookIndexInitialize() {
+    this.stateHookIndex = 0;
+    this.updatedHookIndex = 0;
+    this.watchPropsHookIndex = 0;
+    this.refHookIndex = 0;
+    this.memoHookIndex = 0;
+  }
+
   public render(parentElement: Element, isRerender?: boolean) {
     // 부모 리렌더링으로 인한 자식 리렌더링이라면
     if (isRerender) {
-      this.stateHookIndex = 0;
-      this.updatedHookIndex = 0;
-      this.watchPropsHookIndex = 0;
-      this.refHookIndex = 0;
+      this.hookIndexInitialize();
     }
 
     currentFiber = this;
@@ -129,11 +132,7 @@ export default class Fiber {
   }
 
   public reRender() {
-    this.stateHookIndex = 0;
-    this.updatedHookIndex = 0;
-    this.watchPropsHookIndex = 0;
-    this.refHookIndex = 0;
-
+    this.hookIndexInitialize();
     currentFiber = this;
     const template = this.component(this.nextProps);
 

@@ -213,3 +213,61 @@ export const setRef = function <D extends { current: unknown }>(
     ref.current = value;
   };
 };
+
+export const memoizedList = new WeakMap<Fiber, Array<{
+  data: unknown;
+  callback: () => unknown;
+  prevSnapshot: unknown;
+  cachedValue: unknown;
+}>>();
+
+export function memo<D, R>(data: D, callback: () => R): R {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('memo 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  checkInvalidHook(currentFiber);
+
+  let dep = memoizedList.get(currentFiber);
+  if (!dep) {
+    dep = [];
+    memoizedList.set(currentFiber, dep);
+  }
+
+  const index = currentFiber.memoHookIndex++;
+
+  const createSnapshot = (value: D) =>
+    isPrimitive(value) ? value : { ...(value as object) };
+
+  const checkChanged = (current: D, prev: unknown): boolean => {
+    if (isPrimitive(current)) {
+      return current !== prev;
+    }
+    return Object.keys(current as object).some(
+      (key) => (current as any)[key] !== (prev as any)[key]
+    );
+  };
+
+  if (!dep[index]) {
+    const cachedValue = callback();
+    dep[index] = {
+      data: data,
+      callback: callback,
+      prevSnapshot: createSnapshot(data),
+      cachedValue,
+    };
+    return cachedValue as R;
+  }
+
+  const hasChanged = checkChanged(data, dep[index].prevSnapshot);
+
+  if (hasChanged) {
+    const cachedValue = callback();
+    dep[index].cachedValue = cachedValue;
+    dep[index].prevSnapshot = createSnapshot(data);
+    return cachedValue as R;
+  }
+
+  return dep[index].cachedValue as R;
+}

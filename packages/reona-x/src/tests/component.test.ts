@@ -1,5 +1,5 @@
-import { expect, test, beforeEach, afterEach, describe } from 'vitest';
-import { rootRender, state, html } from '../core';
+import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
+import { rootRender, state, html, memo } from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -116,4 +116,138 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('div[data-testid="data2"]')?.textContent).toBe('2');
     expect(document.querySelector('div[data-testid="data3"]')?.textContent).toBe('2');
   });
-})
+
+  test('객체 의존성이 변경되면 재계산한다.', async () => {
+    const computeFn = vi.fn((count: number) => count * 2);
+
+    function Component() {
+      const data = state({ count: 1 });
+
+      const doubled = memo(data, () => computeFn(data.count));
+
+      const increment = () => {
+        data.count += 1;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${increment}>increment</button>
+          <div data-testid="result">${doubled}</div>
+        </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, Component);
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
+    expect(computeFn).toHaveBeenCalledTimes(1);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('4');
+    expect(computeFn).toHaveBeenCalledTimes(2);
+  });
+
+  test('객체 의존성이 변경되지 않으면 캐시된 값을 반환한다.', async () => {
+    const computeFn = vi.fn((count: number) => count * 2);
+
+    function Component() {
+      const data = state({ count: 1 });
+
+      const doubled = memo(data, () => computeFn(data.count));
+
+      const noop = () => {
+        data.count = data.count;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${noop}>noop</button>
+          <div data-testid="result">${doubled}</div>
+        </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, Component);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
+    expect(computeFn).toHaveBeenCalledTimes(1);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
+    expect(computeFn).toHaveBeenCalledTimes(1);
+  });
+
+  test('원시값 의존성이 변경되면 재계산한다.', async () => {
+    const computeFn = vi.fn((count: number) => count * 3);
+
+    function Component() {
+      const data = state({ count: 1 });
+
+      const tripled = memo(data.count, () => computeFn(data.count));
+
+      const increment = () => {
+        data.count += 1;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${increment}>increment</button>
+          <div data-testid="result">${tripled}</div>
+        </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, Component);
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('3');
+    expect(computeFn).toHaveBeenCalledTimes(1);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('6');
+    expect(computeFn).toHaveBeenCalledTimes(2);
+  });
+
+  test('복수의 memo 훅을 사용할 수 있다.', async () => {
+    const computeFn1 = vi.fn((count: number) => count * 2);
+    const computeFn2 = vi.fn((count: number) => count * 3);
+
+    function Component() {
+      const data = state({ count: 1 });
+
+      const doubled = memo(data, () => computeFn1(data.count));
+      const tripled = memo(data, () => computeFn2(data.count));
+
+      const increment = () => {
+        data.count += 1;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${increment}>increment</button>
+          <div data-testid="doubled">${doubled}</div>
+          <div data-testid="tripled">${tripled}</div>
+        </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, Component);
+
+    expect(document.querySelector('div[data-testid="doubled"]')?.textContent).toBe('2');
+    expect(document.querySelector('div[data-testid="tripled"]')?.textContent).toBe('3');
+    expect(computeFn1).toHaveBeenCalledTimes(1);
+    expect(computeFn2).toHaveBeenCalledTimes(1);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('div[data-testid="doubled"]')?.textContent).toBe('4');
+    expect(document.querySelector('div[data-testid="tripled"]')?.textContent).toBe('6');
+    expect(computeFn1).toHaveBeenCalledTimes(2);
+    expect(computeFn2).toHaveBeenCalledTimes(2);
+  });
+});

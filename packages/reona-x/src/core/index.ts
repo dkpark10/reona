@@ -11,7 +11,9 @@ import {
   unMounted,
   updated,
   watchProps,
-  ref, setRef
+  ref,
+  setRef,
+  memo,
 } from './hooks';
 import {
   rootRender
@@ -31,4 +33,5 @@ export {
   ref,
   setRef,
   watchProps,
+  memo,
 };
