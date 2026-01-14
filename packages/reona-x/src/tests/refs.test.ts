@@ -56,17 +56,15 @@ describe('refs 테스트', () => {
   test('ref에 엘리먼트를 할당할 수 있어야 한다.', async () => {
     let result: unknown;
     function RefElement() {
-      const headingElement = ref<{ element: HTMLHeadElement | null }>({
-        element: null,
-      });
+      const headingElement = ref<HTMLHeadElement | null>(null);
 
       mounted(() => {
-        result = headingElement.current.element;
+        result = headingElement.current;
       });
 
       return html`
         <div id="app">
-          <h1 $$ref="${setRef(headingElement, 'element')}">hh</h1>
+          <h1 $$ref="${setRef(headingElement)}">hh</h1>
         </div>
       `;
     }

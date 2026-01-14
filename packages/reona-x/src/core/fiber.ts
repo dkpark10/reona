@@ -83,7 +83,14 @@ export default class Fiber {
     this.sequence = options.sequence;
   }
 
-  public render(parentElement: Element) {
+  public render(parentElement: Element, isRerender?: boolean) {
+    // 부모 리렌더링으로 인한 자식 렌더링이라면
+    if (isRerender) {
+      this.stateHookIndex = 0;
+      this.updatedHookIndex = 0;
+      this.watchPropsHookIndex = 0;
+    }
+
     currentFiber = this;
     const template = this.component(this.nextProps);
 

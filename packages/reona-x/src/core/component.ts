@@ -31,9 +31,8 @@ export function createComponent<P extends Props>(
 
     if (options && options.props) {
       fiber.nextProps = options.props;
-      if ((fiber.nextProps && fiber.prevProps) && !shallowEqual(fiber.nextProps, fiber.prevProps)) {
-        fiber.watchPropsTrigger = true;
-      }
+      fiber.watchPropsTrigger = !!(fiber.nextProps && fiber.prevProps) 
+        && !shallowEqual(fiber.nextProps, fiber.prevProps);
     }
     return fiber;
   };

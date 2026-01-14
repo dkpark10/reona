@@ -1,6 +1,5 @@
 import Fiber from './fiber';
 import { createStore } from './store';
-import { ref, setRef } from './ref';
 import {
   createComponent,
   html,
@@ -12,6 +11,7 @@ import {
   unMounted,
   updated,
   watchProps,
+  ref, setRef
 } from './hooks';
 import {
   rootRender

@@ -1,4 +1,4 @@
-import { rootRender } from './core';
+import { rootRender } from "./core";
+import TicTacToe from '../../../apps/tic-tac-toe/reona-x';
 
-import Component from '../../../fixture/reona-x';
-rootRender(document.getElementById('root')!, Component, { value: 123 });
+rootRender(document.getElementById('root')!, TicTacToe);

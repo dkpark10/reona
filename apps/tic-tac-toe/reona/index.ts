@@ -1,4 +1,4 @@
-import { component, html, createComponent } from '../../packages/reona/src/core';
+import { component, html, createComponent } from '../../../packages/reona/src/core';
 import Timer from './timer';
 import './styles/index.css';
 

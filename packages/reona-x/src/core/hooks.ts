@@ -177,3 +177,34 @@ export function watchProps<P extends Props>(callback: (prev: P) => void) {
   const index = currentFiber.watchPropsHookIndex++;
   dep[index] = callback as (prev: Props) => void;
 }
+
+export const refs = new WeakMap<Fiber, { current: unknown }>();
+
+export function ref<Data>(initial: Data) {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('ref 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  const existState = refs.get(currentFiber);
+  if (existState) {
+    return existState as { current: Data };
+  }
+
+  let fiber = currentFiber;
+  refs.set(fiber, { current: initial });
+  return { current: initial } as { current: Data };
+}
+
+export const setRef = function <D extends { current: unknown }>(
+  ref: D,
+) {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  return function (value: unknown) {
+    ref.current = value;
+  };
+};

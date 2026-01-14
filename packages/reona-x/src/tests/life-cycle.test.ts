@@ -15,7 +15,7 @@ import {
   getInstanceMap,
   watchPropsHooks,
 } from '../core/fiber';
-import { states, watchProps } from '../core/hooks';
+import { ref, states, watchProps, refs } from '../core/hooks';
 import { flushRaf } from './utils';
 import { createKey } from '../../../shared';
 
@@ -264,6 +264,8 @@ describe('라이프 사이클 훅 테스트', () => {
       const data2 = state({
         noop: null,
       });
+      const refValue = ref(123);
+      refValue.current;
 
       mounted(mountFn);
       updated(data1, updatedFn1);
@@ -304,5 +306,6 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(updatedHooks.get(fiber!)).toBeUndefined();
     expect(mountHooks.get(fiber!)).toBeUndefined();
     expect(watchPropsHooks.get(fiber!)).toBeUndefined();
+    expect(refs.get(fiber!)).toBeUndefined();
   });
 });
