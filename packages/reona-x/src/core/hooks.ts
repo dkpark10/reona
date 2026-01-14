@@ -9,7 +9,6 @@ import Fiber, {
 } from './fiber';
 import { update } from './renderer';
 
-
 function checkInvalidHook(currentFiber: Fiber) {
   if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
     throw new Error('훅은 함수 최상단에 선언해야 합니다.');
@@ -20,7 +19,7 @@ function checkInvalidHook(currentFiber: Fiber) {
   }
 }
 
-const states = new WeakMap<Fiber, Array<Record<string, any>>>();
+export const states = new WeakMap<Fiber, Array<Record<string, any>>>();
 
 export function state<D extends Data>(initial: D) {
   const currentFiber = getCurrentFiber();
@@ -134,7 +133,7 @@ export function unMounted(callback: () => void) {
   dep.push(callback);
 }
 
-export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
+export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
   const currentFiber = getCurrentFiber();
   if (currentFiber === null) {
     throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
@@ -149,7 +148,16 @@ export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
   }
 
   const index = currentFiber.updatedHookIndex++;
-  dep[index] = callback as (next: Data, prev: Data) => void;
+
+  if (!dep[index]) {
+    dep[index] = {
+      data: data,
+      callback: callback as (prev: Data) => void,
+      prevSnapshot: { ...data },
+    };
+  } else {
+    dep[index].callback = callback as (prev: Data) => void;
+  }
 }
 
 export function watchProps<P extends Props>(callback: (prev: P) => void) {

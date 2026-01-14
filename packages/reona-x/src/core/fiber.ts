@@ -1,10 +1,10 @@
 import type { Component, Props, Data } from '../utils/types';
-import { getDepth } from '../../../shared';
 import Parser, { type VNode } from './parser';
 import { createDOM } from './runtime-dom';
 
 /** @description 전역 컴포넌트 관리 map */
-let instanceMap: Map<Component, Map<string, Fiber>>;
+type InstanceMapValue = Map<string, Fiber>;
+let instanceMap: Map<Component, InstanceMapValue>;
 export function getInstanceMap() {
   return instanceMap;
 }
@@ -12,10 +12,10 @@ export function getInstanceMap() {
 const NOT_PRODUCTION = __DEV__ || __TEST__;
 
 if (NOT_PRODUCTION) {
-  instanceMap = new Map<Component, Map<string, Fiber>>();
+  instanceMap = new Map<Component, InstanceMapValue>();
 } else {
   // @ts-ignore
-  instanceMap = new WeakMap<Component, Map<string, Fiber>>();
+  instanceMap = new WeakMap<Component, InstanceMapValue>();
 }
 
 let currentFiber: Fiber | null = null;
@@ -25,11 +25,16 @@ export function getCurrentFiber() {
 
 export const mountHooks = new WeakMap<Fiber, Array<() => void>>();
 export const unMountHooks = new WeakMap<Fiber, Array<() => void>>();
-export const updatedHooks = new WeakMap<Fiber, Array<(next: Data, prev: Data) => void>>();
+export const updatedHooks = new WeakMap<Fiber, Array<{
+  data: Data;
+  callback: (prev: Data) => void;
+  prevSnapshot: Data;
+}>>();
 export const watchPropsHooks = new WeakMap<Fiber, Array<(prev: Props) => void>>();
 
 type FiberOption = {
   key: string;
+  sequence: number;
 };
 
 // todo fiber의 역할 분리 필요
@@ -50,8 +55,10 @@ export default class Fiber {
 
   public key: string;
 
+  public sequence: number;
+
   public nextProps?: Props;
-  
+
   public prevProps?: Props;
 
   public nextState: Record<string, any>;
@@ -73,15 +80,14 @@ export default class Fiber {
   constructor(component: Component, options: FiberOption) {
     this.component = component;
     this.key = options.key;
+    this.sequence = options.sequence;
   }
 
   public render(parentElement: Element) {
-    const depth = getDepth(this.key);
-
     currentFiber = this;
     const template = this.component(this.nextProps);
 
-    const parser = new Parser(template, depth + 1);
+    const parser = new Parser(template, this.sequence + 1);
 
     this.parentElement = parentElement;
 
@@ -117,8 +123,6 @@ export default class Fiber {
   }
 
   public reRender() {
-    const depth = getDepth(this.key);
-
     this.stateHookIndex = 0;
     this.updatedHookIndex = 0;
     this.watchPropsHookIndex = 0;
@@ -126,7 +130,7 @@ export default class Fiber {
     currentFiber = this;
     const template = this.component(this.nextProps);
 
-    const parser = new Parser(template, depth + 1);
+    const parser = new Parser(template, this.sequence + 1);
     this.nextVnodeTree = parser.parse();
 
     this.ummount();
@@ -139,8 +143,15 @@ export default class Fiber {
 
     const dep = updatedHooks.get(this);
     if (dep) {
-      for (const fn of dep) {
-        fn?.(this.nextState, this.prevState);
+      for (const hook of dep) {
+        if (!hook) continue;
+        const hasChanged = Object.keys(hook.data).some(
+          key => hook.data[key as keyof Data] !== hook.prevSnapshot[key as keyof Data]
+        );
+        if (hasChanged) {
+          hook.callback(hook.prevSnapshot);
+          hook.prevSnapshot = { ...hook.data };
+        }
       }
     }
   }

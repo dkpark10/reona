@@ -31,7 +31,7 @@ export type VComponent = {
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
-function isCreateComponentFunc(func: any): func is (depth: number) => Fiber {
+function isCreateComponentFunc(func: any): func is (sequence: number) => Fiber {
   return typeof func === 'function' && func.__isCreateComponent;
 }
 
@@ -41,11 +41,11 @@ export default class Parser {
 
   private valueIndex = 0;
 
-  private depth: number | undefined;
+  private sequence: number | undefined;
 
-  constructor(renderResult: RenderResult, depth?: number) {
+  constructor(renderResult: RenderResult, sequence?: number) {
     this.renderResult = renderResult;
-    this.depth = depth;
+    this.sequence = sequence;
   }
 
   public parse(): VNode {
@@ -123,10 +123,10 @@ export default class Parser {
 
           // createComponent 반환 함수일 시
           if (typeof value === 'function' && value.__isCreateComponent) {
-            const getFiber = value as (depth: number) => any;
-            const fiber = getFiber(this.depth!);
+            const getFiber = value as (sequence: number) => any;
+            const fiber = getFiber(this.sequence!);
 
-            this.depth!++;
+            this.sequence!++;
             this.valueIndex++;
 
             return {
@@ -149,8 +149,8 @@ export default class Parser {
               }
               if (isCreateComponentFunc(value)) {
                 const getFiber = value;
-                const fiber = getFiber(this.depth!);
-                this.depth!++;
+                const fiber = getFiber(this.sequence!);
+                this.sequence!++;
 
                 return {
                   type: 'component',

@@ -10,9 +10,14 @@ import {
 } from '../core';
 import {
   mountHooks,
+  unMountHooks,
+  updatedHooks,
   getInstanceMap,
+  watchPropsHooks,
 } from '../core/fiber';
+import { states, watchProps } from '../core/hooks';
 import { flushRaf } from './utils';
+import { createKey } from '../../../shared';
 
 beforeEach(() => {
   const div = document.createElement('div');
@@ -57,7 +62,7 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
     expect(mountFn).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(fiber)).toBeFalsy();
+    expect(mountHooks.get(fiber)).toBeUndefined();
   });
 
   test('마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 마운트훅 맵을 클리어 한다.', async () => {
@@ -81,14 +86,13 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(mountFn2).toHaveBeenCalledOnce();
     expect(mountFn3).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(fiber)).toBeFalsy();
+    expect(mountHooks.get(fiber)).toBeUndefined();
   });
 
   test('업데이트 훅 실행을 테스트 한다.', async () => {
-    const expectedValue: any[] = [];
-    const updatedFn = vi.fn((next, prev) => {
-      expectedValue[0] = next;
-      expectedValue[1] = prev;
+    let expectedValue;
+    const updatedFn = vi.fn((prev) => {
+      expectedValue = prev;
     });
 
     function Component() {
@@ -96,7 +100,7 @@ describe('라이프 사이클 훅 테스트', () => {
         value: 1,
       });
 
-      updated(updatedFn);
+      updated(data, updatedFn);
 
       const trigger = () => {
         data.value += 1;
@@ -112,13 +116,13 @@ describe('라이프 사이클 훅 테스트', () => {
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(updatedFn).toHaveBeenCalled();
-    expect(expectedValue).toEqual([{ value: 2 }, { value: 1 }]);
+    expect(updatedFn).toHaveBeenCalledTimes(1);
+    expect(expectedValue).toEqual({ value: 1 });
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(updatedFn).toHaveBeenCalled();
-    expect(expectedValue).toEqual([{ value: 3 }, { value: 2 }]);
+    expect(updatedFn).toHaveBeenCalledTimes(2);
+    expect(expectedValue).toEqual({ value: 2 });
   });
 
   test('언마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 언마운트훅 맵을 클리어 한다.', async () => {
@@ -156,7 +160,7 @@ describe('라이프 사이클 훅 테스트', () => {
     rootRender(document.getElementById('root')!, Component);
 
     const instanceMap = getInstanceMap();
-    const fibers = instanceMap.get(Child);
+    const fiber = instanceMap.get(Child)?.get(createKey(1));
 
     document.querySelector('button')?.click();
 
@@ -164,7 +168,7 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(unMountFn1).toHaveBeenCalledOnce();
     expect(unMountFn2).toHaveBeenCalledOnce();
     expect(unMountFn3).toHaveBeenCalledOnce();
-    expect(fibers?.size).toBeFalsy();
+    expect(unMountHooks.get(fiber!)).toBeUndefined();
   });
 
   test('조건부 렌더링에 따른 마운트, 언마운트 훅을 테스트를 한다.', async () => {
@@ -186,6 +190,7 @@ describe('라이프 사이클 훅 테스트', () => {
       unMounted(unMountFn1);
       return html`<div></div>`;
     }
+
     function Child2() {
       mounted(mountFn2);
       unMounted(unMountFn2);
@@ -239,5 +244,65 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
     expect(unMountFn2).toHaveBeenCalled();
     expect(mountFn1).toHaveBeenCalled();
+  });
+
+  test('언마운트 시 해당 컴포넌트의 훅 데이터들이 정리되어야 한다.', async () => {
+    const mountFn = vi.fn(() => {
+      console.log('mount1');
+    });
+    const unMountFn = vi.fn(() => {
+      console.log('unmount1');
+    });
+    const updatedFn1 = vi.fn();
+    const updatedFn2 = vi.fn();
+    const watchPropsFn = vi.fn();
+
+    function Child({ value }: { value: number; }) {
+      const data1 = state({
+        noop: null,
+      });
+      const data2 = state({
+        noop: null,
+      });
+
+      mounted(mountFn);
+      updated(data1, updatedFn1);
+      updated(data2, updatedFn2)
+      unMounted(unMountFn);
+      watchProps(watchPropsFn);
+
+      return html`<div>${value}</div>`;
+    }
+
+    function Parent() {
+      const data = state({
+        bool: true,
+      });
+
+      const trigger = () => {
+        data.bool = !data.bool;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${trigger}>trigger</button>
+          ${data.bool ? createComponent(Child, { props: { value: 1 }}) : ''}
+        </div>
+      `;
+    }
+
+    rootRender(document.getElementById('root')!, Parent);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    const instanceMap = getInstanceMap();
+    const fiber = instanceMap.get(Child)?.get(createKey(1));
+
+    expect(states.get(fiber!)).toBeUndefined();
+    expect(unMountHooks.get(fiber!)).toBeUndefined();
+    expect(updatedHooks.get(fiber!)).toBeUndefined();
+    expect(mountHooks.get(fiber!)).toBeUndefined();
+    expect(watchPropsHooks.get(fiber!)).toBeUndefined();
   });
 });

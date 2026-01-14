@@ -13,9 +13,9 @@ export function createComponent<P extends Props>(
   options?: CreateComponentOption<P>
 ) {
   const instanceMap = getInstanceMap();
-  /** @description 컴포넌트의 depth */
-  const func = function getFiber(depth: number) {
-    const key = createKey(depth, options?.key);
+  /** @description 컴포넌트의 트리에서의 sequence */
+  const func = function getFiber(sequence: number) {
+    const key = createKey(sequence, options?.key);
 
     let instanceDeps = instanceMap.get(component);
     if (!instanceDeps) {
@@ -24,7 +24,7 @@ export function createComponent<P extends Props>(
 
     let fiber: Fiber | undefined = instanceDeps.get(key);
     if (!fiber) {
-      fiber = new Fiber(component, { key });
+      fiber = new Fiber(component, { key, sequence });
       instanceDeps.set(key, fiber);
       instanceMap.set(component, instanceDeps);
     }

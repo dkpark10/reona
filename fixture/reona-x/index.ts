@@ -19,8 +19,8 @@ export default function Counter({ value }: CounterProps) {
     console.log('mounted', document.getElementById('app'));
   });
 
-  updated<typeof data>((next, prev) => {
-    console.log(next, prev);
+  updated(data, (prev) => {
+    console.log(prev);
   });
 
   return html`

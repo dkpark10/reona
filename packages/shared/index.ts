@@ -93,13 +93,8 @@ export class Observable<T> {
 }
 
 // ex) 0__reona_key__
-export function createKey(depth: number, key?: string | number) {
-  return `${depth}__reona_key__${key || ''}`;
-}
-
-// ex) 0__reona_key__ 에서 숫자를 추출
-export function getDepth(key: string) {
-  return Number(key.match(/^\d+/)![0]);
+export function createKey(sequence: number, key?: string | number) {
+  return `${sequence}__reona_key__${key || ''}`;
 }
 
 export function shallowEqual(
