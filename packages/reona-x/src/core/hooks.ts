@@ -51,13 +51,10 @@ export function state<D extends Data>(initial: D) {
     },
 
     set(target, key, value, receiver) {
-      const prevState = { ...target };
       const prevValue = Reflect.get(receiver, key);
 
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
-        currentFiber.nextState = target;
-        currentFiber.prevState = prevState;
         update(currentFiber);
       }
       return result;
@@ -178,7 +175,7 @@ export function watchProps<P extends Props>(callback: (prev: P) => void) {
   dep[index] = callback as (prev: Props) => void;
 }
 
-export const refs = new WeakMap<Fiber, { current: unknown }>();
+export const refs = new WeakMap<Fiber, Array<{ current: unknown }>>();
 
 export function ref<Data>(initial: Data) {
   const currentFiber = getCurrentFiber();
@@ -186,14 +183,22 @@ export function ref<Data>(initial: Data) {
     throw new Error('ref 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  const existState = refs.get(currentFiber);
-  if (existState) {
-    return existState as { current: Data };
+  checkInvalidHook(currentFiber);
+
+  let refList = refs.get(currentFiber);
+  if (!refList) {
+    refList = [];
+    refs.set(currentFiber, refList);
   }
 
-  let fiber = currentFiber;
-  refs.set(fiber, { current: initial });
-  return { current: initial } as { current: Data };
+  const index = currentFiber.refHookIndex++;
+
+  if (refList[index]) {
+    return refList[index] as { current: Data };
+  }
+
+  refList[index] = { current: initial };
+  return refList[index] as { current: Data };
 }
 
 export const setRef = function <D extends { current: unknown }>(

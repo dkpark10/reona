@@ -94,35 +94,53 @@ describe('라이프 사이클 훅 테스트', () => {
     const updatedFn = vi.fn((prev) => {
       expectedValue = prev;
     });
+    const updatedFn2 = vi.fn();
 
     function Component() {
       const data = state({
         value: 1,
       });
+      const data2 = state({
+        value: 1,
+      });
 
       updated(data, updatedFn);
+      updated(data2, updatedFn2);
 
       const trigger = () => {
         data.value += 1;
       };
 
+      const noop = () => {
+        data2.value = data2.value;
+      };
+
       return html`
         <div id="app">
-          <button type="button" @click=${trigger}>trigger</button>
+          <button type="button" data-testid="btn1" @click=${trigger}>trigger</button>
+          <button type="button" data-testid="btn2" @click=${noop}>noop</button>
         </div>
       `;
     }
     rootRender(document.getElementById('root')!, Component);
 
-    document.querySelector('button')?.click();
+    (document.querySelector('button[data-testid="btn1"]') as HTMLButtonElement).click();
     await flushRaf();
     expect(updatedFn).toHaveBeenCalledTimes(1);
     expect(expectedValue).toEqual({ value: 1 });
 
-    document.querySelector('button')?.click();
+    (document.querySelector('button[data-testid="btn1"]') as HTMLButtonElement).click();
     await flushRaf();
     expect(updatedFn).toHaveBeenCalledTimes(2);
     expect(expectedValue).toEqual({ value: 2 });
+
+    (document.querySelector('button[data-testid="btn2"]') as HTMLButtonElement).click();
+    await flushRaf();
+    expect(updatedFn2).not.toHaveBeenCalled();
+
+    (document.querySelector('button[data-testid="btn2"]') as HTMLButtonElement).click();
+    await flushRaf();
+    expect(updatedFn2).not.toHaveBeenCalled();
   });
 
   test('언마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 언마운트훅 맵을 클리어 한다.', async () => {

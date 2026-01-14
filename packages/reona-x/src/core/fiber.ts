@@ -61,10 +61,6 @@ export default class Fiber {
 
   public prevProps?: Props;
 
-  public nextState: Record<string, any>;
-
-  public prevState: Record<string, any>;
-
   public hookIndex = 0;
 
   public hookLimit = 0;
@@ -77,6 +73,8 @@ export default class Fiber {
 
   public watchPropsHookIndex = 0;
 
+  public refHookIndex = 0;
+
   constructor(component: Component, options: FiberOption) {
     this.component = component;
     this.key = options.key;
@@ -84,11 +82,12 @@ export default class Fiber {
   }
 
   public render(parentElement: Element, isRerender?: boolean) {
-    // 부모 리렌더링으로 인한 자식 렌더링이라면
+    // 부모 리렌더링으로 인한 자식 리렌더링이라면
     if (isRerender) {
       this.stateHookIndex = 0;
       this.updatedHookIndex = 0;
       this.watchPropsHookIndex = 0;
+      this.refHookIndex = 0;
     }
 
     currentFiber = this;
@@ -133,6 +132,7 @@ export default class Fiber {
     this.stateHookIndex = 0;
     this.updatedHookIndex = 0;
     this.watchPropsHookIndex = 0;
+    this.refHookIndex = 0;
 
     currentFiber = this;
     const template = this.component(this.nextProps);
@@ -153,7 +153,7 @@ export default class Fiber {
       for (const hook of dep) {
         if (!hook) continue;
         const hasChanged = Object.keys(hook.data).some(
-          key => hook.data[key as keyof Data] !== hook.prevSnapshot[key as keyof Data]
+          (key) => hook.data[key as keyof Data] !== hook.prevSnapshot[key as keyof Data]
         );
         if (hasChanged) {
           hook.callback(hook.prevSnapshot);
