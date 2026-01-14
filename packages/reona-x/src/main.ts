@@ -1,4 +1,5 @@
 import { rootRender } from "./core";
-import TicTacToe from '../../../apps/tic-tac-toe/reona-x';
+import Todo from '../../../apps/todo/reona-x';
+import Tic from '../../../apps/tic-tac-toe/reona-x';
 
-rootRender(document.getElementById('root')!, TicTacToe);
+rootRender(document.getElementById('root')!, Todo);

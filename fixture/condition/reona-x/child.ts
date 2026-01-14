@@ -1,4 +1,4 @@
-import { html, mounted, unMounted, watchProps } from '../../packages/reona-x/src/core';
+import { html, mounted, unMounted, watchProps } from '../../../packages/reona-x/src/core';
 
 interface ChildProps {
   value: number;

@@ -1,4 +1,4 @@
-import { createComponent, component, html } from '../../packages/reona/src/core';
+import { createComponent, component, html } from '../../../packages/reona/src/core';
 import condi1 from './condi1';
 import condi2 from './condi2';
 

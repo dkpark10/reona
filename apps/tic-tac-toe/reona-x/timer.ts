@@ -1,4 +1,4 @@
-import { html, state, ref, watchProps, unMounted } from '../../../packages/reona-x/src/core';
+import { html, state, ref, watchProps, unMounted } from 'reona-x';
 
 interface TimerProps {
   beginCountTrigger: boolean;

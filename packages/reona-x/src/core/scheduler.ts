@@ -14,7 +14,7 @@ class Scheduler {
 
     while (this.queue.length > 0) {
       const fn = this.queue.shift()!;
-      await fn(); // 동기/비동기 모두 대응
+      await fn();
     }
 
     this.running = false;

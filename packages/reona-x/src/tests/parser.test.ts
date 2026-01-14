@@ -254,4 +254,18 @@ describe('파서 테스트', () => {
       },
     });
   });
+
+  test('속성 이름 자체가 marker인 경우를 테스트 한다.', () => {
+    const template = html`<input type="text" ${true ? 'checked' : ''}></input>`;
+
+    expect(new Parser(template).parse()).toEqual({
+      type: 'element',
+      tag: 'input',
+      children: [],
+      attr: { 
+        type: 'text',
+        checked: true,
+      },
+    });
+  });
 });

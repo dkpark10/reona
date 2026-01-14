@@ -15,8 +15,6 @@
 13. css style colocation
 14. ssr, streaming ssr
 15. portal
-16. 중첩 컴포넌트
-17. 렌더 최적화
 
 ## 아키텍쳐
 

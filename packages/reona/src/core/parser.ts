@@ -58,7 +58,15 @@ export default class Parser {
     for (const attr of el.attributes) {
       const { values } = this.renderResult;
 
-      // attr에 이벤트 할당
+      const nameMarker = attr.name.match(/^__marker_(\d+)__$/);
+      if (nameMarker) {
+        const value = values[this.valueIndex++];
+        if (value && typeof value === 'string') {
+          attrs[value] = true;
+        }
+        continue;
+      }
+
       const markers = attr.value.match(/__marker_(\d+)__/g);
       if (markers && markers.length >= 1) {
         if (typeof values[this.valueIndex] === 'function') {

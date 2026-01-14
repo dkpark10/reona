@@ -1,4 +1,4 @@
-import { html, state, createComponent } from '../../../packages/reona-x/src/core';
+import { html, state, createComponent } from 'reona-x';
 import Timer from './timer';
 import './styles/index.css';
 
@@ -89,8 +89,13 @@ export default function TicTacToe() {
         })}
       </header>
       <ul class="board">
-        ${data.board.map((cell, index) => 
-          html`<li @click=${() => handleClick(index)} class="cell ${getClassWinTile(index)}">${cell}</li>`)
+        ${data.board.map((cell, idx) => 
+          html`
+            <li>
+              <button ${data.winner ? 'disabled' : ''} @click=${() => handleClick(idx)} class="cell ${getClassWinTile(idx)}">
+                ${cell}
+              </button>
+            </li>`)
         }
       </ul>
       <footer>

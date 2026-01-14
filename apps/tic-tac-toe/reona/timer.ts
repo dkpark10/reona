@@ -1,4 +1,4 @@
-import { component, html } from '../../../packages/reona/src/core';
+import { component, html } from 'reona';
 
 export default component<
   { beginCountTrigger: boolean },
