@@ -30,9 +30,9 @@ export function createComponent<P extends Props>(
   getInstance: () => any,
   options?: CreateComponentOption<P>
 ) {
-  /** @description 컴포넌트의 depth */
-  const func = function getFiber(depth: number) {
-    const key = createKey(depth, options?.key);
+  /** @description 컴포넌트의 sequence */
+  const func = function getFiber(sequence: number) {
+    const key = createKey(sequence, options?.key);
 
     let instanceDeps = instanceMap.get(getInstance);
     if (!instanceDeps) {
@@ -42,8 +42,7 @@ export function createComponent<P extends Props>(
     let fiber: Fiber | undefined = instanceDeps.get(key);
     if (!fiber) {
       const instance = getInstance() as ComponentInstance<P, Data, Methods>;
-      // @ts-ignore
-      fiber = new Fiber(instance, { key });
+      fiber = new Fiber(instance as any, { key, sequence });
       instanceDeps.set(key, fiber);
       instanceMap.set(getInstance, instanceDeps);
     }

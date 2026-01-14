@@ -1,11 +1,11 @@
 import type { Props, Data, Methods, ComponentInstance, ComponentKey } from '../utils/types';
 import Parser, { type VNode } from './parser';
 import { createDOM } from './runtime-dom';
-import { getDepth } from '../../../shared';
 import { instanceMap } from './instances';
 
 type FiberOption = {
   key: ComponentKey;
+  sequence: number;
 };
 
 // todo 너무 fiber 역할이 많고 명확하지가 않다..
@@ -15,6 +15,8 @@ export default class Fiber {
   public key: ComponentKey;
 
   public mounted = false;
+
+  public sequence = 0;
 
   private parentElement: Element;
 
@@ -29,13 +31,14 @@ export default class Fiber {
   constructor(instance: ComponentInstance<Props, Data, Methods>, options: FiberOption) {
     this.instance = instance;
     this.key = options.key;
+    this.sequence = options.sequence;
     this.key;
   }
 
   // 초기 렌더
   public render(parentElement: Element) {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.getComponentKey());
+    const depth = this.sequence;
 
     const parser = new Parser(template, depth + 1);
     this.prevVnodeTree = parser.parse();
@@ -55,7 +58,7 @@ export default class Fiber {
 
   public reRender() {
     const template = this.instance.template();
-    const depth = getDepth(this.instance.getComponentKey());
+    const depth = this.sequence;
 
     const parser = new Parser(template, depth + 1);
     this.nextVnodeTree = parser.parse();

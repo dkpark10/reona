@@ -77,9 +77,10 @@ export default class Parser {
             `${el.tagName.toLowerCase()} 엘리먼트에 ${attr.name} 속성에 ${values[this.valueIndex - 1]} 객체가 들어가 있습니다. 값이 맞는지 확인하세요.`
           );
         } else {
-          attrs[attr.name] = markers.reduce((acc) => {
-            return (acc += values[this.valueIndex++]);
-          }, '');
+          attrs[attr.name] = attr.value.replace(/__marker_(\d+)__/g, () => {
+            const v = values[this.valueIndex++];
+            return v !== undefined ? String(v) : '';
+          });
         }
       } else {
         attrs[attr.name] = attr.value;

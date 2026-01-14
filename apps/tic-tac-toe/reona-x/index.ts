@@ -76,28 +76,26 @@ export default function TicTacToe() {
     }).find((item) => !!item);
   };
 
-  // const getClassWinTile = (index: number) => {
-  //   return data.winTile.includes(index) ? 'win' : '';
-  // }
+  const getClassWinTile = (index: number) => data.winTile.includes(index) ? 'win' : '';
 
   return html`
-      <div class="container">
-        <header>
-        <h1>Tic Tac Toe</h1>
-          ${createComponent(Timer, {
-            props: {
-              beginCountTrigger: data.trigger,
-            },
-          })}
-        </header>
-        <ul class="board">
-          ${data.board.map((cell, index) => 
-            html`<li @click=${() => handleClick(index)} class="cell">${cell}</li>`)
-          }
-        </ul>
-        <footer>
-          <button class="reset" type="button" @click=${reset}>다시 시작하기</button>
-        </footer>
-      </div>
-    `;
+    <div class="container">
+      <header>
+      <h1>Tic Tac Toe</h1>
+        ${createComponent(Timer, {
+          props: {
+            beginCountTrigger: data.trigger,
+          },
+        })}
+      </header>
+      <ul class="board">
+        ${data.board.map((cell, index) => 
+          html`<li @click=${() => handleClick(index)} class="cell ${getClassWinTile(index)}">${cell}</li>`)
+        }
+      </ul>
+      <footer>
+        <button class="reset" type="button" @click=${reset}>다시 시작하기</button>
+      </footer>
+    </div>
+  `;
 }
