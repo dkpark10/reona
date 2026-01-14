@@ -23,15 +23,16 @@ export function getCurrentFiber() {
   return currentFiber;
 }
 
-export const mountHooks = new WeakMap<Fiber, Set<() => void>>();
-export const unMountHooks = new WeakMap<Fiber, Set<() => void>>();
-export const updatedHooks = new WeakMap<Fiber, Set<<D extends Data>(next: D, prev: D) => void>>();
-export const watchPropsHooks = new WeakMap<Fiber, Set<<P extends Props>(prev: P) => void>>();
+export const mountHooks = new WeakMap<Fiber, Array<() => void>>();
+export const unMountHooks = new WeakMap<Fiber, Array<() => void>>();
+export const updatedHooks = new WeakMap<Fiber, Array<(next: Data, prev: Data) => void>>();
+export const watchPropsHooks = new WeakMap<Fiber, Array<(prev: Props) => void>>();
 
 type FiberOption = {
   key: string;
 };
 
+// todo fiber의 역할 분리 필요
 export default class Fiber {
   private parentElement: Element;
 
@@ -62,6 +63,10 @@ export default class Fiber {
   public hookLimit = 0;
 
   public watchPropsTrigger = false;
+
+  public updatedHookIndex = 0;
+
+  public watchPropsHookIndex = 0;
 
   constructor(component: Component, options: FiberOption) {
     this.component = component;
@@ -105,11 +110,15 @@ export default class Fiber {
       }
       this.isMounted = true;
       this.hookLimit = this.hookIndex;
+      mountHooks.delete(this);
     }
   }
 
   public reRender() {
     const depth = getDepth(this.key);
+
+    this.updatedHookIndex = 0;
+    this.watchPropsHookIndex = 0;
 
     currentFiber = this;
     const template = this.component(this.nextProps);
@@ -149,6 +158,7 @@ export default class Fiber {
         mountHooks.delete(fiber);
         unMountHooks.delete(fiber);
         updatedHooks.delete(fiber);
+        watchPropsHooks.delete(fiber);
       }
     }
   }

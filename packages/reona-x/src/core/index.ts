@@ -1,5 +1,5 @@
 import Fiber from './fiber';
-import { createStore, store } from './store';
+import { createStore } from './store';
 import { ref, setRef } from './ref';
 import {
   createComponent,
@@ -7,6 +7,7 @@ import {
 } from './component';
 import {
   state,
+  store,
   mounted,
   unMounted,
   updated,

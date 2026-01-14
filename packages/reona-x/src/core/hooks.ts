@@ -11,16 +11,23 @@ import { update } from './renderer';
 
 const states = new WeakMap<Fiber, Record<string, any>>();
 
+function checkInvalidHook(currentFiber: Fiber) {
+  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+    throw new Error('훅은 함수 최상단에 선언해야 합니다.');
+  }
+
+  if (!currentFiber.isMounted) {
+    currentFiber.hookIndex += 1;
+  }
+}
+
 export function state<D extends Data>(initial: D) {
   const currentFiber = getCurrentFiber();
   if (currentFiber === null) {
     throw new Error('상태 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
-    throw new Error('훅은 함수 최상단에 선언해야 합니다.');
-  }
-
+  checkInvalidHook(currentFiber);
   const existState = states.get(currentFiber);
   if (existState) {
     return existState as D;
@@ -53,48 +60,51 @@ export function state<D extends Data>(initial: D) {
   return data as D;
 }
 
+interface StoreOption<D extends Data> {
+  data: D;
+  subscribe: (fiber: Fiber) => () => void;
+}
+
+export function store<D extends Data>(storeOption: StoreOption<D>) {
+  const { data, subscribe } = storeOption;
+  let currentFiber = getCurrentFiber();
+  if (!currentFiber) {
+    throw new Error('스토어 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  checkInvalidHook(currentFiber);
+  if (currentFiber.isMounted) {
+    return data;
+  }
+
+  const unSubscribe = subscribe(currentFiber);
+  let dep = unMountHooks.get(currentFiber);
+  if (!dep) {
+    dep = [];
+    unMountHooks.set(currentFiber, dep);
+  }
+  dep.push(unSubscribe);
+  return data;
+}
+
+
 export function mounted(callback: () => void) {
   const currentFiber = getCurrentFiber();
   if (currentFiber === null) {
     throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+  checkInvalidHook(currentFiber);
+  if (currentFiber.isMounted) {
     return;
   }
 
-  currentFiber.hookIndex += 1;
   let dep = mountHooks.get(currentFiber);
   if (!dep) {
-    dep = new Set();
-    dep.add(callback);
+    dep = [];
     mountHooks.set(currentFiber, dep);
-  } else {
-    dep.add(callback);
   }
-}
-
-export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
-    throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
-  }
-
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
-    return;
-  }
-
-  currentFiber.hookIndex += 1;
-  let dep = updatedHooks.get(currentFiber);
-  if (!dep) {
-    dep = new Set();
-    // @ts-ignore
-    dep.add(callback);
-    updatedHooks.set(currentFiber, dep);
-  } else {
-    // @ts-ignore
-    dep.add(callback);
-  }
+  dep.push(callback);
 }
 
 export function unMounted(callback: () => void) {
@@ -103,21 +113,36 @@ export function unMounted(callback: () => void) {
     throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+  checkInvalidHook(currentFiber);
+  if (currentFiber.isMounted) {
     return;
   }
 
-  currentFiber.hookIndex += 1;
   let dep = unMountHooks.get(currentFiber);
   if (!dep) {
-    dep = new Set();
-    dep.add(callback);
+    dep = [];
     unMountHooks.set(currentFiber, dep);
-  } else {
-    dep.add(callback);
   }
+  dep.push(callback);
 }
 
+export function updated<D extends Data>(callback: (next: D, prev: D) => void) {
+  const currentFiber = getCurrentFiber();
+  if (currentFiber === null) {
+    throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  checkInvalidHook(currentFiber);
+
+  let dep = updatedHooks.get(currentFiber);
+  if (!dep) {
+    dep = [];
+    updatedHooks.set(currentFiber, dep);
+  }
+
+  const index = currentFiber.updatedHookIndex++;
+  dep[index] = callback as (next: Data, prev: Data) => void;
+}
 
 export function watchProps<P extends Props>(callback: (prev: P) => void) {
   const currentFiber = getCurrentFiber();
@@ -125,19 +150,14 @@ export function watchProps<P extends Props>(callback: (prev: P) => void) {
     throw new Error('watchProps 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
-    return;
-  }
+  checkInvalidHook(currentFiber);
 
-  currentFiber.hookIndex += 1;
   let dep = watchPropsHooks.get(currentFiber);
   if (!dep) {
-    dep = new Set();
-    // @ts-ignore
-    dep.add(callback);
+    dep = [];
     watchPropsHooks.set(currentFiber, dep);
-  } else {
-    // @ts-ignore
-    dep.add(callback);
   }
+
+  const index = currentFiber.watchPropsHookIndex++;
+  dep[index] = callback as (prev: Props) => void;
 }

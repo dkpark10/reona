@@ -8,6 +8,11 @@ import {
   rootRender,
   updated,
 } from '../core';
+import {
+  mountHooks,
+  unMountHooks,
+  getInstanceMap,
+} from '../core/fiber';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -43,7 +48,7 @@ describe('라이프 사이클 훅 테스트', () => {
         </div>
       `;
     }
-    rootRender(document.getElementById('root')!, Component);
+    const fiber = rootRender(document.getElementById('root')!, Component);
 
     document.querySelector('button')?.click();
     await flushRaf();
@@ -52,6 +57,32 @@ describe('라이프 사이클 훅 테스트', () => {
     document.querySelector('button')?.click();
     await flushRaf();
     expect(mountFn).toHaveBeenCalledOnce();
+
+    expect(mountHooks.get(fiber)).toBeFalsy();
+  });
+
+  test('마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 마운트훅 맵을 클리어 한다.', async () => {
+    const mountFn1 = vi.fn();
+    const mountFn2 = vi.fn();
+    const mountFn3 = vi.fn();
+
+    function Component() {
+      mounted(mountFn1);
+      mounted(mountFn2);
+      mounted(mountFn3);
+
+      return html`
+        <div id="app"></div>
+      `;
+    }
+    const fiber = rootRender(document.getElementById('root')!, Component);
+
+    await flushRaf();
+    expect(mountFn1).toHaveBeenCalledOnce();
+    expect(mountFn2).toHaveBeenCalledOnce();
+    expect(mountFn3).toHaveBeenCalledOnce();
+
+    expect(mountHooks.get(fiber)).toBeFalsy();
   });
 
   test('업데이트 훅 실행을 테스트 한다.', async () => {
@@ -91,7 +122,53 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(expectedValue).toEqual([{ value: 3 }, { value: 2 }]);
   });
 
-  test('조건부 렌더링에 따른 라이프 사이클 훅을 테스트를 한다.', async () => {
+  test('언마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 언마운트훅 맵을 클리어 한다.', async () => {
+    const unMountFn1 = vi.fn();
+    const unMountFn2 = vi.fn();
+    const unMountFn3 = vi.fn();
+
+    function Child() {
+      unMounted(unMountFn1);
+      unMounted(unMountFn2);
+      unMounted(unMountFn3);
+
+      return html`
+        <div></div>
+      `;
+    }
+
+    function Component() {
+      const data = state({
+        bool: true,
+      });
+
+      const trigger = () => {
+        data.bool = !data.bool;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${trigger}>trigger</button>
+          ${data.bool ? createComponent(Child): ''}
+        </div>
+      `;
+    }
+
+    rootRender(document.getElementById('root')!, Component);
+
+    const instanceMap = getInstanceMap();
+    const fibers = instanceMap.get(Child);
+
+    document.querySelector('button')?.click();
+
+    await flushRaf();
+    expect(unMountFn1).toHaveBeenCalledOnce();
+    expect(unMountFn2).toHaveBeenCalledOnce();
+    expect(unMountFn3).toHaveBeenCalledOnce();
+    expect(fibers?.size).toBeFalsy();
+  });
+
+  test('조건부 렌더링에 따른 마운트, 언마운트 훅을 테스트를 한다.', async () => {
     const mountFn1 = vi.fn(() => {
       console.log('mount1');
     });

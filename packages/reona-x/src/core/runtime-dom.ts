@@ -15,6 +15,7 @@ export function rootRender(
 
   const fiber = getFiber(0);
   fiber.render(container);
+  return fiber;
 }
 
 

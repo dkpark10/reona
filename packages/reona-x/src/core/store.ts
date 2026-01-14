@@ -1,6 +1,6 @@
 import type { Data } from '../utils/types';
 import { isPrimitive } from '../../../shared';
-import Fiber, { getCurrentFiber, unMountHooks } from './fiber';
+import Fiber from './fiber';
 import { update } from './renderer';
 
 export function createStore<D extends Data>(initial: D) {
@@ -36,28 +36,4 @@ export function createStore<D extends Data>(initial: D) {
       };
     },
   };
-}
-
-interface StoreOption<D extends Data> {
-  data: D;
-  subscribe: (fiber: Fiber) => () => void;
-}
-
-export function store<D extends Data>(storeOption: StoreOption<D>) {
-  const { data, subscribe } = storeOption;
-  let fiber = getCurrentFiber();
-  if (!fiber) {
-    throw new Error('스토어 함수는 컴포넌트 내에서 선언해야 합니다.');
-  }
-
-  const unSubscribe = subscribe(fiber);
-  let dep = unMountHooks.get(fiber);
-  if (!dep) {
-    dep = new Set();
-    dep.add(unSubscribe);
-    unMountHooks.set(fiber, dep);
-  } else {
-    dep.add(unSubscribe);
-  }
-  return data;
 }
