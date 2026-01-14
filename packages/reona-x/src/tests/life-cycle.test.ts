@@ -10,7 +10,6 @@ import {
 } from '../core';
 import {
   mountHooks,
-  unMountHooks,
   getInstanceMap,
 } from '../core/fiber';
 import { flushRaf } from './utils';

@@ -64,6 +64,8 @@ export default class Fiber {
 
   public watchPropsTrigger = false;
 
+  public stateHookIndex = 0;
+
   public updatedHookIndex = 0;
 
   public watchPropsHookIndex = 0;
@@ -117,6 +119,7 @@ export default class Fiber {
   public reRender() {
     const depth = getDepth(this.key);
 
+    this.stateHookIndex = 0;
     this.updatedHookIndex = 0;
     this.watchPropsHookIndex = 0;
 

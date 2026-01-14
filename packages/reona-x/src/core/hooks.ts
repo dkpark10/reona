@@ -9,7 +9,6 @@ import Fiber, {
 } from './fiber';
 import { update } from './renderer';
 
-const states = new WeakMap<Fiber, Record<string, any>>();
 
 function checkInvalidHook(currentFiber: Fiber) {
   if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
@@ -21,6 +20,8 @@ function checkInvalidHook(currentFiber: Fiber) {
   }
 }
 
+const states = new WeakMap<Fiber, Array<Record<string, any>>>();
+
 export function state<D extends Data>(initial: D) {
   const currentFiber = getCurrentFiber();
   if (currentFiber === null) {
@@ -28,16 +29,23 @@ export function state<D extends Data>(initial: D) {
   }
 
   checkInvalidHook(currentFiber);
-  const existState = states.get(currentFiber);
-  if (existState) {
-    return existState as D;
+
+  let stateList = states.get(currentFiber);
+  if (!stateList) {
+    stateList = [];
+    states.set(currentFiber, stateList);
+  }
+
+  const stateIndex = currentFiber.stateHookIndex++;
+
+  if (stateList[stateIndex]) {
+    return stateList[stateIndex] as D;
   }
 
   if (initial && isPrimitive(initial)) {
     throw new Error('원시객체 입니다. 데이터는 객체 형식이어야 합니다.');
   }
 
-  let fiber = currentFiber;
   const data = new Proxy(initial, {
     get(target, key, receiver) {
       return Reflect.get(target, key, receiver);
@@ -49,14 +57,14 @@ export function state<D extends Data>(initial: D) {
 
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
-        fiber.nextState = target;
-        fiber.prevState = prevState;
-        update(fiber);
+        currentFiber.nextState = target;
+        currentFiber.prevState = prevState;
+        update(currentFiber);
       }
       return result;
     },
   });
-  states.set(fiber, data);
+  stateList[stateIndex] = data;
   return data as D;
 }
 
