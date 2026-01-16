@@ -133,48 +133,78 @@ export function reconcile(fiber: Fiber) {
     }
   }
 
-  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement);
-
+  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement.firstElementChild);
   // todo remove
-  batchReplace(fiber);
+  // batchReplace(fiber);
 }
 
-function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, parentElement: Element) {
-  if (prevVnodeTree.type !== nextVnodeTree.type) {
-    const dom = createDOM(nextVnodeTree, parentElement);
-    parentElement.replaceWith(dom);
+function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null) {
+  if (prevVnodeTree.type !== nextVnodeTree.type && currentNode) {
+    const dom = createDOM(nextVnodeTree, currentNode);
+    currentNode.replaceWith(dom);
     return;
   }
 
-  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component') {
+  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && currentNode) {
     if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
-      const dom = createDOM(nextVnodeTree, parentElement);
-      parentElement.replaceWith(dom);
+      const dom = createDOM(nextVnodeTree, currentNode);
+      currentNode.replaceWith(dom);
       return;
     }
   }
 
-  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
+  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element' && currentNode) {
     if (prevVnodeTree.tag !== nextVnodeTree.tag) {
-      const dom = createDOM(nextVnodeTree, parentElement);
-      parentElement.replaceWith(dom);
+      const dom = createDOM(nextVnodeTree, currentNode);
+      currentNode.replaceWith(dom);
       return;
     }
   }
 
-  changeAttribute(prevVnodeTree, nextVnodeTree, parentElement);
-}
+  changeAttribute(prevVnodeTree, nextVnodeTree, currentNode);
+  changeText(prevVnodeTree, nextVnodeTree, currentNode);
 
+  const next = nextVnodeTree as VElementNode;
+  const prev = prevVnodeTree as VElementNode;
 
-function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, parentElement: Element) {
-  if (prevVnodeTree.type !== 'element' || nextVnodeTree.type !== 'element') {
+  if (!next.children || !prev.children) {
     return;
   }
 
-  if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
-    Object.values(nextVnodeTree.attr || {}).forEach(([name, value]) => {
-      parentElement.setAttribute(name, value);
-    });
+  const len = next.children.length;
+
+  // todo 길이 다를 때 처리
+  if (next.children.length !== prev.children.length) {
+    return;
+  }
+
+  for (let i = 0; i < len; i++) {
+    const childOfPrev = prev.children[i];
+    const childOfNext = next.children[i];
+    const childDom = currentNode?.childNodes[i] as HTMLElement;
+    recursiveDiff(childOfPrev, childOfNext, childDom);
+  }
+}
+
+function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null) {
+  if (!currentNode) return;
+  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
+    if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
+      Object.entries(nextVnodeTree.attr || {}).forEach(([name, value]) => {
+        if (typeof value === 'string') {
+          currentNode.setAttribute(name, value);
+        }
+      });
+    }
+  }
+}
+
+function changeText(prevVnode: VNode, nextVnode: VNode, currentNode: Element | null) {
+  if (!currentNode) return;
+  if (prevVnode.type === 'text' && nextVnode.type === 'text') {
+    if (prevVnode.value !== nextVnode.value) {
+      currentNode.textContent = nextVnode.value;
+    }
   }
 }
 
@@ -185,50 +215,4 @@ function batchReplace(fiber: Fiber) {
 
   fiber.prevVnodeTree = fiber.nextVnodeTree;
   fiber.currentDom = dom;
-}
-
-function reconcileTextNodes(
-  prevVnode: VElementNode,
-  nextVnode: VElementNode,
-  dom: HTMLElement,
-) {
-  if (!isSameElement(prevVnode, nextVnode)) {
-    return false;
-  }
-
-  const prevChildren = prevVnode.children;
-  const nextChildren = nextVnode.children;
-
-  if (prevChildren.length !== nextChildren.length) {
-    return false;
-  }
-
-  for (let i = 0; i < prevChildren.length; i++) {
-    const prevChild = prevChildren[i];
-    const nextChild = nextChildren[i];
-
-    if (prevChild.type === 'text' && nextChild.type === 'text') {
-      if (prevChild.value !== nextChild.value) {
-        const textNode = dom.childNodes[i];
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          textNode.textContent = nextChild.value;
-        }
-      }
-    }
-
-    if (prevChild.type === 'element' && nextChild.type === 'element') {
-      const childDom = dom.childNodes[i] as HTMLElement;
-      if (childDom && childDom.nodeType === Node.ELEMENT_NODE) {
-        reconcileTextNodes(prevChild, nextChild, childDom);
-      }
-    }
-  }
-
-  return true;
-}
-
-function isSameElement(prevVnode: VElementNode, nextVnode: VElementNode) {
-  const sameTag = prevVnode.tag === nextVnode.tag;
-  const sameAttr = shallowEqual(prevVnode.attr, nextVnode.attr);
-  return sameTag && sameAttr;
 }
