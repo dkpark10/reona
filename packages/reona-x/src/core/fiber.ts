@@ -1,5 +1,6 @@
 import type { Component, Props, Data } from '../utils/types';
 import Parser, { type VNode } from './parser';
+import { reconcile } from '../experimental/reconcile';
 import { createDOM } from './runtime-dom';
 
 /** @description 전역 컴포넌트 관리 map */
@@ -39,17 +40,15 @@ type FiberOption = {
 
 // todo fiber의 역할 분리 필요
 export default class Fiber {
-  private parentElement: Element;
+  public parentElement: Element;
 
-  private component: Component;
+  public component: Component;
 
-  private prevVnodeTree: VNode;
+  public prevVnodeTree: VNode;
 
-  private nextVnodeTree: VNode;
+  public nextVnodeTree: VNode;
 
-  private prevDom: HTMLElement;
-
-  private nextDom: HTMLElement;
+  public currentDom: HTMLElement;
 
   public isMounted = false;
 
@@ -95,16 +94,32 @@ export default class Fiber {
 
     currentFiber = this;
     const template = this.component(this.nextProps);
-
     const parser = new Parser(template, this.sequence + 1);
 
     this.parentElement = parentElement;
-
     this.prevVnodeTree = parser.parse();
-    this.prevDom = createDOM(this.prevVnodeTree, parentElement);
 
-    this.parentElement.insertBefore(this.prevDom, null);
+    this.currentDom = createDOM(this.prevVnodeTree, parentElement);
+    parentElement.insertBefore(this.currentDom, null);
 
+    this.runWatchProps();
+    this.runMount();
+  }
+
+  public reRender() {
+    this.hookIndexInitialize();
+    currentFiber = this;
+    const template = this.component(this.nextProps);
+
+    const parser = new Parser(template, this.sequence + 1);
+    this.nextVnodeTree = parser.parse();
+
+    this.runUnmount();
+    reconcile(this);
+    this.runUpdate();
+  }
+
+  private runWatchProps() {
     if (this.watchPropsTrigger) {
       const dep = watchPropsHooks.get(this);
       if (dep) {
@@ -115,9 +130,10 @@ export default class Fiber {
         }
       }
     }
-
     this.prevProps = this.nextProps;
+  }
 
+  private runMount() {
     if (!this.isMounted) {
       const dep = mountHooks.get(this);
       if (dep) {
@@ -131,22 +147,7 @@ export default class Fiber {
     }
   }
 
-  public reRender() {
-    this.hookIndexInitialize();
-    currentFiber = this;
-    const template = this.component(this.nextProps);
-
-    const parser = new Parser(template, this.sequence + 1);
-    this.nextVnodeTree = parser.parse();
-
-    this.ummount();
-
-    this.nextDom = createDOM(this.nextVnodeTree, this.parentElement);
-    this.prevDom.replaceWith(this.nextDom);
-
-    this.prevVnodeTree = this.nextVnodeTree;
-    this.prevDom = this.nextDom;
-
+  private runUpdate() {
     const dep = updatedHooks.get(this);
     if (dep) {
       for (const hook of dep) {
@@ -163,7 +164,7 @@ export default class Fiber {
   }
 
   // todo 부분 최적화 방법??
-  private ummount() {
+  private runUnmount() {
     const prevFibers = this.collectFibers(this.prevVnodeTree);
     const nextFibers = this.collectFibers(this.nextVnodeTree);
 

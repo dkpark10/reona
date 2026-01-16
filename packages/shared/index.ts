@@ -98,8 +98,8 @@ export function createKey(sequence: number, key?: string | number) {
 }
 
 export function shallowEqual(
-  objA: Record<string, any>,
-  objB: Record<string, any>
+  objA: Record<string, any> | undefined,
+  objB: Record<string, any> | undefined,
 ): boolean {
   if (Object.is(objA, objB)) return true;
 

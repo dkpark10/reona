@@ -25,5 +25,4 @@
     "types": ["vite/client", "@testing-library/jest-dom/vitest"]
   },
   "include": ["./src", "env.d.ts"],
-  "exclude": ["./src/tests"]
 }

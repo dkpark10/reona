@@ -170,7 +170,7 @@ describe('라이프 사이클 훅 테스트', () => {
       return html`
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
-          ${data.bool ? createComponent(Child): ''}
+          ${data.bool ? createComponent(Child) : ''}
         </div>
       `;
     }
@@ -203,16 +203,16 @@ describe('라이프 사이클 훅 테스트', () => {
       console.log('unmount2');
     });
 
-    function Child() {
+    function Child({ value }: { value: number }) {
       mounted(mountFn1);
       unMounted(unMountFn1);
-      return html`<div></div>`;
+      return html`<div id="div1">${value}</div>`;
     }
 
-    function Child2() {
+    function Child2({ value }: { value: number }) {
       mounted(mountFn2);
       unMounted(unMountFn2);
-      return html`<div></div>`;
+      return html`<div id="div2">${value}</div>`;
     }
 
     function Parent() {
@@ -228,40 +228,52 @@ describe('라이프 사이클 훅 테스트', () => {
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
           ${data.bool
-            ? createComponent(Child, {
-                props: {
-                  value: 1,
-                },
-              })
-            : createComponent(Child2, {
-                props: {
-                  value: 2,
-                },
-              })}
+          ? createComponent(Child, {
+            props: {
+              value: 1,
+            },
+          })
+          : createComponent(Child2, {
+            props: {
+              value: 2,
+            },
+          })}
         </div>
       `;
     }
 
     rootRender(document.getElementById('root')!, Parent);
 
+    expect(document.getElementById('div1')).toBeInTheDocument();
+    expect(document.getElementById('div1')?.textContent).toBe('1');
+
     document.querySelector('button')?.click();
     await flushRaf();
     expect(unMountFn1).toHaveBeenCalled();
     expect(mountFn2).toHaveBeenCalled();
+    expect(document.getElementById('div2')).toBeInTheDocument();
+    expect(document.getElementById('div2')?.textContent).toBe('2');
 
     document.querySelector('button')?.click();
     await flushRaf();
     expect(unMountFn2).toHaveBeenCalled();
     expect(mountFn1).toHaveBeenCalled();
+    expect(document.getElementById('div1')).toBeInTheDocument();
+    expect(document.getElementById('div1')?.textContent).toBe('1');
 
+    document.querySelector('button')?.click();
     await flushRaf();
     expect(unMountFn1).toHaveBeenCalled();
     expect(mountFn2).toHaveBeenCalled();
+    expect(document.getElementById('div2')).toBeInTheDocument();
+    expect(document.getElementById('div2')?.textContent).toBe('2');
 
     document.querySelector('button')?.click();
     await flushRaf();
     expect(unMountFn2).toHaveBeenCalled();
     expect(mountFn1).toHaveBeenCalled();
+    expect(document.getElementById('div1')).toBeInTheDocument();
+    expect(document.getElementById('div1')?.textContent).toBe('1');
   });
 
   test('언마운트 시 해당 컴포넌트의 훅 데이터들이 정리되어야 한다.', async () => {
@@ -306,7 +318,7 @@ describe('라이프 사이클 훅 테스트', () => {
       return html`
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
-          ${data.bool ? createComponent(Child, { props: { value: 1 }}) : ''}
+          ${data.bool ? createComponent(Child, { props: { value: 1 } }) : ''}
         </div>
       `;
     }

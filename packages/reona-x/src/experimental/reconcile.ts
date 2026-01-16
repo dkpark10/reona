@@ -1,514 +1,234 @@
 /** @see {@link https://ko.legacy.reactjs.org/docs/reconciliation.html} */
-import type { VNode, VElementNode, VTextNode, VComponent } from '../core/parser';
-import type { Props } from '../utils/types';
-import Fiber, { unMountHooks, mountHooks, updatedHooks, getInstanceMap } from '../core/fiber';
+import type { VNode, VElementNode, VTextNode } from '../core/parser';
+import { shallowEqual } from '../../../shared';
+import { Fiber } from '../core';
+import { createDOM } from '../core/runtime-dom';
 
-export function reconcile(
-  prevVNode: VNode | null,
-  nextVNode: VNode | null,
-  dom: Node | null,
-  parentElement: Element
-): Node | null {
-  // Case 1: 새 노드 추가
-  if (prevVNode === null && nextVNode !== null) {
-    const newDom = createDOMFromVNode(nextVNode, parentElement);
-    if (newDom) {
-      parentElement.appendChild(newDom);
+/**
+ *
+ *
+  1. 최상위 노드 타입이 다름 (일괄 교체)
+
+  text → element
+  text → component
+  element → text
+  element → component
+  component → text
+  component → element
+
+  2. Text Node
+
+  "hello" → "world"  // value 변경
+
+  3. Element Node
+
+  3-1. Tag 변경 (일괄 교체)
+
+  <div> → <span>
+  <ul> → <ol>
+
+  3-2. Attr 변경
+
+  <div id="1"> → <div id="2">           // 값 변경
+  <div id="1"> → <div>                   // attr 삭제
+  <div> → <div id="1">                   // attr 추가
+  <div class="a" id="1"> → <div id="1">  // 일부 삭제
+  <button onClick={fn1}> → <button onClick={fn2}>  // 이벤트 핸들러 변경
+
+  3-3. Children 개수 변경
+
+  <ul><li>1</li></ul> → <ul><li>1</li><li>2</li></ul>  // 추가
+  <ul><li>1</li><li>2</li></ul> → <ul><li>1</li></ul>  // 삭제
+
+  3-4. Children 타입 변경
+
+  <div>text</div> → <div><span>text</span></div>      // text → element
+  <div><Comp /></div> → <div>text</div>               // component → text
+
+  4. Component Node
+
+  <Comp1 /> → <Comp2 />  // 다른 컴포넌트 (일괄 교체)
+
+  5. 중첩 케이스
+
+  5-1. 깊은 text 변경
+
+  <div><span><p>1</p></span></div>
+  →
+  <div><span><p>2</p></span></div>
+
+  5-2. 깊은 attr 변경
+
+  <div><span class="a">1</span></div>
+  →
+  <div><span class="b">1</span></div>
+
+  5-3. 깊은 tag 변경 (해당 subtree 교체)
+
+  <div><span>1</span></div>
+  →
+  <div><p>1</p></div>
+
+  5-4. 복합 변경
+
+  <div id="1">
+    <span class="s">1</span>
+    <p>hello</p>
+  </div>
+  →
+  <div id="2">
+    <span class="s">2</span>
+    <p>world</p>
+  </div>
+  // attr 변경 + 여러 text 변경
+
+  5-5. 중첩된 컴포넌트
+
+  <div><Comp1 /></div>
+  →
+  <div><Comp2 /></div>
+
+  5-6. 배열/리스트 (key 관련)
+
+  <ul>
+    <li key="a">A</li>
+    <li key="b">B</li>
+  </ul>
+  →
+  <ul>
+    <li key="b">B</li>
+    <li key="a">A</li>
+  </ul>
+  // 순서 변경 
+ */
+
+export function reconcile(fiber: Fiber) {
+  const prevVnodeTree = fiber.prevVnodeTree;
+  const nextVnodeTree = fiber.nextVnodeTree;
+
+  if (prevVnodeTree.type !== nextVnodeTree.type) {
+    batchReplace(fiber);
+    return;
+  }
+
+  /**
+   * native tag가 아닌 fiber 변경 시 일괄교체
+   * ex) html`${condition ? createComponent(comp1) : createComponent(comp2)}`
+   */
+  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component') {
+    if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
+      batchReplace(fiber);
+      return;
     }
-    return newDom;
   }
 
-  // Case 2: 노드 삭제
-  if (prevVNode !== null && nextVNode === null) {
-    if (dom) {
-      unmountVNode(prevVNode);
-      dom.parentNode?.removeChild(dom);
+  /**
+   * native tag값 변경의 경우 일괄 교체
+   * ex) html`${condition ? <div /> : </article />}`
+   */
+  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
+    if (prevVnodeTree.tag !== nextVnodeTree.tag) {
+      batchReplace(fiber);
+      return;
     }
-    return null;
   }
 
-  // Case 3: 둘 다 null
-  if (prevVNode === null || nextVNode === null || dom === null) {
-    return null;
+  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement);
+
+  // todo remove
+  batchReplace(fiber);
+}
+
+function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, parentElement: Element) {
+  if (prevVnodeTree.type !== nextVnodeTree.type) {
+    const dom = createDOM(nextVnodeTree, parentElement);
+    parentElement.replaceWith(dom);
+    return;
   }
 
-  // Case 4: 타입이 다르면 전체 교체
-  if (prevVNode.type !== nextVNode.type) {
-    unmountVNode(prevVNode);
-    const newDom = createDOMFromVNode(nextVNode, parentElement);
-    if (newDom) {
-      dom.parentNode?.replaceChild(newDom, dom);
+  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component') {
+    if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
+      const dom = createDOM(nextVnodeTree, parentElement);
+      parentElement.replaceWith(dom);
+      return;
     }
-    return newDom;
   }
 
-  // Case 5: 같은 타입 - 타입별 처리
-  switch (nextVNode.type) {
-    case 'text':
-      return reconcileText(prevVNode as VTextNode, nextVNode, dom as Text);
+  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
+    if (prevVnodeTree.tag !== nextVnodeTree.tag) {
+      const dom = createDOM(nextVnodeTree, parentElement);
+      parentElement.replaceWith(dom);
+      return;
+    }
+  }
 
-    case 'element':
-      return reconcileElement(
-        prevVNode as VElementNode,
-        nextVNode,
-        dom as HTMLElement,
-        parentElement
-      );
+  changeAttribute(prevVnodeTree, nextVnodeTree, parentElement);
+}
 
-    case 'component':
-      return reconcileComponent(prevVNode as VComponent, nextVNode, dom, parentElement);
 
-    default:
-      return dom;
+function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, parentElement: Element) {
+  if (prevVnodeTree.type !== 'element' || nextVnodeTree.type !== 'element') {
+    return;
+  }
+
+  if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
+    Object.values(nextVnodeTree.attr || {}).forEach(([name, value]) => {
+      parentElement.setAttribute(name, value);
+    });
   }
 }
 
-/**
- * @description 텍스트 노드 reconciliation
- */
-function reconcileText(prevVNode: VTextNode, nextVNode: VTextNode, dom: Text): Text {
-  if (prevVNode.value !== nextVNode.value) {
-    dom.textContent = nextVNode.value;
-  }
-  return dom;
+// 일괄 dom 전체 교체
+function batchReplace(fiber: Fiber) {
+  const dom = createDOM(fiber.nextVnodeTree, fiber.parentElement);
+  fiber.currentDom.replaceWith(dom);
+
+  fiber.prevVnodeTree = fiber.nextVnodeTree;
+  fiber.currentDom = dom;
 }
 
-/**
- * @description 엘리먼트 노드 reconciliation
- */
-function reconcileElement(
-  prevVNode: VElementNode,
-  nextVNode: VElementNode,
+function reconcileTextNodes(
+  prevVnode: VElementNode,
+  nextVnode: VElementNode,
   dom: HTMLElement,
-  parentElement: Element
-): HTMLElement {
-  // 태그가 다르면 전체 교체
-  if (prevVNode.tag !== nextVNode.tag) {
-    unmountVNode(prevVNode);
-    const newDom = createDOMFromVNode(nextVNode, parentElement) as HTMLElement;
-    dom.parentNode?.replaceChild(newDom, dom);
-    return newDom;
+) {
+  if (!isSameElement(prevVnode, nextVnode)) {
+    return false;
   }
 
-  // 속성 diff & patch
-  patchAttributes(dom, prevVNode.attr, nextVNode.attr);
+  const prevChildren = prevVnode.children;
+  const nextChildren = nextVnode.children;
 
-  // 자식 노드 reconciliation
-  reconcileChildren(prevVNode.children, nextVNode.children, dom);
-
-  return dom;
-}
-
-/**
- * @description 컴포넌트 노드 reconciliation
- */
-function reconcileComponent(
-  prevVNode: VComponent,
-  nextVNode: VComponent,
-  dom: Node,
-  parentElement: Element
-): Node {
-  // 같은 Fiber 인스턴스면 props만 업데이트하고 리렌더
-  if (prevVNode.fiber === nextVNode.fiber) {
-    // Fiber가 자체적으로 리렌더링 처리
-    return dom;
+  if (prevChildren.length !== nextChildren.length) {
+    return false;
   }
 
-  // 다른 Fiber면 이전 것 언마운트하고 새로 마운트
-  unmountFiber(prevVNode.fiber);
-  nextVNode.fiber.render(parentElement);
-
-  return dom;
-}
-
-/**
- * @description 속성 diff & patch
- */
-function patchAttributes(
-  dom: HTMLElement,
-  prevAttrs: Props | undefined,
-  nextAttrs: Props | undefined
-): void {
-  const prev = prevAttrs || {};
-  const next = nextAttrs || {};
-
-  // 이전 속성 중 삭제된 것 제거
-  for (const key of Object.keys(prev)) {
-    if (!(key in next)) {
-      removeAttribute(dom, key, prev[key]);
-    }
-  }
-
-  // 새 속성 추가 또는 업데이트
-  for (const [key, value] of Object.entries(next)) {
-    if (prev[key] !== value) {
-      setAttribute(dom, key, value, prev[key]);
-    }
-  }
-}
-
-/**
- * @description 속성 제거
- */
-function removeAttribute(dom: HTMLElement, key: string, value: any): void {
-  // 이벤트 핸들러
-  if (/@([^\s=/>]+)/.test(key) && typeof value === 'function') {
-    const eventName = key.slice(1);
-    dom.removeEventListener(eventName, value);
-  }
-  // ref는 제거하지 않음
-  else if (!/^\$\$ref\b/.test(key)) {
-    dom.removeAttribute(key);
-  }
-}
-
-/**
- * @description 속성 설정
- */
-function setAttribute(dom: HTMLElement, key: string, value: any, prevValue?: any): void {
-  // 이벤트 핸들러
-  if (/@([^\s=/>]+)/.test(key) && typeof value === 'function') {
-    const eventName = key.slice(1);
-    // 이전 핸들러 제거
-    if (prevValue && typeof prevValue === 'function') {
-      dom.removeEventListener(eventName, prevValue);
-    }
-    dom.addEventListener(eventName, value);
-  }
-  // ref
-  else if (/^\$\$ref\b/.test(key)) {
-    const setRef = value as Function;
-    setRef(dom);
-  }
-  // 일반 속성
-  else {
-    dom.setAttribute(key, value);
-  }
-}
-
-/**
- * @description 자식 노드 reconciliation (키 기반 + 인덱스 기반 혼합)
- */
-function reconcileChildren(
-  prevChildren: VNode[],
-  nextChildren: VNode[],
-  parentDom: HTMLElement
-): void {
-  const prevLen = prevChildren.length;
-  const nextLen = nextChildren.length;
-  const maxLen = Math.max(prevLen, nextLen);
-
-  // DOM 인덱스 추적 (컴포넌트는 자체 DOM을 가지므로 별도 추적)
-  let domIndex = 0;
-  const domChildren = Array.from(parentDom.childNodes);
-
-  // VNode별 DOM 매핑 구축
-  const prevVNodeDomMap = new Map<VNode, Node>();
-  for (let i = 0; i < prevLen; i++) {
+  for (let i = 0; i < prevChildren.length; i++) {
     const prevChild = prevChildren[i];
-    if (prevChild.type === 'component') {
-      const dom = prevChild.fiber.getDom();
-      if (dom) {
-        prevVNodeDomMap.set(prevChild, dom);
-        domIndex++;
-      }
-    } else {
-      const dom = domChildren[domIndex];
-      if (dom) {
-        prevVNodeDomMap.set(prevChild, dom);
-        domIndex++;
-      }
-    }
-  }
-
-  // 키 기반 매핑 (명시적 key가 있는 노드용)
-  const prevKeyMap = new Map<string, { vnode: VNode; dom: Node; index: number }>();
-  for (let i = 0; i < prevLen; i++) {
-    const prevChild = prevChildren[i];
-    const explicitKey = getExplicitKey(prevChild);
-    if (explicitKey) {
-      const dom = prevVNodeDomMap.get(prevChild);
-      if (dom) {
-        prevKeyMap.set(explicitKey, { vnode: prevChild, dom, index: i });
-      }
-    }
-  }
-
-  const usedPrevIndices = new Set<number>();
-  const newDomOrder: Node[] = [];
-
-  // 새 자식들 처리
-  for (let i = 0; i < nextLen; i++) {
     const nextChild = nextChildren[i];
-    const explicitKey = getExplicitKey(nextChild);
 
-    let prevChild: VNode | null = null;
-    let prevDom: Node | null = null;
-    let prevIndex: number = -1;
-
-    // 1. 명시적 key로 먼저 찾기
-    if (explicitKey && prevKeyMap.has(explicitKey)) {
-      const entry = prevKeyMap.get(explicitKey)!;
-      prevChild = entry.vnode;
-      prevDom = entry.dom;
-      prevIndex = entry.index;
-    }
-    // 2. key가 없으면 같은 인덱스의 이전 노드 사용 (조건부 렌더링 대응)
-    else if (i < prevLen && !usedPrevIndices.has(i)) {
-      const candidate = prevChildren[i];
-      // 명시적 key가 있는 노드는 인덱스 매칭에서 제외
-      if (!getExplicitKey(candidate)) {
-        prevChild = candidate;
-        prevDom = prevVNodeDomMap.get(candidate) ?? null;
-        prevIndex = i;
-      }
-    }
-
-    if (prevIndex >= 0) {
-      usedPrevIndices.add(prevIndex);
-    }
-
-    // reconcile 실행
-    if (prevChild && prevDom) {
-      // 같은 타입이면 업데이트
-      if (isSameType(prevChild, nextChild)) {
-        const updatedDom = reconcile(prevChild, nextChild, prevDom, parentDom);
-        if (updatedDom) {
-          newDomOrder.push(updatedDom);
-        } else if (nextChild.type === 'component') {
-          // 컴포넌트는 reconcile이 null을 반환할 수 있음
-          const componentDom = nextChild.fiber.getDom();
-          if (componentDom) {
-            newDomOrder.push(componentDom);
-          }
-        }
-      }
-      // 다른 타입이면 교체
-      else {
-        unmountVNode(prevChild);
-
-        // 이전 DOM 위치에 새 DOM 삽입
-        if (nextChild.type === 'component') {
-          // 컴포넌트: 이전 DOM 위치 기억 후 제거, 새 컴포넌트 렌더
-          const nextSibling = prevDom.nextSibling;
-          prevDom.parentNode?.removeChild(prevDom);
-          nextChild.fiber.render(parentDom);
-          const newDom = nextChild.fiber.getDom();
-          if (newDom) {
-            // 원래 위치로 이동 (render가 끝에 추가했으므로)
-            if (nextSibling) {
-              parentDom.insertBefore(newDom, nextSibling);
-            }
-            newDomOrder.push(newDom);
-          }
-        } else {
-          // 일반 노드: 직접 교체
-          const newDom = createDOMFromVNode(nextChild, parentDom);
-          if (newDom) {
-            prevDom.parentNode?.replaceChild(newDom, prevDom);
-            newDomOrder.push(newDom);
-          }
+    if (prevChild.type === 'text' && nextChild.type === 'text') {
+      if (prevChild.value !== nextChild.value) {
+        const textNode = dom.childNodes[i];
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          textNode.textContent = nextChild.value;
         }
       }
     }
-    // 새 노드 생성
-    else {
-      if (nextChild.type === 'component') {
-        nextChild.fiber.render(parentDom);
-        const newDom = nextChild.fiber.getDom();
-        if (newDom) {
-          newDomOrder.push(newDom);
-        }
-      } else {
-        const newDom = createDOMFromVNode(nextChild, parentDom);
-        if (newDom) {
-          parentDom.appendChild(newDom);
-          newDomOrder.push(newDom);
-        }
+
+    if (prevChild.type === 'element' && nextChild.type === 'element') {
+      const childDom = dom.childNodes[i] as HTMLElement;
+      if (childDom && childDom.nodeType === Node.ELEMENT_NODE) {
+        reconcileTextNodes(prevChild, nextChild, childDom);
       }
     }
-  }
-
-  // 사용되지 않은 이전 노드들 제거
-  for (let i = 0; i < prevLen; i++) {
-    if (!usedPrevIndices.has(i)) {
-      const prevChild = prevChildren[i];
-      unmountVNode(prevChild);
-
-      if (prevChild.type === 'component') {
-        prevChild.fiber.removeDom();
-      } else {
-        const dom = prevVNodeDomMap.get(prevChild);
-        dom?.parentNode?.removeChild(dom);
-      }
-    }
-  }
-
-  // DOM 순서 재정렬
-  reorderChildren(parentDom, newDomOrder);
-}
-
-/**
- * @description 명시적 key 추출 (사용자가 지정한 key만)
- */
-function getExplicitKey(vnode: VNode): string | null {
-  if (vnode.type === 'element' && vnode.attr?.key) {
-    return `key:${vnode.attr.key}`;
-  }
-  // 컴포넌트의 경우 props에서 key를 찾아야 함
-  if (vnode.type === 'component' && vnode.fiber.props?.key) {
-    return `key:${vnode.fiber.props.key}`;
-  }
-  return null;
-}
-
-/**
- * @description 두 VNode가 같은 타입인지 확인
- */
-function isSameType(prev: VNode, next: VNode): boolean {
-  if (prev.type !== next.type) return false;
-
-  if (prev.type === 'element' && next.type === 'element') {
-    return prev.tag === next.tag;
-  }
-
-  if (prev.type === 'component' && next.type === 'component') {
-    // 같은 컴포넌트 함수인지 확인 (fiber.key로 판단)
-    // fiber.key는 "depth-componentName" 형태이므로 componentName 부분 비교
-    const prevName = prev.fiber.key.split('-').slice(1).join('-');
-    const nextName = next.fiber.key.split('-').slice(1).join('-');
-    return prevName === nextName;
   }
 
   return true;
 }
 
-/**
- * @description DOM 자식 순서 재정렬
- */
-function reorderChildren(parentDom: HTMLElement, newOrder: Node[]): void {
-  for (let i = 0; i < newOrder.length; i++) {
-    const node = newOrder[i];
-    const currentNode = parentDom.childNodes[i];
-
-    if (node !== currentNode) {
-      if (currentNode) {
-        parentDom.insertBefore(node, currentNode);
-      } else {
-        parentDom.appendChild(node);
-      }
-    }
-  }
-}
-
-/**
- * @description VNode 언마운트 (cleanup)
- */
-function unmountVNode(vnode: VNode): void {
-  switch (vnode.type) {
-    case 'component':
-      unmountFiber(vnode.fiber);
-      break;
-    case 'element':
-      vnode.children.forEach(unmountVNode);
-      break;
-    case 'text':
-      // 텍스트 노드는 cleanup 불필요
-      break;
-  }
-}
-
-/**
- * @description Fiber 언마운트
- */
-function unmountFiber(fiber: Fiber): void {
-  const dep = unMountHooks.get(fiber);
-  if (dep) {
-    for (const fn of dep) {
-      fn();
-    }
-  }
-
-  const instanceMap = getInstanceMap();
-  // @ts-ignore - component is private but we need access for cleanup
-  const component = (fiber as any).component;
-  instanceMap.get(component)?.delete(fiber.key);
-
-  mountHooks.delete(fiber);
-  unMountHooks.delete(fiber);
-  updatedHooks.delete(fiber);
-}
-
-/**
- * @description VNode로부터 DOM 생성 (runtime-dom.ts의 createDOM과 유사하지만 분리)
- */
-function createDOMFromVNode(vnode: VNode, parentElement: Element): Node | null {
-  if (vnode.type === 'text') {
-    return document.createTextNode(vnode.value);
-  }
-
-  if (vnode.type === 'component') {
-    const fiber = vnode.fiber;
-    fiber.render(parentElement);
-    return null;
-  }
-
-  // DocumentFragment (tag 없는 루트)
-  if (!vnode.tag) {
-    const fragment = document.createDocumentFragment();
-    vnode.children?.forEach((child) => {
-      const dom = createDOMFromVNode(child, parentElement);
-      if (dom) {
-        fragment.appendChild(dom);
-      }
-    });
-    return fragment;
-  }
-
-  const el = document.createElement(vnode.tag);
-
-  if (vnode.attr) {
-    for (const [key, value] of Object.entries(vnode.attr)) {
-      setAttribute(el, key, value);
-    }
-  }
-
-  vnode.children?.forEach((child) => {
-    const childDom = createDOMFromVNode(child, el);
-    if (childDom) {
-      el.appendChild(childDom);
-    }
-  });
-
-  return el;
-}
-
-/**
- * @description VNode와 DOM을 매핑하는 헬퍼 (초기 렌더 후 사용)
- */
-export function buildDomMap(vnode: VNode, dom: Node): Map<VNode, Node> {
-  const map = new Map<VNode, Node>();
-  buildDomMapRecursive(vnode, dom, map);
-  return map;
-}
-
-function buildDomMapRecursive(vnode: VNode, dom: Node, map: Map<VNode, Node>): void {
-  map.set(vnode, dom);
-
-  if (vnode.type === 'element' && dom instanceof HTMLElement) {
-    const domChildren = Array.from(dom.childNodes);
-    let domIndex = 0;
-
-    for (const childVNode of vnode.children) {
-      if (childVNode.type === 'component') {
-        // 컴포넌트는 자체 DOM을 관리
-        continue;
-      }
-
-      if (domIndex < domChildren.length) {
-        buildDomMapRecursive(childVNode, domChildren[domIndex], map);
-        domIndex++;
-      }
-    }
-  }
+function isSameElement(prevVnode: VElementNode, nextVnode: VElementNode) {
+  const sameTag = prevVnode.tag === nextVnode.tag;
+  const sameAttr = shallowEqual(prevVnode.attr, nextVnode.attr);
+  return sameTag && sameAttr;
 }
