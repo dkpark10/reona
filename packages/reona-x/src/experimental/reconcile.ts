@@ -133,31 +133,35 @@ export function reconcile(fiber: Fiber) {
     }
   }
 
-  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement.firstElementChild);
+  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement.firstElementChild, fiber.parentElement);
+  fiber.prevVnodeTree = nextVnodeTree;
   // todo remove
   // batchReplace(fiber);
 }
 
-function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null) {
-  if (prevVnodeTree.type !== nextVnodeTree.type && currentNode) {
-    const dom = createDOM(nextVnodeTree, currentNode);
-    currentNode.replaceWith(dom);
-    return;
-  }
-
-  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && currentNode) {
+function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null, parentElement: Element | null) {
+  if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && parentElement) {
     if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
-      const dom = createDOM(nextVnodeTree, currentNode);
-      currentNode.replaceWith(dom);
+      createDOM(nextVnodeTree, parentElement);
+      if (currentNode) {
+        currentNode.replaceWith(nextVnodeTree.fiber.currentDom);
+      }
       return;
     }
   }
 
-  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element' && currentNode) {
-    if (prevVnodeTree.tag !== nextVnodeTree.tag) {
-      const dom = createDOM(nextVnodeTree, currentNode);
+  if (prevVnodeTree.type !== nextVnodeTree.type && parentElement) {
+    const dom = createDOM(nextVnodeTree, parentElement);
+    if (currentNode) {
       currentNode.replaceWith(dom);
-      return;
+    }
+    return;
+  }
+
+  if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element' && parentElement) {
+    const dom = createDOM(nextVnodeTree, parentElement);
+    if (currentNode) {
+      currentNode.replaceWith(dom);
     }
   }
 
@@ -182,7 +186,7 @@ function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: 
     const childOfPrev = prev.children[i];
     const childOfNext = next.children[i];
     const childDom = currentNode?.childNodes[i] as HTMLElement;
-    recursiveDiff(childOfPrev, childOfNext, childDom);
+    recursiveDiff(childOfPrev, childOfNext, childDom, currentNode);
   }
 }
 
