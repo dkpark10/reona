@@ -133,81 +133,85 @@ export function reconcile(fiber: Fiber) {
     }
   }
 
-  recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.parentElement.firstElementChild, fiber.parentElement);
+  const newDom = recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.currentDom, fiber.parentElement);
+  if (newDom) {
+    fiber.currentDom = newDom as HTMLElement;
+  }
   fiber.prevVnodeTree = nextVnodeTree;
-  // todo remove
-  // batchReplace(fiber);
 }
 
-function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null, parentElement: Element | null) {
+function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElement: Element | null, parentElement: Element | null): Element | null {
   if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && parentElement) {
     if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
       createDOM(nextVnodeTree, parentElement);
-      if (currentNode) {
-        currentNode.replaceWith(nextVnodeTree.fiber.currentDom);
+      if (currentElement) {
+        currentElement.replaceWith(nextVnodeTree.fiber.currentDom);
       }
-      return;
+      return nextVnodeTree.fiber.currentDom;
     }
   }
 
   if (prevVnodeTree.type !== nextVnodeTree.type && parentElement) {
     const dom = createDOM(nextVnodeTree, parentElement);
-    if (currentNode) {
-      currentNode.replaceWith(dom);
+    if (currentElement) {
+      currentElement.replaceWith(dom);
     }
-    return;
+    return dom;
   }
 
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element' && parentElement) {
     const dom = createDOM(nextVnodeTree, parentElement);
-    if (currentNode) {
-      currentNode.replaceWith(dom);
+    if (currentElement) {
+      currentElement.replaceWith(dom);
     }
+    return dom;
   }
 
-  changeAttribute(prevVnodeTree, nextVnodeTree, currentNode);
-  changeText(prevVnodeTree, nextVnodeTree, currentNode);
+  changeAttribute(prevVnodeTree, nextVnodeTree, currentElement);
+  changeText(prevVnodeTree, nextVnodeTree, currentElement);
 
   const next = nextVnodeTree as VElementNode;
   const prev = prevVnodeTree as VElementNode;
 
   if (!next.children || !prev.children) {
-    return;
+    return null;
   }
 
   const len = next.children.length;
 
   // todo 길이 다를 때 처리
   if (next.children.length !== prev.children.length) {
-    return;
+    return null;
   }
 
   for (let i = 0; i < len; i++) {
     const childOfPrev = prev.children[i];
     const childOfNext = next.children[i];
-    const childDom = currentNode?.childNodes[i] as HTMLElement;
-    recursiveDiff(childOfPrev, childOfNext, childDom, currentNode);
+    const childDom = currentElement?.childNodes[i] as HTMLElement;
+    recursiveDiff(childOfPrev, childOfNext, childDom, currentElement);
   }
+
+  return null;
 }
 
-function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, currentNode: Element | null) {
-  if (!currentNode) return;
+function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElement: Element | null) {
+  if (!currentElement) return;
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
     if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
       Object.entries(nextVnodeTree.attr || {}).forEach(([name, value]) => {
         if (typeof value === 'string') {
-          currentNode.setAttribute(name, value);
+          currentElement.setAttribute(name, value);
         }
       });
     }
   }
 }
 
-function changeText(prevVnode: VNode, nextVnode: VNode, currentNode: Element | null) {
-  if (!currentNode) return;
+function changeText(prevVnode: VNode, nextVnode: VNode, currentElement: Element | null) {
+  if (!currentElement) return;
   if (prevVnode.type === 'text' && nextVnode.type === 'text') {
     if (prevVnode.value !== nextVnode.value) {
-      currentNode.textContent = nextVnode.value;
+      currentElement.textContent = nextVnode.value;
     }
   }
 }
