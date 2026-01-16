@@ -160,11 +160,13 @@ function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElemen
   }
 
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element' && parentElement) {
-    const dom = createDOM(nextVnodeTree, parentElement);
-    if (currentElement) {
-      currentElement.replaceWith(dom);
+    if (prevVnodeTree.tag !== nextVnodeTree.tag) {
+      const dom = createDOM(nextVnodeTree, parentElement);
+      if (currentElement) {
+        currentElement.replaceWith(dom);
+      }
+      return dom;
     }
-    return dom;
   }
 
   changeAttribute(prevVnodeTree, nextVnodeTree, currentElement);
