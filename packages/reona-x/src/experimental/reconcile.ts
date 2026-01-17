@@ -99,7 +99,47 @@ import { createDOM } from '../core/runtime-dom';
     <li key="b">B</li>
     <li key="a">A</li>
   </ul>
-  // 순서 변경 
+
+  6. 길이 변경
+
+  6-1 추가
+  <ul>
+    <li>A</li>
+    <li>B</li>
+  </ul>
+
+  <ul>
+    <li>A</li>
+    <li>B</li>
+    <li>C</li>  // 새로 추가
+  </ul>
+
+  6-2 삭제
+  <ul>
+    <li>A</li>
+    <li>B</li>
+    <li>C</li>
+  </ul>
+
+  // next
+  <ul>
+    <li>A</li>
+    <li>B</li>
+    // C는 삭제됨
+  </ul>
+
+  6-3 복합
+  <div>
+    <span>Hello</span>
+    <p>World</p>
+  </div>
+
+  // next
+  <div>
+    <span>Hi</span>      // 텍스트 변경
+    <p>World</p>
+    <button>Click</button>  // 새로 추가
+  </div>
  */
 
 export function reconcile(fiber: Fiber) {
@@ -140,7 +180,11 @@ export function reconcile(fiber: Fiber) {
   fiber.prevVnodeTree = nextVnodeTree;
 }
 
-function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElement: Element | null, parentElement: Element | null): Element | null {
+function recursiveDiff(
+  prevVnodeTree: VNode,
+  nextVnodeTree: VNode,
+  currentElement: Element | null,
+  parentElement: Element | null): Element | null {
   if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && parentElement) {
     if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
       createDOM(nextVnodeTree, parentElement);
@@ -179,17 +223,30 @@ function recursiveDiff(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElemen
     return null;
   }
 
-  const len = next.children.length;
+  const prevLen = prev.children.length;
+  const nextLen = next.children.length;
 
-  // todo 길이 다를 때 처리
-  if (next.children.length !== prev.children.length) {
-    return null;
+  if (prevLen > nextLen) {
+    let gap = prevLen - nextLen;
+    while (currentElement?.lastElementChild && gap) {
+      currentElement.lastElementChild.remove();
+      gap--;
+    }
   }
 
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < nextLen; i++) {
     const childOfPrev = prev.children[i];
     const childOfNext = next.children[i];
     const childDom = currentElement?.childNodes[i] as HTMLElement;
+
+    // 이전 노드에서 추가된 경우
+    if (!childOfPrev && childOfNext) {
+      if (childOfNext.type === 'element') {
+        parentElement?.appendChild(createDOM(childOfNext as VNode));
+        continue;
+      }
+    }
+
     recursiveDiff(childOfPrev, childOfNext, childDom, currentElement);
   }
 

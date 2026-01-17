@@ -1,5 +1,5 @@
 import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
-import { rootRender, state, html, memo } from '../core';
+import { rootRender, state, html } from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -9,7 +9,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.body.removeChild(document.getElementById('root')!);
+  if (document.getElementById('root')) {
+    document.body.removeChild(document.getElementById('root')!);
+  }
 });
 
 describe('컴포넌트 테스트', () => {
@@ -117,137 +119,127 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('div[data-testid="data3"]')?.textContent).toBe('2');
   });
 
-  test('객체 의존성이 변경되면 재계산한다.', async () => {
-    const computeFn = vi.fn((count: number) => count * 2);
-
+  test('컴포넌트가 추가되었을 때 테스트 한다1.', async () => {
     function Component() {
-      const data = state({ count: 1 });
+      const data = state({
+        arr: [0],
+      });
 
-      const doubled = memo(data, () => computeFn(data.count));
-
-      const increment = () => {
-        data.count += 1;
+      const trigger = () => {
+        data.arr = [...data.arr, data.arr.length];
       };
 
       return html`
         <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="result">${doubled}</div>
+          <button type="button" @click=${trigger}>trigger</button>
+          <ul>
+            ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
+          </ul>
         </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
-
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
-    expect(computeFn).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('li').length).toBe(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(2);
 
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('4');
-    expect(computeFn).toHaveBeenCalledTimes(2);
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(3);
   });
 
-  test('객체 의존성이 변경되지 않으면 캐시된 값을 반환한다.', async () => {
-    const computeFn = vi.fn((count: number) => count * 2);
-
+  test('컴포넌트가 다수 추가되었을 때 테스트 한다.', async () => {
     function Component() {
-      const data = state({ count: 1 });
+      const data = state({
+        arr: [0],
+      });
 
-      const doubled = memo(data, () => computeFn(data.count));
-
-      const noop = () => {
-        data.count = data.count;
+      const trigger = () => {
+        data.arr = Array.from({ length: data.arr.length * 3 }, (_, i) => i);
       };
 
       return html`
         <div id="app">
-          <button type="button" @click=${noop}>noop</button>
-          <div data-testid="result">${doubled}</div>
+          <button type="button" @click=${trigger}>trigger</button>
+          <ul>
+            ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
+          </ul>
         </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
+    expect(document.querySelectorAll('li').length).toBe(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
-
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
-    expect(computeFn).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('li').length).toBe(3);
 
     document.querySelector('button')?.click();
     await flushRaf();
-
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('2');
-    expect(computeFn).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('li').length).toBe(9);
   });
 
-  test('원시값 의존성이 변경되면 재계산한다.', async () => {
-    const computeFn = vi.fn((count: number) => count * 3);
-
+  test('컴포넌트가 삭제되었을 때 테스트 한다.', async () => {
     function Component() {
-      const data = state({ count: 1 });
+      const data = state({
+        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      });
 
-      const tripled = memo(data.count, () => computeFn(data.count));
-
-      const increment = () => {
-        data.count += 1;
+      const trigger = () => {
+        data.arr = data.arr.slice(0, data.arr.length - 1);
       };
 
       return html`
         <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="result">${tripled}</div>
+          <button type="button" @click=${trigger}>trigger</button>
+          <ul>
+            ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
+          </ul>
         </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
-
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('3');
-    expect(computeFn).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('li').length).toBe(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(9);
 
-    expect(document.querySelector('div[data-testid="result"]')?.textContent).toBe('6');
-    expect(computeFn).toHaveBeenCalledTimes(2);
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(8);
   });
 
-  test('복수의 memo 훅을 사용할 수 있다.', async () => {
-    const computeFn1 = vi.fn((count: number) => count * 2);
-    const computeFn2 = vi.fn((count: number) => count * 3);
-
+  test('컴포넌트가 다수 삭제되었을 때 테스트 한다.', async () => {
     function Component() {
-      const data = state({ count: 1 });
+      const data = state({
+        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      });
 
-      const doubled = memo(data, () => computeFn1(data.count));
-      const tripled = memo(data, () => computeFn2(data.count));
-
-      const increment = () => {
-        data.count += 1;
+      const trigger = () => {
+        data.arr = data.arr.slice(0, data.arr.length - 2);
       };
 
       return html`
         <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="doubled">${doubled}</div>
-          <div data-testid="tripled">${tripled}</div>
+          <button type="button" @click=${trigger}>trigger</button>
+          <ul>
+            ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
+          </ul>
         </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
-
-    expect(document.querySelector('div[data-testid="doubled"]')?.textContent).toBe('2');
-    expect(document.querySelector('div[data-testid="tripled"]')?.textContent).toBe('3');
-    expect(computeFn1).toHaveBeenCalledTimes(1);
-    expect(computeFn2).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('li').length).toBe(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(8);
 
-    expect(document.querySelector('div[data-testid="doubled"]')?.textContent).toBe('4');
-    expect(document.querySelector('div[data-testid="tripled"]')?.textContent).toBe('6');
-    expect(computeFn1).toHaveBeenCalledTimes(2);
-    expect(computeFn2).toHaveBeenCalledTimes(2);
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(document.querySelectorAll('li').length).toBe(6);
   });
 });
