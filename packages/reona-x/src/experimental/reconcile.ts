@@ -245,6 +245,13 @@ function recursiveDiff(
         parentElement?.appendChild(createDOM(childOfNext as VNode));
         continue;
       }
+
+      if (childOfNext.type === 'component') {
+        if (currentElement) {
+          createDOM(childOfNext, currentElement);
+          continue;
+        }
+      }
     }
 
     recursiveDiff(childOfPrev, childOfNext, childDom, currentElement);
