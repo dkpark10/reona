@@ -24,7 +24,7 @@ export function getCurrentInstance() {
   return currentInstance;
 }
 
-export const mountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
+export const mountHooks = new WeakMap < ComponentInstance, Array<() => void | (() => () => void)>> ();
 export const unMountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
 export const updatedHooks = new WeakMap<ComponentInstance, Array<{
   data: Data;
@@ -134,17 +134,25 @@ export default class ComponentInstance {
   }
 
   private runMount() {
-    if (!this.isMounted) {
-      const dep = mountHooks.get(this);
-      if (dep) {
-        for (const fn of dep) {
-          fn();
+    if (this.isMounted) return;
+
+    const mountDeps = mountHooks.get(this);
+    if (mountDeps) {
+      for (const fn of mountDeps) {
+        const cleanUp = fn();
+        if (typeof cleanUp === 'function') {
+          let unMountDeps = unMountHooks.get(this);
+          if (!unMountDeps) {
+            unMountDeps = [];
+            unMountHooks.set(this, unMountDeps);
+          }
+          unMountDeps.push(cleanUp);
         }
       }
-      this.isMounted = true;
-      this.hookLimit = this.hookIndex;
-      mountHooks.delete(this);
     }
+    this.isMounted = true;
+    this.hookLimit = this.hookIndex;
+    mountHooks.delete(this);
   }
 
   private runUpdate() {

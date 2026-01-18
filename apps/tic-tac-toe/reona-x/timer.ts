@@ -1,4 +1,4 @@
-import { html, state, ref, watchProps, unMounted } from 'reona-x';
+import { mounted, html, state, ref, watchProps } from 'reona-x';
 
 interface TimerProps {
   beginCountTrigger: boolean;
@@ -27,9 +27,11 @@ export default function Timer({ beginCountTrigger }: TimerProps) {
     }
   });
 
-  unMounted(() => {
-    if (timer.current.id) {
-      clearInterval(timer.current.id);
+  mounted(() => {
+    return () => {
+      if (timer.current.id) {
+        clearInterval(timer.current.id);
+      }
     }
   });
 

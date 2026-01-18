@@ -1,4 +1,4 @@
-import { html, mounted, unMounted, watchProps } from '../../../packages/reona-x/src/core';
+import { html, mounted, watchProps } from '../../../packages/reona-x/src/core';
 
 interface ChildProps {
   value: number;
@@ -6,11 +6,10 @@ interface ChildProps {
 
 export default function Child({ value }: ChildProps) {
   mounted(() => {
-    console.log('mounted child');
-  });
-
-  unMounted(() => {
-    console.log('unMounted child');
+    console.log('mounted child1');
+    return () => {
+      console.log('unMounted child1');
+    }
   });
 
   watchProps<ChildProps>((prev) => {

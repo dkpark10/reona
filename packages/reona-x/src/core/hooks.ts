@@ -111,25 +111,6 @@ export function mounted(callback: () => void) {
   dep.push(callback);
 }
 
-export function unMounted(callback: () => void) {
-  const currentInstance = getCurrentInstance();
-  if (currentInstance === null) {
-    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
-  }
-
-  checkInvalidHook(currentInstance);
-  if (currentInstance.isMounted) {
-    return;
-  }
-
-  let dep = unMountHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    unMountHooks.set(currentInstance, dep);
-  }
-  dep.push(callback);
-}
-
 export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
