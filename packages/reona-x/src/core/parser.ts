@@ -48,7 +48,7 @@ export default class Parser {
     this.sequence = sequence;
   }
 
-  public parse(): VNode {
+  public parse(): VNode | (VNode | null)[] | null {
     const { template: t } = this.renderResult;
     const template = document.createElement('template');
 
@@ -57,6 +57,15 @@ export default class Parser {
     if (template.content.childNodes.length > 1) {
       throw new Error('루트 엘리먼트는 1개여야 합니다.');
     }
+
+    const firstChild = template.content.firstChild;
+
+    // 텍스트 노드만 있는 경우
+    if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+      const vDom = this.convertChild(firstChild);
+      return Array.isArray(vDom) ? vDom[0] : vDom;
+    }
+
     return this.convertNode(template.content.firstElementChild!);
   }
 

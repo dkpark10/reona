@@ -15,6 +15,23 @@ afterEach(() => {
 });
 
 describe('컴포넌트 테스트', () => {
+  test('텍스트 노드만 들어올 때 테스트 한다.', async () => {
+    function Component() {
+      return html`123`;
+    };
+    rootRender(document.getElementById('root')!, Component);
+    expect(document.getElementById('root')?.textContent).toBe('123');
+  });
+
+  test('동적 텍스트 노드만 들어올 때 테스트 한다.', async () => {
+    function Component() {
+      const data = 123;
+      return html`${data}`;
+    };
+    rootRender(document.getElementById('root')!, Component);
+    expect(document.getElementById('root')?.textContent).toBe('123');
+  });
+
   test('복수의 상태 훅을 테스트 한다.', async () => {
     function Component() {
       const data1 = state({

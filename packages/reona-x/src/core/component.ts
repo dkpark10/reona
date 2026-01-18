@@ -1,5 +1,4 @@
 import type { RenderResult, Component, Props } from '../utils/types';
-import { isHtmlString } from '../utils';
 import { createKey, shallowEqual } from '../../../shared';
 import Fiber, { getInstanceMap } from './fiber';
 
@@ -46,6 +45,5 @@ export function html(strings: TemplateStringsArray, ...values: any[]): RenderRes
     .join('%%identifier%%')
     .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
 
-  if (!isHtmlString(rawString)) throw new Error('잘못된 html 형식입니다.');
-  return { template: rawString, values };
+    return { template: rawString, values };
 }

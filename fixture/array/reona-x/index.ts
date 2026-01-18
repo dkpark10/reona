@@ -20,10 +20,9 @@ export default function Array() {
             },
           }))}
         </ul>
+        <ul>
+          ${data.arr.map((item) => html`<li>${item}</li>`)}
+        </ul>
       </div>
   `;
 }
-
-// <ul>
-//           ${data.arr.map((item) => html`<li>${item}</li>`)}
-//         </ul>
