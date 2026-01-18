@@ -116,6 +116,7 @@ export default class ComponentInstance {
 
     this.runUnmount();
     reconcile(this);
+    this.runWatchProps();
     this.runUpdate();
   }
 

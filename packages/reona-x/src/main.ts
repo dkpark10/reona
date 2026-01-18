@@ -3,6 +3,8 @@ import { rootRender } from "./core";
 // import Tic from '../../../apps/tic-tac-toe/reona-x';
 // import Counter from '../../../fixture/counter/reona-x';
 // import Store from '../../../fixture/store/reona-x';
-import Array from '../../../fixture/array/reona-x';
+// import Array from '../../../fixture/array/reona-x';
+import Nested from '../../../fixture/nested/reona-x';
+// import Condition from '../../../fixture/condition/reona-x';
 
-rootRender(document.getElementById('root')!, Array);
+rootRender(document.getElementById('root')!, Nested);

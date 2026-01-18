@@ -2,11 +2,7 @@ import { html, mounted, state, createComponent, updated } from '../../../package
 import Child from './child';
 import Child2 from './child2';
 
-interface CounterProps {
-  value: number;
-}
-
-export default function Counter({ value }: CounterProps) {
+export default function Condition() {
   const data = state({
     bool: true,
   });
@@ -26,7 +22,6 @@ export default function Counter({ value }: CounterProps) {
   return html`
     <div id="app">
       <button type="button" @click=${trigger}>trigger</button>
-      <div>props: ${value}</div>
       ${data.bool ?
         createComponent(Child, {
           props: {

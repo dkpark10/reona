@@ -193,6 +193,10 @@ function recursiveDiff(
       }
       return nextVnodeTree.instance.currentDom;
     }
+
+    // 자식 리렌더링
+    nextVnodeTree.instance.reRender();
+    return null;
   }
 
   if (prevVnodeTree.type !== nextVnodeTree.type && parentElement) {

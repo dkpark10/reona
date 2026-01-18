@@ -1,5 +1,5 @@
-import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
-import { rootRender, state, html, createComponent } from '../core';
+import { vi, expect, test, beforeEach, afterEach, describe } from 'vitest';
+import { watchProps, rootRender, state, html, createComponent } from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -398,5 +398,92 @@ describe('컴포넌트 테스트', () => {
     document.querySelector('button')?.click();
     await flushRaf();
     expect(document.querySelector('ul')?.children).toHaveLength(6);
+  });
+
+  test('중첩 컴포넌트의 리렌더링을 테스트 한다.', async () => {
+    let prev1 = -1;
+    let prev2 = -1;
+
+    function App() {
+      const data = state({
+        count: 0,
+      });
+    
+      const onClick = () => {
+        data.count += 1;
+      }
+    
+      return html`
+        <div id="app">
+          <button type="button" @click=${onClick}>트리거</button>
+          <div id="val1">${data.count}</div>
+          ${createComponent(
+            Son, {
+              props: {
+                value: data.count * 2,
+              },
+            },
+          )}
+        </div>`;
+    }
+
+    interface CommonProps {
+      value: number;
+    }
+
+    const watchPropsFn1 = vi.fn((prev: CommonProps) => {
+      prev1 = prev.value;
+    });
+    const watchPropsFn2 = vi.fn((prev: CommonProps) => {
+      prev2 = prev.value;
+    });
+
+    function Son({ value }: CommonProps) {
+      watchProps<CommonProps>(watchPropsFn1);
+    
+      return html`
+        <div>
+          <div id="val2">${value}</div>
+          ${createComponent(
+            GrandSon, {
+              props: {
+                value: value * 2,
+              },
+            },
+          )}
+        </div>`;
+    }
+
+    function GrandSon({ value }: CommonProps) {
+      watchProps<CommonProps>(watchPropsFn2);
+
+      return html`<div id="val3">${value}</div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(prev1).toBe(0);
+    expect(prev2).toBe(0);
+    expect(document.getElementById('val1')?.textContent).toBe('1');
+    expect(document.getElementById('val2')?.textContent).toBe('2');
+    expect(document.getElementById('val3')?.textContent).toBe('4');
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(prev1).toBe(2);
+    expect(prev2).toBe(4);
+    expect(document.getElementById('val1')?.textContent).toBe('2');
+    expect(document.getElementById('val2')?.textContent).toBe('4');
+    expect(document.getElementById('val3')?.textContent).toBe('8');
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    expect(prev1).toBe(4);
+    expect(prev2).toBe(8);
+    expect(document.getElementById('val1')?.textContent).toBe('3');
+    expect(document.getElementById('val2')?.textContent).toBe('6');
+    expect(document.getElementById('val3')?.textContent).toBe('12');
   });
 });
