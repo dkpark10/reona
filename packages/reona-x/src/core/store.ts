@@ -1,6 +1,6 @@
 import type { Data } from '../utils/types';
 import { isPrimitive } from '../../../shared';
-import Fiber from './fiber';
+import ComponentInstance from './component-instance';
 import { update } from './renderer';
 
 export function createStore<D extends Data>(initial: D) {
@@ -8,7 +8,7 @@ export function createStore<D extends Data>(initial: D) {
     throw new Error('원시객체 입니다. 데이터에 객체 형식이어야 합니다.');
   }
 
-  const listeners = new Set<Fiber>();
+  const listeners = new Set<ComponentInstance>();
 
   const data = new Proxy(initial, {
     get(target, key, receiver) {
@@ -19,8 +19,8 @@ export function createStore<D extends Data>(initial: D) {
       const prevValue = Reflect.get(receiver, key);
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
-        listeners.forEach(function (fiber) {
-          update(fiber);
+        listeners.forEach(function (instance) {
+          update(instance);
         });
       }
       return result;
@@ -29,10 +29,10 @@ export function createStore<D extends Data>(initial: D) {
 
   return {
     data,
-    subscribe(fiber: Fiber) {
-      listeners.add(fiber);
+    subscribe(instance: ComponentInstance) {
+      listeners.add(instance);
       return function () {
-        listeners.delete(fiber);
+        listeners.delete(instance);
       };
     },
   };

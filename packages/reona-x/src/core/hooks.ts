@@ -1,41 +1,41 @@
 import type { Props, Data } from '../utils/types';
 import { isPrimitive } from '../../../shared';
-import Fiber, {
-  getCurrentFiber,
+import ComponentInstance, {
+  getCurrentInstance,
   mountHooks,
   unMountHooks,
   updatedHooks,
   watchPropsHooks,
-} from './fiber';
+} from './component-instance';
 import { update } from './renderer';
 
-function checkInvalidHook(currentFiber: Fiber) {
-  if (currentFiber.isMounted && currentFiber.hookIndex > currentFiber.hookLimit) {
+function checkInvalidHook(currentInstance: ComponentInstance) {
+  if (currentInstance.isMounted && currentInstance.hookIndex > currentInstance.hookLimit) {
     throw new Error('훅은 함수 최상단에 선언해야 합니다.');
   }
 
-  if (!currentFiber.isMounted) {
-    currentFiber.hookIndex += 1;
+  if (!currentInstance.isMounted) {
+    currentInstance.hookIndex += 1;
   }
 }
 
-export const states = new WeakMap<Fiber, Array<Record<string, any>>>();
+export const states = new WeakMap<ComponentInstance, Array<Record<string, any>>>();
 
 export function state<D extends Data>(initial: D) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('상태 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
+  checkInvalidHook(currentInstance);
 
-  let stateList = states.get(currentFiber);
+  let stateList = states.get(currentInstance);
   if (!stateList) {
     stateList = [];
-    states.set(currentFiber, stateList);
+    states.set(currentInstance, stateList);
   }
 
-  const stateIndex = currentFiber.stateHookIndex++;
+  const stateIndex = currentInstance.stateHookIndex++;
 
   if (stateList[stateIndex]) {
     return stateList[stateIndex] as D;
@@ -55,7 +55,7 @@ export function state<D extends Data>(initial: D) {
 
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
-        update(currentFiber);
+        update(currentInstance);
       }
       return result;
     },
@@ -66,26 +66,26 @@ export function state<D extends Data>(initial: D) {
 
 interface StoreOption<D extends Data> {
   data: D;
-  subscribe: (fiber: Fiber) => () => void;
+  subscribe: (instance: ComponentInstance) => () => void;
 }
 
 export function store<D extends Data>(storeOption: StoreOption<D>) {
   const { data, subscribe } = storeOption;
-  let currentFiber = getCurrentFiber();
-  if (!currentFiber) {
+  let currentInstance = getCurrentInstance();
+  if (!currentInstance) {
     throw new Error('스토어 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
-  if (currentFiber.isMounted) {
+  checkInvalidHook(currentInstance);
+  if (currentInstance.isMounted) {
     return data;
   }
 
-  const unSubscribe = subscribe(currentFiber);
-  let dep = unMountHooks.get(currentFiber);
+  const unSubscribe = subscribe(currentInstance);
+  let dep = unMountHooks.get(currentInstance);
   if (!dep) {
     dep = [];
-    unMountHooks.set(currentFiber, dep);
+    unMountHooks.set(currentInstance, dep);
   }
   dep.push(unSubscribe);
   return data;
@@ -93,58 +93,58 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
 
 
 export function mounted(callback: () => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('mount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
-  if (currentFiber.isMounted) {
+  checkInvalidHook(currentInstance);
+  if (currentInstance.isMounted) {
     return;
   }
 
-  let dep = mountHooks.get(currentFiber);
+  let dep = mountHooks.get(currentInstance);
   if (!dep) {
     dep = [];
-    mountHooks.set(currentFiber, dep);
+    mountHooks.set(currentInstance, dep);
   }
   dep.push(callback);
 }
 
 export function unMounted(callback: () => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
-  if (currentFiber.isMounted) {
+  checkInvalidHook(currentInstance);
+  if (currentInstance.isMounted) {
     return;
   }
 
-  let dep = unMountHooks.get(currentFiber);
+  let dep = unMountHooks.get(currentInstance);
   if (!dep) {
     dep = [];
-    unMountHooks.set(currentFiber, dep);
+    unMountHooks.set(currentInstance, dep);
   }
   dep.push(callback);
 }
 
 export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('updated 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
+  checkInvalidHook(currentInstance);
 
-  let dep = updatedHooks.get(currentFiber);
+  let dep = updatedHooks.get(currentInstance);
   if (!dep) {
     dep = [];
-    updatedHooks.set(currentFiber, dep);
+    updatedHooks.set(currentInstance, dep);
   }
 
-  const index = currentFiber.updatedHookIndex++;
+  const index = currentInstance.updatedHookIndex++;
 
   if (!dep[index]) {
     dep[index] = {
@@ -158,40 +158,40 @@ export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
 }
 
 export function watchProps<P extends Props>(callback: (prev: P) => void) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('watchProps 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
+  checkInvalidHook(currentInstance);
 
-  let dep = watchPropsHooks.get(currentFiber);
+  let dep = watchPropsHooks.get(currentInstance);
   if (!dep) {
     dep = [];
-    watchPropsHooks.set(currentFiber, dep);
+    watchPropsHooks.set(currentInstance, dep);
   }
 
-  const index = currentFiber.watchPropsHookIndex++;
+  const index = currentInstance.watchPropsHookIndex++;
   dep[index] = callback as (prev: Props) => void;
 }
 
-export const refs = new WeakMap<Fiber, Array<{ current: unknown }>>();
+export const refs = new WeakMap<ComponentInstance, Array<{ current: unknown }>>();
 
 export function ref<Data>(initial: Data) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('ref 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
+  checkInvalidHook(currentInstance);
 
-  let refList = refs.get(currentFiber);
+  let refList = refs.get(currentInstance);
   if (!refList) {
     refList = [];
-    refs.set(currentFiber, refList);
+    refs.set(currentInstance, refList);
   }
 
-  const index = currentFiber.refHookIndex++;
+  const index = currentInstance.refHookIndex++;
 
   if (refList[index]) {
     return refList[index] as { current: Data };
@@ -204,8 +204,8 @@ export function ref<Data>(initial: Data) {
 export const setRef = function <D extends { current: unknown }>(
   ref: D,
 ) {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
@@ -214,7 +214,7 @@ export const setRef = function <D extends { current: unknown }>(
   };
 };
 
-export const memoizedList = new WeakMap<Fiber, Array<{
+export const memoizedList = new WeakMap<ComponentInstance, Array<{
   data: unknown;
   callback: () => unknown;
   prevSnapshot: unknown;
@@ -222,20 +222,20 @@ export const memoizedList = new WeakMap<Fiber, Array<{
 }>>();
 
 export function memo<D, R>(data: D, callback: () => R): R {
-  const currentFiber = getCurrentFiber();
-  if (currentFiber === null) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
     throw new Error('memo 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
-  checkInvalidHook(currentFiber);
+  checkInvalidHook(currentInstance);
 
-  let dep = memoizedList.get(currentFiber);
+  let dep = memoizedList.get(currentInstance);
   if (!dep) {
     dep = [];
-    memoizedList.set(currentFiber, dep);
+    memoizedList.set(currentInstance, dep);
   }
 
-  const index = currentFiber.memoHookIndex++;
+  const index = currentInstance.memoHookIndex++;
 
   const createSnapshot = (value: D) =>
     isPrimitive(value) ? value : { ...(value as object) };

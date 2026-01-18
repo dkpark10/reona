@@ -1,6 +1,6 @@
 import type { RenderResult, Component, Props } from '../utils/types';
 import { createKey, shallowEqual } from '../../../shared';
-import Fiber, { getInstanceMap } from './fiber';
+import ComponentInstance, { getInstanceMap } from './component-instance';
 
 interface CreateComponentOption<P extends Props> {
   key?: string | number;
@@ -13,7 +13,7 @@ export function createComponent<P extends Props>(
 ) {
   const instanceMap = getInstanceMap();
   /** @description 컴포넌트의 트리에서의 sequence */
-  const func = function getFiber(sequence: number) {
+  const func = function getInstance(sequence: number) {
     const key = createKey(sequence, options?.key);
 
     let instanceDeps = instanceMap.get(component);
@@ -21,19 +21,19 @@ export function createComponent<P extends Props>(
       instanceDeps = new Map();
     }
 
-    let fiber: Fiber | undefined = instanceDeps.get(key);
-    if (!fiber) {
-      fiber = new Fiber(component, { key, sequence });
-      instanceDeps.set(key, fiber);
+    let instance: ComponentInstance | undefined = instanceDeps.get(key);
+    if (!instance) {
+      instance = new ComponentInstance(component, { key, sequence });
+      instanceDeps.set(key, instance);
       instanceMap.set(component, instanceDeps);
     }
 
     if (options && options.props) {
-      fiber.nextProps = options.props;
-      fiber.watchPropsTrigger = !!(fiber.nextProps && fiber.prevProps) 
-        && !shallowEqual(fiber.nextProps, fiber.prevProps);
+      instance.nextProps = options.props;
+      instance.watchPropsTrigger = !!(instance.nextProps && instance.prevProps)
+        && !shallowEqual(instance.nextProps, instance.prevProps);
     }
-    return fiber;
+    return instance;
   };
   func.__isCreateComponent = true;
   return func;
@@ -45,5 +45,5 @@ export function html(strings: TemplateStringsArray, ...values: any[]): RenderRes
     .join('%%identifier%%')
     .replace(/%%identifier%%/g, () => `__marker_${idx++}__`);
 
-    return { template: rawString, values };
+  return { template: rawString, values };
 }

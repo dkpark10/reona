@@ -1,7 +1,7 @@
 /** @see {@link https://ko.legacy.reactjs.org/docs/reconciliation.html} */
-import type { VNode, VElementNode, VTextNode } from '../core/parser';
+import type { VNode, VElementNode } from '../core/parser';
 import { shallowEqual } from '../../../shared';
-import { Fiber } from '../core';
+import ComponentInstance from '../core/component-instance';
 import { createDOM } from '../core/runtime-dom';
 
 /**
@@ -142,22 +142,22 @@ import { createDOM } from '../core/runtime-dom';
   </div>
  */
 
-export function reconcile(fiber: Fiber) {
-  const prevVnodeTree = fiber.prevVnodeTree;
-  const nextVnodeTree = fiber.nextVnodeTree;
+export function reconcile(instance: ComponentInstance) {
+  const prevVnodeTree = instance.prevVnodeTree;
+  const nextVnodeTree = instance.nextVnodeTree;
 
   if (prevVnodeTree.type !== nextVnodeTree.type) {
-    batchReplace(fiber);
+    batchReplace(instance);
     return;
   }
 
   /**
-   * native tag가 아닌 fiber 변경 시 일괄교체
+   * native tag가 아닌 instance 변경 시 일괄교체
    * ex) html`${condition ? createComponent(comp1) : createComponent(comp2)}`
    */
   if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component') {
-    if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
-      batchReplace(fiber);
+    if (prevVnodeTree.instance !== nextVnodeTree.instance) {
+      batchReplace(instance);
       return;
     }
   }
@@ -168,16 +168,16 @@ export function reconcile(fiber: Fiber) {
    */
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
     if (prevVnodeTree.tag !== nextVnodeTree.tag) {
-      batchReplace(fiber);
+      batchReplace(instance);
       return;
     }
   }
 
-  const newDom = recursiveDiff(prevVnodeTree, nextVnodeTree, fiber.currentDom, fiber.parentElement);
+  const newDom = recursiveDiff(prevVnodeTree, nextVnodeTree, instance.currentDom, instance.parentElement);
   if (newDom) {
-    fiber.currentDom = newDom as HTMLElement;
+    instance.currentDom = newDom as HTMLElement;
   }
-  fiber.prevVnodeTree = nextVnodeTree;
+  instance.prevVnodeTree = nextVnodeTree;
 }
 
 function recursiveDiff(
@@ -186,12 +186,12 @@ function recursiveDiff(
   currentElement: Element | null,
   parentElement: Element | null): Element | null {
   if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && parentElement) {
-    if (prevVnodeTree.fiber !== nextVnodeTree.fiber) {
+    if (prevVnodeTree.instance !== nextVnodeTree.instance) {
       createDOM(nextVnodeTree, parentElement);
       if (currentElement) {
-        currentElement.replaceWith(nextVnodeTree.fiber.currentDom);
+        currentElement.replaceWith(nextVnodeTree.instance.currentDom);
       }
-      return nextVnodeTree.fiber.currentDom;
+      return nextVnodeTree.instance.currentDom;
     }
   }
 
@@ -284,10 +284,10 @@ function changeText(prevVnode: VNode, nextVnode: VNode, currentElement: Element 
 }
 
 // 일괄 dom 전체 교체
-function batchReplace(fiber: Fiber) {
-  const dom = createDOM(fiber.nextVnodeTree, fiber.parentElement);
-  fiber.currentDom.replaceWith(dom);
+function batchReplace(instance: ComponentInstance) {
+  const dom = createDOM(instance.nextVnodeTree, instance.parentElement);
+  instance.currentDom.replaceWith(dom);
 
-  fiber.prevVnodeTree = fiber.nextVnodeTree;
-  fiber.currentDom = dom;
+  instance.prevVnodeTree = instance.nextVnodeTree;
+  instance.currentDom = dom;
 }

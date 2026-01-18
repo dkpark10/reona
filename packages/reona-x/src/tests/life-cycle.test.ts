@@ -14,7 +14,7 @@ import {
   updatedHooks,
   getInstanceMap,
   watchPropsHooks,
-} from '../core/fiber';
+} from '../core/component-instance';
 import { ref, states, watchProps, refs } from '../core/hooks';
 import { flushRaf } from './utils';
 import { createKey } from '../../../shared';
@@ -52,7 +52,7 @@ describe('라이프 사이클 훅 테스트', () => {
         </div>
       `;
     }
-    const fiber = rootRender(document.getElementById('root')!, Component);
+    const instance = rootRender(document.getElementById('root')!, Component);
 
     document.querySelector('button')?.click();
     await flushRaf();
@@ -62,7 +62,7 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
     expect(mountFn).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(fiber)).toBeUndefined();
+    expect(mountHooks.get(instance)).toBeUndefined();
   });
 
   test('마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 마운트훅 맵을 클리어 한다.', async () => {
@@ -79,14 +79,14 @@ describe('라이프 사이클 훅 테스트', () => {
         <div id="app"></div>
       `;
     }
-    const fiber = rootRender(document.getElementById('root')!, Component);
+    const instance = rootRender(document.getElementById('root')!, Component);
 
     await flushRaf();
     expect(mountFn1).toHaveBeenCalledOnce();
     expect(mountFn2).toHaveBeenCalledOnce();
     expect(mountFn3).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(fiber)).toBeUndefined();
+    expect(mountHooks.get(instance)).toBeUndefined();
   });
 
   test('업데이트 훅 실행을 테스트 한다.', async () => {
@@ -178,7 +178,7 @@ describe('라이프 사이클 훅 테스트', () => {
     rootRender(document.getElementById('root')!, Component);
 
     const instanceMap = getInstanceMap();
-    const fiber = instanceMap.get(Child)?.get(createKey(1));
+    const instance = instanceMap.get(Child)?.get(createKey(1));
 
     document.querySelector('button')?.click();
 
@@ -186,7 +186,7 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(unMountFn1).toHaveBeenCalledOnce();
     expect(unMountFn2).toHaveBeenCalledOnce();
     expect(unMountFn3).toHaveBeenCalledOnce();
-    expect(unMountHooks.get(fiber!)).toBeUndefined();
+    expect(unMountHooks.get(instance!)).toBeUndefined();
   });
 
   test('조건부 렌더링에 따른 마운트, 언마운트 훅을 테스트를 한다.', async () => {
@@ -329,13 +329,13 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
 
     const instanceMap = getInstanceMap();
-    const fiber = instanceMap.get(Child)?.get(createKey(1));
+    const instance = instanceMap.get(Child)?.get(createKey(1));
 
-    expect(states.get(fiber!)).toBeUndefined();
-    expect(unMountHooks.get(fiber!)).toBeUndefined();
-    expect(updatedHooks.get(fiber!)).toBeUndefined();
-    expect(mountHooks.get(fiber!)).toBeUndefined();
-    expect(watchPropsHooks.get(fiber!)).toBeUndefined();
-    expect(refs.get(fiber!)).toBeUndefined();
+    expect(states.get(instance!)).toBeUndefined();
+    expect(unMountHooks.get(instance!)).toBeUndefined();
+    expect(updatedHooks.get(instance!)).toBeUndefined();
+    expect(mountHooks.get(instance!)).toBeUndefined();
+    expect(watchPropsHooks.get(instance!)).toBeUndefined();
+    expect(refs.get(instance!)).toBeUndefined();
   });
 });

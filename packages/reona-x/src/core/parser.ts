@@ -1,6 +1,6 @@
 import type { RenderResult, Props } from '../utils/types';
 import { isEmpty } from '../../../shared';
-import Fiber from './fiber';
+import ComponentInstance from './component-instance';
 
 export function isRenderResultObject(obj: any): obj is RenderResult {
   return (
@@ -23,15 +23,14 @@ export type VElementNode = {
   children: VNode[];
 };
 
-// fiber
 export type VComponent = {
   type: 'component';
-  fiber: Fiber;
+  instance: ComponentInstance;
 };
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
-function isCreateComponentFunc(func: any): func is (sequence: number) => Fiber {
+function isCreateComponentFunc(func: any): func is (sequence: number) => ComponentInstance {
   return typeof func === 'function' && func.__isCreateComponent;
 }
 
@@ -144,15 +143,15 @@ export default class Parser {
 
           // createComponent 반환 함수일 시
           if (typeof value === 'function' && value.__isCreateComponent) {
-            const getFiber = value as (sequence: number) => any;
-            const fiber = getFiber(this.sequence!);
+            const getInstance = value as (sequence: number) => any;
+            const instance = getInstance(this.sequence!);
 
             this.sequence!++;
             this.valueIndex++;
 
             return {
               type: 'component',
-              fiber,
+              instance,
             };
           }
 
@@ -169,13 +168,13 @@ export default class Parser {
                 return vdom;
               }
               if (isCreateComponentFunc(value)) {
-                const getFiber = value;
-                const fiber = getFiber(this.sequence!);
+                const getInstance = value;
+                const instance = getInstance(this.sequence!);
                 this.sequence!++;
 
                 return {
                   type: 'component',
-                  fiber,
+                  instance,
                 };
               }
             });

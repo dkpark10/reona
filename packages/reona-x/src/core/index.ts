@@ -1,4 +1,3 @@
-import Fiber from './fiber';
 import { createStore } from './store';
 import {
   createComponent,
@@ -20,7 +19,6 @@ import {
 } from './runtime-dom';
 
 export {
-  Fiber,
   store,
   createStore,
   state,

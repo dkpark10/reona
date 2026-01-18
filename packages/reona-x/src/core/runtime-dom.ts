@@ -9,13 +9,13 @@ export function rootRender(
   component: Component,
   props?: Parameters<typeof component>[0]
 ) {
-  const getFiber = createComponent(component, {
+  const getInstance = createComponent(component, {
     props,
   });
 
-  const fiber = getFiber(0);
-  fiber.render(container);
-  return fiber;
+  const instance = getInstance(0);
+  instance.render(container);
+  return instance;
 }
 
 
@@ -28,9 +28,8 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
   }
 
   if (vnode.type === 'component') {
-    // todo 부모에서 리렌더링 시 자식을 어떻게 처리해야 할지?? 이대로??
-    const fiber = vnode.fiber;
-    fiber.render(parentElement!, true);
+    const instance = vnode.instance;
+    instance.render(parentElement!, true);
     return null;
   }
 

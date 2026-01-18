@@ -4,7 +4,7 @@ import { reconcile } from '../experimental/reconcile';
 import { createDOM } from './runtime-dom';
 
 /** @description 전역 컴포넌트 관리 map */
-type InstanceMapValue = Map<string, Fiber>;
+type InstanceMapValue = Map<string, ComponentInstance>;
 let instanceMap: Map<Component, InstanceMapValue>;
 export function getInstanceMap() {
   return instanceMap;
@@ -19,27 +19,27 @@ if (NOT_PRODUCTION) {
   instanceMap = new WeakMap<Component, InstanceMapValue>();
 }
 
-let currentFiber: Fiber | null = null;
-export function getCurrentFiber() {
-  return currentFiber;
+let currentInstance: ComponentInstance | null = null;
+export function getCurrentInstance() {
+  return currentInstance;
 }
 
-export const mountHooks = new WeakMap<Fiber, Array<() => void>>();
-export const unMountHooks = new WeakMap<Fiber, Array<() => void>>();
-export const updatedHooks = new WeakMap<Fiber, Array<{
+export const mountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
+export const unMountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
+export const updatedHooks = new WeakMap<ComponentInstance, Array<{
   data: Data;
   callback: (prev: Data) => void;
   prevSnapshot: Data;
 }>>();
-export const watchPropsHooks = new WeakMap<Fiber, Array<(prev: Props) => void>>();
+export const watchPropsHooks = new WeakMap<ComponentInstance, Array<(prev: Props) => void>>();
 
-type FiberOption = {
+type ComponentInstanceOption = {
   key: string;
   sequence: number;
 };
 
-// todo fiber의 역할 분리 필요
-export default class Fiber {
+/** @description 컴포넌트 인스턴스 - 상태, Props, 생명주기, VNode 트리, DOM 참조를 관리 */
+export default class ComponentInstance {
   public parentElement: Element;
 
   public component: Component;
@@ -72,7 +72,7 @@ export default class Fiber {
   public refHookIndex = 0;
   public memoHookIndex = 0;
 
-  constructor(component: Component, options: FiberOption) {
+  constructor(component: Component, options: ComponentInstanceOption) {
     this.component = component;
     this.key = options.key;
     this.sequence = options.sequence;
@@ -92,7 +92,7 @@ export default class Fiber {
       this.hookIndexInitialize();
     }
 
-    currentFiber = this;
+    currentInstance = this;
     const template = this.component(this.nextProps);
     const parser = new Parser(template, this.sequence + 1);
 
@@ -108,7 +108,7 @@ export default class Fiber {
 
   public reRender() {
     this.hookIndexInitialize();
-    currentFiber = this;
+    currentInstance = this;
     const template = this.component(this.nextProps);
 
     const parser = new Parser(template, this.sequence + 1);
@@ -163,35 +163,34 @@ export default class Fiber {
     }
   }
 
-  // todo 부분 최적화 방법??
   private runUnmount() {
-    const prevFibers = this.collectFibers(this.prevVnodeTree);
-    const nextFibers = this.collectFibers(this.nextVnodeTree);
+    const prevInstances = this.collectInstances(this.prevVnodeTree);
+    const nextInstances = this.collectInstances(this.nextVnodeTree);
 
-    for (const fiber of prevFibers) {
-      if (!nextFibers.has(fiber)) {
-        const dep = unMountHooks.get(fiber);
+    for (const instance of prevInstances) {
+      if (!nextInstances.has(instance)) {
+        const dep = unMountHooks.get(instance);
         if (!dep) continue;
         for (const fn of dep) {
           fn();
         }
-        instanceMap.get(fiber.component)?.delete(fiber.key);
-        mountHooks.delete(fiber);
-        unMountHooks.delete(fiber);
-        updatedHooks.delete(fiber);
-        watchPropsHooks.delete(fiber);
+        instanceMap.get(instance.component)?.delete(instance.key);
+        mountHooks.delete(instance);
+        unMountHooks.delete(instance);
+        updatedHooks.delete(instance);
+        watchPropsHooks.delete(instance);
       }
     }
   }
 
-  private collectFibers(vnode: VNode | undefined, set: Set<Fiber> = new Set()): Set<Fiber> {
+  private collectInstances(vnode: VNode | undefined, set: Set<ComponentInstance> = new Set()): Set<ComponentInstance> {
     if (!vnode) return set;
     switch (vnode.type) {
       case 'component':
-        set.add(vnode.fiber);
+        set.add(vnode.instance);
         break;
       case 'element':
-        vnode.children.forEach((child) => this.collectFibers(child, set));
+        vnode.children.forEach((child) => this.collectInstances(child, set));
         break;
       case 'text':
         break;

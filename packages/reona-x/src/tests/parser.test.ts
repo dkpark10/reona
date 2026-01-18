@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import Parser from '../core/parser';
-import Fiber from '../core/fiber';
+import ComponentInstance from '../core/component-instance';
 import { html, createComponent } from '../core/component';
 
 describe('파서 테스트', () => {
@@ -109,7 +109,7 @@ describe('파서 테스트', () => {
     expect(new Parser(template).parse()).toEqual({
       type: 'element',
       tag: 'div',
-      children: [{ type: 'component', fiber: expect.any(Fiber) }],
+      children: [{ type: 'component', instance: expect.any(ComponentInstance) }],
       attr: { id: 'app' },
     });
   });
@@ -189,15 +189,15 @@ describe('파서 테스트', () => {
           children: [
             {
               type: 'component',
-              fiber: expect.any(Fiber),
+              instance: expect.any(ComponentInstance),
             },
             {
               type: 'component',
-              fiber: expect.any(Fiber),
+              instance: expect.any(ComponentInstance),
             },
             {
               type: 'component',
-              fiber: expect.any(Fiber),
+              instance: expect.any(ComponentInstance),
             },
           ],
         },
@@ -248,7 +248,7 @@ describe('파서 테스트', () => {
       type: 'element',
       tag: 'div',
       children: [{ type: 'text', value: '123' }],
-      attr: { 
+      attr: {
         id: 'app foo bar',
         class: 'c1 c2 c3',
       },
@@ -262,7 +262,7 @@ describe('파서 테스트', () => {
       type: 'element',
       tag: 'input',
       children: [],
-      attr: { 
+      attr: {
         type: 'text',
         checked: true,
       },

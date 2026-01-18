@@ -1,17 +1,17 @@
-import Fiber from './fiber';
+import ComponentInstance from './component-instance';
 
-const renderQueue = new Set<Fiber>();
+const renderQueue = new Set<ComponentInstance>();
 let rafId: number | null = null;
 
-export function update(fiber: Fiber) {
-  renderQueue.add(fiber);
+export function update(instance: ComponentInstance) {
+  renderQueue.add(instance);
 
   if (rafId !== null) return;
 
   rafId = requestAnimationFrame(() => {
     try {
-      renderQueue.forEach((fiber) => {
-        fiber.reRender();
+      renderQueue.forEach((instance) => {
+        instance.reRender();
       });
     } finally {
       renderQueue.clear();
