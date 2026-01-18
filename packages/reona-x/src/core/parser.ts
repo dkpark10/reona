@@ -48,7 +48,7 @@ export default class Parser {
     this.sequence = sequence;
   }
 
-  public parse(): VNode | (VNode | null)[] | null {
+  public parse(): VNode {
     const { template: t } = this.renderResult;
     const template = document.createElement('template');
 
@@ -60,10 +60,13 @@ export default class Parser {
 
     const firstChild = template.content.firstChild;
 
-    // 텍스트 노드만 있는 경우
+    // 텍스트 노드, 단일 컴포넌트 처리
     if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
       const vDom = this.convertChild(firstChild);
-      return Array.isArray(vDom) ? vDom[0] : vDom;
+      if (Array.isArray(vDom)) {
+        return vDom.filter((v) => !!v)[0];
+      }
+      return vDom!;
     }
 
     return this.convertNode(template.content.firstElementChild!);
@@ -205,7 +208,7 @@ export default class Parser {
     return null;
   }
 
-  public replaceMarkers(str: string): string {
+  private replaceMarkers(str: string): string {
     const { values } = this.renderResult;
     return str.replace(/__marker_(\d+)__/g, () => {
       const v = values[this.valueIndex++];

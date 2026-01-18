@@ -242,7 +242,7 @@ function recursiveDiff(
     // 이전 노드에서 추가된 경우
     if (!childOfPrev && childOfNext) {
       if (childOfNext.type === 'element') {
-        parentElement?.appendChild(createDOM(childOfNext as VNode));
+        currentElement?.insertBefore(createDOM(childOfNext as VNode), null);
         continue;
       }
 

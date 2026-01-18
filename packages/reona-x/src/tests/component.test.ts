@@ -156,15 +156,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(1);
+    expect(document.querySelector('ul')?.children).toHaveLength(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(2);
+    expect(document.querySelector('ul')?.children).toHaveLength(2);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(3);
+    expect(document.querySelector('ul')?.children).toHaveLength(3);
   });
 
   test('컴포넌트가 다수 추가되었을 때 테스트 한다.', async () => {
@@ -187,15 +187,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(1);
+    expect(document.querySelector('ul')?.children).toHaveLength(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(3);
+    expect(document.querySelector('ul')?.children).toHaveLength(3);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(9);
+    expect(document.querySelector('ul')?.children).toHaveLength(9);
   });
 
   test('컴포넌트가 삭제되었을 때 테스트 한다.', async () => {
@@ -218,15 +218,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(10);
+    expect(document.querySelector('ul')?.children).toHaveLength(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(9);
+    expect(document.querySelector('ul')?.children).toHaveLength(9);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(8);
+    expect(document.querySelector('ul')?.children).toHaveLength(8);
   });
 
   test('컴포넌트가 다수 삭제되었을 때 테스트 한다.', async () => {
@@ -249,15 +249,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(10);
+    expect(document.querySelector('ul')?.children).toHaveLength(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(8);
+    expect(document.querySelector('ul')?.children).toHaveLength(8);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(6);
+    expect(document.querySelector('ul')?.children).toHaveLength(6);
   });
 
   test('중첩 컴포넌트가 추가되었을 때 테스트 한다.', async () => {
@@ -284,15 +284,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(1);
+    expect(document.querySelector('ul')?.children).toHaveLength(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(2);
+    expect(document.querySelector('ul')?.children).toHaveLength(2);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(3);
+    expect(document.querySelector('ul')?.children).toHaveLength(3);
   });
 
   test('중첩 컴포넌트가 다수 추가되었을 때 테스트 한다.', async () => {
@@ -319,15 +319,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(1);
+    expect(document.querySelector('ul')?.children).toHaveLength(1);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(3);
+    expect(document.querySelector('ul')?.children).toHaveLength(3);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(9);
+    expect(document.querySelector('ul')?.children).toHaveLength(9);
   });
 
   test('중첩 컴포넌트가 삭제되었을 때 테스트 한다.', async () => {
@@ -354,15 +354,15 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(10);
+    expect(document.querySelector('ul')?.children).toHaveLength(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(9);
+    expect(document.querySelector('ul')?.children).toHaveLength(9);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(8);
+    expect(document.querySelector('ul')?.children).toHaveLength(8);
   });
 
   test('중첩 컴포넌트가 다수 삭제되었을 때 테스트 한다.', async () => {
@@ -389,14 +389,14 @@ describe('컴포넌트 테스트', () => {
     }
 
     rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelectorAll('li')).toHaveLength(10);
+    expect(document.querySelector('ul')?.children).toHaveLength(10);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(8);
+    expect(document.querySelector('ul')?.children).toHaveLength(8);
 
     document.querySelector('button')?.click();
     await flushRaf();
-    expect(document.querySelectorAll('li')).toHaveLength(6);
+    expect(document.querySelector('ul')?.children).toHaveLength(6);
   });
 });
