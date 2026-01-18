@@ -234,6 +234,7 @@ function recursiveDiff(
     }
   }
 
+  const fragment = document.createDocumentFragment();
   for (let i = 0; i < nextLen; i++) {
     const childOfPrev = prev.children[i];
     const childOfNext = next.children[i];
@@ -242,7 +243,7 @@ function recursiveDiff(
     // 이전 노드에서 추가된 경우
     if (!childOfPrev && childOfNext) {
       if (childOfNext.type === 'element') {
-        currentElement?.insertBefore(createDOM(childOfNext as VNode), null);
+        fragment.appendChild(createDOM(childOfNext as VNode));
         continue;
       }
 
@@ -253,9 +254,9 @@ function recursiveDiff(
         }
       }
     }
-
     recursiveDiff(childOfPrev, childOfNext, childDom, currentElement);
   }
+  currentElement?.insertBefore(fragment, null);
 
   return null;
 }
