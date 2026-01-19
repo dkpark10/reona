@@ -1,5 +1,16 @@
 import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
-import { createStore, store, createComponent, ref, mounted, rootRender, setRef, state, html, memo } from '../core';
+import {
+  createStore,
+  store,
+  createComponent,
+  ref,
+  mounted,
+  rootRender,
+  setRef,
+  state,
+  html,
+  memo,
+} from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -27,11 +38,10 @@ describe('memo 테스트', () => {
         data.count += 1;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="result">${doubled}</div>
-        </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${increment}>increment</button>
+        <div data-testid="result">${doubled}</div>
+      </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
@@ -58,11 +68,10 @@ describe('memo 테스트', () => {
         data.count = data.count;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${noop}>noop</button>
-          <div data-testid="result">${doubled}</div>
-        </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${noop}>noop</button>
+        <div data-testid="result">${doubled}</div>
+      </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
@@ -92,11 +101,10 @@ describe('memo 테스트', () => {
         data.count += 1;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="result">${tripled}</div>
-        </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${increment}>increment</button>
+        <div data-testid="result">${tripled}</div>
+      </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
@@ -125,12 +133,11 @@ describe('memo 테스트', () => {
         data.count += 1;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${increment}>increment</button>
-          <div data-testid="doubled">${doubled}</div>
-          <div data-testid="tripled">${tripled}</div>
-        </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${increment}>increment</button>
+        <div data-testid="doubled">${doubled}</div>
+        <div data-testid="tripled">${tripled}</div>
+      </div>`;
     }
 
     rootRender(document.getElementById('root')!, Component);
@@ -148,7 +155,7 @@ describe('memo 테스트', () => {
     expect(computeFn1).toHaveBeenCalledTimes(2);
     expect(computeFn2).toHaveBeenCalledTimes(2);
   });
-})
+});
 
 describe('refs 테스트', () => {
   test('refs 값 변경 시 리렌더링이 되어서는 안된다.', async () => {
@@ -215,12 +222,7 @@ describe('refs 테스트', () => {
 describe('store 테스트', () => {
   test('전역 스토어 값 업데이트 시 형제 컴포넌트 값도 변경되어야 한다.', async () => {
     function Store() {
-      return html`
-        <div id="app">
-          ${createComponent(Child1)}
-          ${createComponent(Child2)}
-        </div>
-      `;
+      return html` <div id="app">${createComponent(Child1)} ${createComponent(Child2)}</div> `;
     }
 
     const countStore = createStore({
@@ -232,7 +234,7 @@ describe('store 테스트', () => {
 
       const trigger = () => {
         storeData.count += 1;
-      }
+      };
 
       return html`
         <div>
@@ -245,9 +247,7 @@ describe('store 테스트', () => {
     function Child2() {
       const storeData = store(countStore);
 
-      return html`
-        <div id="store2">${storeData.count}</div>
-      `;
+      return html` <div id="store2">${storeData.count}</div> `;
     }
 
     rootRender(document.getElementById('root')!, Store);

@@ -24,13 +24,16 @@ export function getCurrentInstance() {
   return currentInstance;
 }
 
-export const mountHooks = new WeakMap < ComponentInstance, Array<() => void | (() => () => void)>> ();
+export const mountHooks = new WeakMap<ComponentInstance, Array<() => void | (() => () => void)>>();
 export const unMountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
-export const updatedHooks = new WeakMap<ComponentInstance, Array<{
-  data: Data;
-  callback: (prev: Data) => void;
-  prevSnapshot: Data;
-}>>();
+export const updatedHooks = new WeakMap<
+  ComponentInstance,
+  Array<{
+    data: Data;
+    callback: (prev: Data) => void;
+    prevSnapshot: Data;
+  }>
+>();
 export const watchPropsHooks = new WeakMap<ComponentInstance, Array<(prev: Props) => void>>();
 
 type ComponentInstanceOption = {
@@ -192,7 +195,10 @@ export default class ComponentInstance {
     }
   }
 
-  private collectInstances(vnode: VNode | undefined, set: Set<ComponentInstance> = new Set()): Set<ComponentInstance> {
+  private collectInstances(
+    vnode: VNode | undefined,
+    set: Set<ComponentInstance> = new Set()
+  ): Set<ComponentInstance> {
     if (!vnode) return set;
     switch (vnode.type) {
       case 'component':
