@@ -1,0 +1,28 @@
+import { html, state, createComponent } from 'reona-x';
+import ArrayChild from './array-child';
+
+export default function Array() {
+  const data = state({
+    arr: [0, 1, 2, 3, 4],
+  });
+
+  const trigger = () => {
+    data.arr = [...data.arr, data.arr.length];
+  };
+
+    return html`
+      <div id="app">
+        <button type="button" @click=${trigger}>trigger</button>
+        <ul>
+          ${data.arr.map((item) => createComponent(ArrayChild, {
+            props: {
+              value: item,
+            },
+          }))}
+        </ul>
+        <ul>
+          ${data.arr.map((item) => html`<li>${item}</li>`)}
+        </ul>
+      </div>
+  `;
+}

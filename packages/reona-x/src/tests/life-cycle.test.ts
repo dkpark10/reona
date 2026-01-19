@@ -1,13 +1,5 @@
 import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
-import {
-  mounted,
-  unMounted,
-  state,
-  html,
-  createComponent,
-  rootRender,
-  updated,
-} from '../core';
+import { mounted, state, html, createComponent, rootRender, updated } from '../core';
 import {
   mountHooks,
   unMountHooks,
@@ -75,9 +67,7 @@ describe('라이프 사이클 훅 테스트', () => {
       mounted(mountFn2);
       mounted(mountFn3);
 
-      return html`
-        <div id="app"></div>
-      `;
+      return html` <div id="app"></div> `;
     }
     const instance = rootRender(document.getElementById('root')!, Component);
 
@@ -149,13 +139,11 @@ describe('라이프 사이클 훅 테스트', () => {
     const unMountFn3 = vi.fn();
 
     function Child() {
-      unMounted(unMountFn1);
-      unMounted(unMountFn2);
-      unMounted(unMountFn3);
+      mounted(() => unMountFn1);
+      mounted(() => unMountFn2);
+      mounted(() => unMountFn3);
 
-      return html`
-        <div></div>
-      `;
+      return html` <div></div> `;
     }
 
     function Component() {
@@ -190,28 +178,28 @@ describe('라이프 사이클 훅 테스트', () => {
   });
 
   test('조건부 렌더링에 따른 마운트, 언마운트 훅을 테스트를 한다.', async () => {
-    const mountFn1 = vi.fn(() => {
-      console.log('mount1');
-    });
     const unMountFn1 = vi.fn(() => {
       console.log('unmount1');
     });
-    const mountFn2 = vi.fn(() => {
-      console.log('mount2');
+    const mountFn1 = vi.fn(() => {
+      console.log('mount1');
+      return unMountFn1;
     });
     const unMountFn2 = vi.fn(() => {
       console.log('unmount2');
     });
+    const mountFn2 = vi.fn(() => {
+      console.log('mount2');
+      return unMountFn2;
+    });
 
     function Child({ value }: { value: number }) {
       mounted(mountFn1);
-      unMounted(unMountFn1);
       return html`<div id="div1">${value}</div>`;
     }
 
     function Child2({ value }: { value: number }) {
       mounted(mountFn2);
-      unMounted(unMountFn2);
       return html`<div id="div2">${value}</div>`;
     }
 
@@ -228,16 +216,16 @@ describe('라이프 사이클 훅 테스트', () => {
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
           ${data.bool
-          ? createComponent(Child, {
-            props: {
-              value: 1,
-            },
-          })
-          : createComponent(Child2, {
-            props: {
-              value: 2,
-            },
-          })}
+            ? createComponent(Child, {
+                props: {
+                  value: 1,
+                },
+              })
+            : createComponent(Child2, {
+                props: {
+                  value: 2,
+                },
+              })}
         </div>
       `;
     }
@@ -277,17 +265,18 @@ describe('라이프 사이클 훅 테스트', () => {
   });
 
   test('언마운트 시 해당 컴포넌트의 훅 데이터들이 정리되어야 한다.', async () => {
-    const mountFn = vi.fn(() => {
-      console.log('mount1');
-    });
     const unMountFn = vi.fn(() => {
       console.log('unmount1');
+    });
+    const mountFn = vi.fn(() => {
+      console.log('mount1');
+      return unMountFn;
     });
     const updatedFn1 = vi.fn();
     const updatedFn2 = vi.fn();
     const watchPropsFn = vi.fn();
 
-    function Child({ value }: { value: number; }) {
+    function Child({ value }: { value: number }) {
       const data1 = state({
         noop: null,
       });
@@ -299,8 +288,7 @@ describe('라이프 사이클 훅 테스트', () => {
 
       mounted(mountFn);
       updated(data1, updatedFn1);
-      updated(data2, updatedFn2)
-      unMounted(unMountFn);
+      updated(data2, updatedFn2);
       watchProps(watchPropsFn);
 
       return html`<div>${value}</div>`;

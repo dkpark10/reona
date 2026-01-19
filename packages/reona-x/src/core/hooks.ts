@@ -92,7 +92,6 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
   return data;
 }
 
-
 export function mounted(callback: () => void) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
@@ -108,25 +107,6 @@ export function mounted(callback: () => void) {
   if (!dep) {
     dep = [];
     mountHooks.set(currentInstance, dep);
-  }
-  dep.push(callback);
-}
-
-export function unMounted(callback: () => void) {
-  const currentInstance = getCurrentInstance();
-  if (currentInstance === null) {
-    throw new Error('unmMount 함수는 컴포넌트 내에서 선언해야 합니다.');
-  }
-
-  checkInvalidHook(currentInstance);
-  if (currentInstance.isMounted) {
-    return;
-  }
-
-  let dep = unMountHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    unMountHooks.set(currentInstance, dep);
   }
   dep.push(callback);
 }
@@ -202,9 +182,7 @@ export function ref<Data>(initial: Data) {
   return refList[index] as { current: Data };
 }
 
-export const setRef = function <D extends { current: unknown }>(
-  ref: D,
-) {
+export const setRef = function <D extends { current: unknown }>(ref: D) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
     throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
@@ -215,12 +193,15 @@ export const setRef = function <D extends { current: unknown }>(
   };
 };
 
-export const memoizedList = new WeakMap<ComponentInstance, Array<{
-  data: unknown;
-  callback: () => unknown;
-  prevSnapshot: unknown;
-  cachedValue: unknown;
-}>>();
+export const memoizedList = new WeakMap<
+  ComponentInstance,
+  Array<{
+    data: unknown;
+    callback: () => unknown;
+    prevSnapshot: unknown;
+    cachedValue: unknown;
+  }>
+>();
 
 export function memo<D, R>(data: D, callback: () => R): R {
   const currentInstance = getCurrentInstance();
@@ -238,8 +219,7 @@ export function memo<D, R>(data: D, callback: () => R): R {
 
   const index = currentInstance.memoHookIndex++;
 
-  const createSnapshot = (value: D) =>
-    isPrimitive(value) ? value : { ...(value as object) };
+  const createSnapshot = (value: D) => (isPrimitive(value) ? value : { ...(value as object) });
 
   const checkChanged = (current: D, prev: unknown): boolean => {
     if (isPrimitive(current)) {

@@ -5,7 +5,7 @@ import { html, createComponent } from '../core/component';
 
 describe('파서 테스트', () => {
   test('vdom 생성값을 테스트 한다.', () => {
-    const func = () => { };
+    const func = () => {};
 
     const props = 123;
     const price = 5;
@@ -166,12 +166,12 @@ describe('파서 테스트', () => {
     const template = html` <div id="app">
       <ul>
         ${[1, 2, 3].map((item) =>
-      createComponent(Child, {
-        props: {
-          value: item,
-        },
-      })
-    )}
+          createComponent(Child, {
+            props: {
+              value: item,
+            },
+          })
+        )}
       </ul>
       <ul>
         ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
@@ -242,7 +242,9 @@ describe('파서 테스트', () => {
   });
 
   test('속성에 동적 값이 존재할 시 테스트 한다.', () => {
-    const template = html`<div class="${'c1'} ${'c2'} ${'c3'}" id="app ${'foo'} ${'bar'}">123</div>`;
+    const template = html`<div class="${'c1'} ${'c2'} ${'c3'}" id="app ${'foo'} ${'bar'}">
+      123
+    </div>`;
 
     expect(new Parser(template).parse()).toEqual({
       type: 'element',

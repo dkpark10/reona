@@ -27,7 +27,6 @@ export function rootRender<P extends Props>(
   return instance;
 }
 
-
 /** @description vnode 객체를 실제 dom 으로 만듬 */
 export function createDOM(vnode: VNode): HTMLElement;
 export function createDOM(vnode: VNode, parentElement: Element): HTMLElement;

@@ -30,8 +30,9 @@ export function createComponent<P extends Props>(
 
     if (options && options.props) {
       instance.nextProps = options.props;
-      instance.watchPropsTrigger = !!(instance.nextProps && instance.prevProps)
-        && !shallowEqual(instance.nextProps, instance.prevProps);
+      instance.watchPropsTrigger =
+        !!(instance.nextProps && instance.prevProps) &&
+        !shallowEqual(instance.nextProps, instance.prevProps);
     }
     return instance;
   };

@@ -173,7 +173,12 @@ export function reconcile(instance: ComponentInstance) {
     }
   }
 
-  const newDom = recursiveDiff(prevVnodeTree, nextVnodeTree, instance.currentDom, instance.parentElement);
+  const newDom = recursiveDiff(
+    prevVnodeTree,
+    nextVnodeTree,
+    instance.currentDom,
+    instance.parentElement
+  );
   if (newDom) {
     instance.currentDom = newDom as HTMLElement;
   }
@@ -184,7 +189,8 @@ function recursiveDiff(
   prevVnodeTree: VNode,
   nextVnodeTree: VNode,
   currentElement: Element | null,
-  parentElement: Element | null): Element | null {
+  parentElement: Element | null
+): Element | null {
   if (prevVnodeTree.type === 'component' && nextVnodeTree.type === 'component' && parentElement) {
     if (prevVnodeTree.instance !== nextVnodeTree.instance) {
       createDOM(nextVnodeTree, parentElement);
@@ -193,6 +199,10 @@ function recursiveDiff(
       }
       return nextVnodeTree.instance.currentDom;
     }
+
+    // 자식 리렌더링
+    nextVnodeTree.instance.reRender();
+    return null;
   }
 
   if (prevVnodeTree.type !== nextVnodeTree.type && parentElement) {
@@ -261,7 +271,11 @@ function recursiveDiff(
   return null;
 }
 
-function changeAttribute(prevVnodeTree: VNode, nextVnodeTree: VNode, currentElement: Element | null) {
+function changeAttribute(
+  prevVnodeTree: VNode,
+  nextVnodeTree: VNode,
+  currentElement: Element | null
+) {
   if (!currentElement) return;
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
     if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
