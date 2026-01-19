@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "reona": "workspace:*",
     "reona-x": "workspace:*"
   }
 }

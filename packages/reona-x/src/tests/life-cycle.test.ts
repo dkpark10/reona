@@ -1,12 +1,5 @@
 import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
-import {
-  mounted,
-  state,
-  html,
-  createComponent,
-  rootRender,
-  updated,
-} from '../core';
+import { mounted, state, html, createComponent, rootRender, updated } from '../core';
 import {
   mountHooks,
   unMountHooks,
@@ -74,9 +67,7 @@ describe('라이프 사이클 훅 테스트', () => {
       mounted(mountFn2);
       mounted(mountFn3);
 
-      return html`
-        <div id="app"></div>
-      `;
+      return html` <div id="app"></div> `;
     }
     const instance = rootRender(document.getElementById('root')!, Component);
 
@@ -152,9 +143,7 @@ describe('라이프 사이클 훅 테스트', () => {
       mounted(() => unMountFn2);
       mounted(() => unMountFn3);
 
-      return html`
-        <div></div>
-      `;
+      return html` <div></div> `;
     }
 
     function Component() {
@@ -227,16 +216,16 @@ describe('라이프 사이클 훅 테스트', () => {
         <div id="app">
           <button type="button" @click=${trigger}>trigger</button>
           ${data.bool
-          ? createComponent(Child, {
-            props: {
-              value: 1,
-            },
-          })
-          : createComponent(Child2, {
-            props: {
-              value: 2,
-            },
-          })}
+            ? createComponent(Child, {
+                props: {
+                  value: 1,
+                },
+              })
+            : createComponent(Child2, {
+                props: {
+                  value: 2,
+                },
+              })}
         </div>
       `;
     }
@@ -287,7 +276,7 @@ describe('라이프 사이클 훅 테스트', () => {
     const updatedFn2 = vi.fn();
     const watchPropsFn = vi.fn();
 
-    function Child({ value }: { value: number; }) {
+    function Child({ value }: { value: number }) {
       const data1 = state({
         noop: null,
       });
@@ -299,7 +288,7 @@ describe('라이프 사이클 훅 테스트', () => {
 
       mounted(mountFn);
       updated(data1, updatedFn1);
-      updated(data2, updatedFn2)
+      updated(data2, updatedFn2);
       watchProps(watchPropsFn);
 
       return html`<div>${value}</div>`;
