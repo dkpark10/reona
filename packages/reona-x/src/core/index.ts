@@ -17,6 +17,8 @@ import {
 import {
   rootRender
 } from './runtime-dom';
+import { createRouter, EnrollRouter } from '../experimental/router';
+export type { Router, RouteOption } from '../experimental/router';
 
 export {
   store,
@@ -32,4 +34,6 @@ export {
   setRef,
   watchProps,
   memo,
+  createRouter,
+  EnrollRouter,
 };

@@ -1,16 +1,25 @@
 /** @description 실제 dom 조작 로직을 여기다 작성 */
 
 import type { VNode } from './parser';
-import type { Component } from '../utils/types';
+import type { Component, Props } from '../utils/types';
 import { createComponent } from './component';
 
-export function rootRender(
+interface RootRenderOptions<P extends Props> {
+  props?: P;
+  context?: Record<string, unknown>;
+}
+
+export function rootRender<P extends Props>(
   container: Element,
-  component: Component,
-  props?: Parameters<typeof component>[0]
+  component: Component | null,
+  options?: RootRenderOptions<P>
 ) {
+  if (!component) {
+    throw new Error('컴포넌트가 없습니다.');
+  }
+
   const getInstance = createComponent(component, {
-    props,
+    props: options?.props,
   });
 
   const instance = getInstance(0);

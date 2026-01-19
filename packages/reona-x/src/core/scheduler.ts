@@ -21,13 +21,4 @@ class Scheduler {
   }
 }
 
-const scheduler = new Scheduler();
-
-const delay = (d: number) => new Promise((resolve) => setTimeout(resolve, d));
-
-scheduler.push(() => console.log('1'));
-scheduler.push(async () => {
-  await delay(1000);
-  console.log('2');
-});
-scheduler.push(() => console.log('3'));
+export const scheduler = new Scheduler();

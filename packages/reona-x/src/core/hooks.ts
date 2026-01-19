@@ -8,6 +8,7 @@ import ComponentInstance, {
   watchPropsHooks,
 } from './component-instance';
 import { update } from './renderer';
+import { contextProvider } from '../core/context';
 
 function checkInvalidHook(currentInstance: ComponentInstance) {
   if (currentInstance.isMounted && currentInstance.hookIndex > currentInstance.hookLimit) {
@@ -271,3 +272,14 @@ export function memo<D, R>(data: D, callback: () => R): R {
 
   return dep[index].cachedValue as R;
 }
+
+export function context<T extends Data>(ctx: T) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance === null) {
+    throw new Error('memo 함수는 컴포넌트 내에서 선언해야 합니다.');
+  }
+
+  checkInvalidHook(currentInstance);
+  
+  return contextProvider.getContext(ctx);
+};
