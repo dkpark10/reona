@@ -1,4 +1,4 @@
-import type { RenderResult, Component, Props, Data } from '../utils/types';
+import type { RenderResult, Component, Props } from '../utils/types';
 import { createKey, shallowEqual } from '../../../shared';
 import ComponentInstance, { getInstanceMap } from './component-instance';
 
@@ -38,15 +38,6 @@ export function createComponent<P extends Props>(
   };
   func.__isCreateComponent = true;
   return func;
-}
-
-interface ContextProvider<T> {
-  value: T;
-  children: Component;
-}
-
-export function contextProvider<T extends Data>({ value, children }: ContextProvider<T>) {
-   return html`${createComponent(children)}`;
 }
 
 export function html(strings: TemplateStringsArray, ...values: any[]): RenderResult {

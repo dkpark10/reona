@@ -8,8 +8,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "reona-x": "workspace:*"
-  }
+  "license": "ISC"
 }

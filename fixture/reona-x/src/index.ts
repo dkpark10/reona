@@ -4,6 +4,7 @@ import Condition from './condition';
 import Counter from './counter';
 import Refs from './refs';
 import Store from './store';
+import ContextApp from './context';
 
 export {
   Nested,
@@ -12,4 +13,5 @@ export {
   Counter,
   Refs,
   Store,
+  ContextApp,
 };

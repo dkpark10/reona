@@ -1,4 +1,4 @@
-import { html, mounted } from 'reona-x';
+import { html, mounted } from '../../../../packages/reona-x/src/core';
 
 interface Child2Props {
   value: number;

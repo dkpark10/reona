@@ -1,4 +1,4 @@
-import { html, state, createComponent } from 'reona-x';
+import { html, state, createComponent } from '../../../../packages/reona-x/src/core';
 import ArrayChild from './array-child';
 
 export default function Array() {

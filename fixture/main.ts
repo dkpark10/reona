@@ -1,4 +1,4 @@
-import { rootRender } from 'reona-x';
+import { rootRender } from '../packages/reona-x/src/core';
 import {
   Nested,
   Array,
@@ -6,6 +6,7 @@ import {
   Counter,
   Refs,
   Store,
+  ContextApp,
  } from './reona-x/src';
 
-rootRender(document.getElementById('root')!, Nested);
+rootRender(document.getElementById('root')!, ContextApp);

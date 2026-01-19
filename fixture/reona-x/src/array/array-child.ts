@@ -1,4 +1,4 @@
-import { html } from 'reona-x';
+import { html } from '../../../../packages/reona-x/src/core';
 
 interface ArrayChildProps {
   value: number;

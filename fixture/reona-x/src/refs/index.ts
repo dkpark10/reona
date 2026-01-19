@@ -1,4 +1,4 @@
-import { html, ref, state } from 'reona-x';
+import { html, ref, state } from '../../../../packages/reona-x/src/core';
 
 export default function Ref() {
   const data = state({

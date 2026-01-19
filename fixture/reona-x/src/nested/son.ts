@@ -1,4 +1,4 @@
-import { watchProps, createComponent, html } from 'reona-x';
+import { watchProps, createComponent, html } from '../../../../packages/reona-x/src/core';
 import GrandSon from './grand-son';
 
 interface SonProps {

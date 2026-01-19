@@ -1,4 +1,4 @@
-import type { Props, Data } from '../utils/types';
+import type { Props, Data, Context } from '../utils/types';
 import { isPrimitive } from '../../../shared';
 import ComponentInstance, {
   getCurrentInstance,
@@ -8,7 +8,6 @@ import ComponentInstance, {
   watchPropsHooks,
 } from './component-instance';
 import { update } from './renderer';
-import { contextProvider } from '../core/context';
 
 function checkInvalidHook(currentInstance: ComponentInstance) {
   if (currentInstance.isMounted && currentInstance.hookIndex > currentInstance.hookLimit) {
@@ -25,7 +24,7 @@ export const states = new WeakMap<ComponentInstance, Array<Record<string, any>>>
 export function state<D extends Data>(initial: D) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
-    throw new Error('상태 함수는 컴포넌트 내에서 선언해야 합니다.');
+    throw new Error('state 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
 
   checkInvalidHook(currentInstance);
@@ -253,13 +252,10 @@ export function memo<D, R>(data: D, callback: () => R): R {
   return dep[index].cachedValue as R;
 }
 
-export function context<T extends Data>(ctx: T) {
+export function context<T extends unknown>(ctx: Context<T>) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
-    throw new Error('memo 함수는 컴포넌트 내에서 선언해야 합니다.');
+    throw new Error('context 함수는 컴포넌트 내에서 선언해야 합니다.');
   }
-
-  checkInvalidHook(currentInstance);
-  
-  return contextProvider.getContext(ctx);
-};
+  return ctx.getContextData();
+}

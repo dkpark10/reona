@@ -1,4 +1,4 @@
-import { html, watchProps } from 'reona-x';
+import { html, watchProps } from '../../../../packages/reona-x/src/core';
 
 interface GrandSonProps {
   value: number;

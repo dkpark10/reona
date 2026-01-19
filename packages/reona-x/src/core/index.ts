@@ -1,7 +1,8 @@
 import { createStore } from './store';
 import { createComponent, html } from './component';
-import { state, store, mounted, updated, watchProps, ref, setRef, memo } from './hooks';
+import { state, store, mounted, updated, watchProps, ref, setRef, memo, context } from './hooks';
 import { rootRender } from './runtime-dom';
+import { createContext } from '../experimental/context';
 
 export {
   store,
@@ -16,4 +17,6 @@ export {
   setRef,
   watchProps,
   memo,
+  createContext,
+  context,
 };

@@ -1,4 +1,4 @@
-import { html, state } from 'reona-x';
+import { html, state } from '../../../../packages/reona-x/src/core';
 
 export default function Counter() {
   const data = state({

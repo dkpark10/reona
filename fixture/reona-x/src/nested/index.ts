@@ -1,4 +1,4 @@
-import { createComponent, html, state } from 'reona-x';
+import { createComponent, html, state } from '../../../../packages/reona-x/src/core';
 import Son from './son';
 
 export default function App() {

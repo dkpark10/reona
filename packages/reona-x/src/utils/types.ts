@@ -10,3 +10,12 @@ export type RenderResult = {
 };
 
 export type Component<P = any> = (props: P) => RenderResult;
+
+export interface Context<T> {
+  provider: ({ value, children }: {
+    value?: T;
+    children: RenderResult;
+  }) => RenderResult;
+
+  getContextData: () => T;
+}

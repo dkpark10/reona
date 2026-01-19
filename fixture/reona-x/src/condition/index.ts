@@ -1,4 +1,4 @@
-import { html, mounted, state, createComponent, updated } from 'reona-x';
+import { html, mounted, state, createComponent, updated } from '../../../../packages/reona-x/src/core';
 import Child from './child';
 import Child2 from './child2';
 
