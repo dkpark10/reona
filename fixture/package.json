@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "reona-x": "file:../packages/reona-x/src/core"
+    "reona-x": "workspace:*"
   }
 }

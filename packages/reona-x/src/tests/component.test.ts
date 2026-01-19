@@ -1,5 +1,5 @@
 import { vi, expect, test, beforeEach, afterEach, describe } from 'vitest';
-import { watchProps, rootRender, state, html, createComponent } from '../core';
+import { mounted, ref, watchProps, rootRender, state, html, createComponent } from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -390,7 +390,7 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('ul')?.children).toHaveLength(6);
   });
 
-  test('중첩 컴포넌트의 리렌더링을 테스트 한다.', async () => {
+  test('부모 렌더링 시 자식 리렌더링을 테스트 한다.', async () => {
     let prev1 = -1;
     let prev2 = -1;
 
@@ -403,15 +403,16 @@ describe('컴포넌트 테스트', () => {
         data.count += 1;
       };
 
-      return html` <div id="app">
-        <button type="button" @click=${onClick}>트리거</button>
-        <div id="val1">${data.count}</div>
-        ${createComponent(Son, {
-          props: {
-            value: data.count * 2,
-          },
-        })}
-      </div>`;
+      return html`
+        <div id="app">
+          <button type="button" @click=${onClick}>트리거</button>
+          <div id="val1">${data.count}</div>
+          ${createComponent(Son, {
+        props: {
+          value: data.count * 2,
+        },
+      })}
+        </div>`;
     }
 
     interface CommonProps {
@@ -428,14 +429,15 @@ describe('컴포넌트 테스트', () => {
     function Son({ value }: CommonProps) {
       watchProps<CommonProps>(watchPropsFn1);
 
-      return html` <div>
-        <div id="val2">${value}</div>
-        ${createComponent(GrandSon, {
-          props: {
-            value: value * 2,
-          },
-        })}
-      </div>`;
+      return html`
+        <div>
+          <div id="val2">${value}</div>
+          ${createComponent(GrandSon, {
+        props: {
+          value: value * 2,
+        },
+      })}
+        </div>`;
     }
 
     function GrandSon({ value }: CommonProps) {
@@ -450,6 +452,8 @@ describe('컴포넌트 테스트', () => {
     await flushRaf();
     expect(prev1).toBe(0);
     expect(prev2).toBe(0);
+    expect(watchPropsFn1).toHaveBeenCalledOnce();
+    expect(watchPropsFn2).toHaveBeenCalledOnce();
     expect(document.getElementById('val1')?.textContent).toBe('1');
     expect(document.getElementById('val2')?.textContent).toBe('2');
     expect(document.getElementById('val3')?.textContent).toBe('4');
@@ -458,6 +462,8 @@ describe('컴포넌트 테스트', () => {
     await flushRaf();
     expect(prev1).toBe(2);
     expect(prev2).toBe(4);
+    expect(watchPropsFn1).toHaveBeenCalledTimes(2);
+    expect(watchPropsFn2).toHaveBeenCalledTimes(2);
     expect(document.getElementById('val1')?.textContent).toBe('2');
     expect(document.getElementById('val2')?.textContent).toBe('4');
     expect(document.getElementById('val3')?.textContent).toBe('8');
@@ -466,8 +472,90 @@ describe('컴포넌트 테스트', () => {
     await flushRaf();
     expect(prev1).toBe(4);
     expect(prev2).toBe(8);
+    expect(watchPropsFn1).toHaveBeenCalledTimes(3);
+    expect(watchPropsFn2).toHaveBeenCalledTimes(3);
     expect(document.getElementById('val1')?.textContent).toBe('3');
     expect(document.getElementById('val2')?.textContent).toBe('6');
     expect(document.getElementById('val3')?.textContent).toBe('12');
+  });
+
+  test('리렌더링 시 watchProps 호출 횟수를 테스트 한다.', async () => {
+    vi.useFakeTimers();
+    let executionCount = 0;
+    interface TimerProps {
+      beginCountTrigger: boolean;
+    }
+
+    function App() {
+      const data = state({
+        trigger: false,
+      });
+
+      const onClick = () => {
+        data.trigger = !data.trigger;
+      };
+
+      return html`
+        <div id="app">
+          <button type="button" @click=${onClick}>trigger</button>
+          ${createComponent(Timer, {
+        props: {
+          beginCountTrigger: data.trigger,
+        },
+      })}
+          </div>`;
+    }
+
+    function Timer({ beginCountTrigger }: TimerProps) {
+      const data = state({
+        count: 0,
+      });
+
+      const timer = ref<{ id: number | null }>({
+        id: null,
+      });
+
+      watchProps<TimerProps>(() => {
+        executionCount += 1;
+        if (beginCountTrigger) {
+          timer.current.id = setInterval(() => {
+            data.count += 1;
+          }, 1_000);
+        }
+
+        if (!beginCountTrigger && timer.current.id) {
+          clearInterval(timer.current.id);
+          data.count = 0;
+          return;
+        }
+      });
+
+      mounted(() => {
+        return () => {
+          if (timer.current.id) {
+            clearInterval(timer.current.id);
+          }
+        }
+      });
+
+      return html`<time>${data.count}</time>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+    document.querySelector('button')?.click();
+    vi.advanceTimersByTime(100);
+    expect(executionCount).toBe(1);
+
+    vi.advanceTimersByTime(1000);
+    expect(document.querySelector('time')?.textContent).toBe('1');
+    expect(executionCount).toBe(1);
+
+    vi.advanceTimersByTime(1000);
+    expect(document.querySelector('time')?.textContent).toBe('2');
+    expect(executionCount).toBe(1);
+
+    vi.advanceTimersByTime(1000);
+    expect(document.querySelector('time')?.textContent).toBe('3');
+    expect(executionCount).toBe(1);
   });
 });

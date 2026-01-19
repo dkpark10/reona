@@ -135,6 +135,7 @@ export default class ComponentInstance {
       }
     }
     this.prevProps = this.nextProps;
+    this.watchPropsTrigger = false;
   }
 
   private runMount() {
