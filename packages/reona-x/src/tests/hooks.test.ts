@@ -1,7 +1,6 @@
 import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
-import { ref, mounted, rootRender, setRef, state, html, memo } from '../core';
+import { createStore, store, createComponent, ref, mounted, rootRender, setRef, state, html, memo } from '../core';
 import { flushRaf } from './utils';
-import Store from '../../../../fixture/store/reona-x';
 
 beforeEach(() => {
   const div = document.createElement('div');
@@ -215,6 +214,42 @@ describe('refs 테스트', () => {
 
 describe('store 테스트', () => {
   test('전역 스토어 값 업데이트 시 형제 컴포넌트 값도 변경되어야 한다.', async () => {
+    function Store() {
+      return html`
+        <div id="app">
+          ${createComponent(Child1)}
+          ${createComponent(Child2)}
+        </div>
+      `;
+    }
+
+    const countStore = createStore({
+      count: 10000,
+    });
+
+    function Child1() {
+      const storeData = store(countStore);
+
+      const trigger = () => {
+        storeData.count += 1;
+      }
+
+      return html`
+        <div>
+          <button type="button" @click=${trigger}>trigger</button>
+          <div id="store1">${storeData.count}</div>
+        </div>
+      `;
+    }
+
+    function Child2() {
+      const storeData = store(countStore);
+
+      return html`
+        <div id="store2">${storeData.count}</div>
+      `;
+    }
+
     rootRender(document.getElementById('root')!, Store);
 
     (document.querySelector('button') as HTMLButtonElement)?.click();

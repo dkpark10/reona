@@ -28,6 +28,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "development": {
+        "types": "./src/core/index.ts",
+        "default": "./src/core/index.ts"
+      },
       "require": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"

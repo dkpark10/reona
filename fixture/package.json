@@ -1,0 +1,15 @@
+{
+  "name": "fixture",
+  "description": "",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsup",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "reona-x": "file:../packages/reona-x/src/core"
+  }
+}
