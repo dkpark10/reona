@@ -200,8 +200,9 @@ function recursiveDiff(
       return nextVnodeTree.instance.currentDom;
     }
 
-    // 자식 리렌더링
-    nextVnodeTree.instance.reRender();
+    if (nextVnodeTree.instance.isMounted) {
+      nextVnodeTree.instance.reRender();
+    }
     return null;
   }
 
