@@ -62,7 +62,14 @@ export default class Parser {
     return this.convertNode(template.content.firstElementChild!);
   }
 
-  private convertNode(el: Element): VElementNode {
+  private convertNode(el?: Element): VElementNode | VTextNode {
+    if (!el) {
+      return {
+        type: 'text',
+        value: '',
+      };
+    }
+
     const attrs: Props = {};
 
     for (const attr of el.attributes) {

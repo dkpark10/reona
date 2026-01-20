@@ -7,23 +7,32 @@ import type ComponentInstance from '../core/component-instance';
 let rootElement: HTMLElement | null = null;
 let currentMatchedInstance: ComponentInstance | null = null;
 
+type GuardResult = boolean | string | void;
+type BeforeGuard = (to: string, from: string) => GuardResult | Promise<GuardResult>;
+type Params = Record<string, string>;
+
 interface RouteOption {
   path: string | RegExp;
   component: Component;
   props?: Props;
+  beforeEnter?: BeforeGuard;
+  children?: RouteOption[];
 }
 
-type GuardResult = boolean | string | void;
+interface MatchResult {
+  route: RouteOption;
+  params: Params;
+  fullPath: string;
+}
 
-type BeforeGuard = (to: string, from: string) => GuardResult | Promise<GuardResult>;
-
-interface Router {
+export interface Router {
   push: (path: string) => Promise<void>;
   replace: (path: string) => Promise<void>;
   back: () => void;
   forward: () => void;
   getCurrentPath: () => string;
-  getComponent: () => { component: Component, props: RouteOption['props'] };
+  getParams: () => Params;
+  getComponent: () => { component: Component, props: Props };
   onRouteChange: (callback: (path: string) => void) => () => void;
   beforeEach: (guard: BeforeGuard) => () => void;
 }
@@ -32,13 +41,56 @@ export function createRouter(routes: RouteOption[]): Router {
   const listeners = new Set<(path: string) => void>();
   const beforeGuardsFn: BeforeGuard[] = [];
 
-  const findRoute = function (path: string): RouteOption | undefined {
-    return routes.find((route) => {
-      if (typeof route.path === 'string') {
-        return route.path === path
-      }
-      return route.path.test(path);
+  // 경로 매칭 및 params 추출
+  const matchPath = function (routePath: string | RegExp, targetPath: string): Params | null {
+    if (routePath instanceof RegExp) {
+      const match = targetPath.match(routePath);
+      return match ? {} : null;
+    }
+
+    // param 이름 추출: /post/:id/:slug → ['id', 'slug']
+    const paramNames: string[] = [];
+    const pattern = routePath.replace(/:([^/]+)/g, (_, name) => {
+      paramNames.push(name);
+      return '([^/]+)';
     });
+
+    const regex = new RegExp(`^${pattern}$`);
+    const match = targetPath.match(regex);
+
+    if (!match) return null;
+
+    // params 객체 생성: { id: '123', slug: 'hello' }
+    const params: Params = {};
+    paramNames.forEach((name, i) => {
+      params[name] = match[i + 1];
+    });
+
+    return params;
+  };
+
+  const findRoute = function (
+    path: string,
+    routeList: RouteOption[] = routes,
+    basePath: string = ''
+  ): MatchResult | undefined {
+    for (const route of routeList) {
+      const fullPath = basePath + route.path;
+
+      const params = matchPath(fullPath, path);
+      if (params !== null) {
+        return { route, params, fullPath };
+      }
+
+      if (route.children && route.children.length > 0) {
+        const childMatch = findRoute(path, route.children, fullPath);
+        if (childMatch) {
+          return childMatch;
+        }
+      }
+    }
+
+    return undefined;
   };
 
   const notifyListeners = function () {
@@ -50,13 +102,23 @@ export function createRouter(routes: RouteOption[]): Router {
     return window.location.pathname;
   };
 
-  const getComponent = function (): { component: Component, props: RouteOption['props'] } {
+  const getComponent = function (): { component: Component, props: Props } {
     const currentPath = getCurrentPath();
-    const route = findRoute(currentPath);
-    return {
-      component: route?.component ?? (() => html``),
-      props: route?.props,
+    const match = findRoute(currentPath);
+
+    if (!match) {
+      return {
+        component: () => html`404`,
+        props: {},
+      };
     }
+
+    return {
+      component: match.route.component,
+      props: {
+        ...match.route.props,
+      },
+    };
   };
 
   const renderRoute = function () {
@@ -77,14 +139,23 @@ export function createRouter(routes: RouteOption[]): Router {
   };
 
   const runGuards = async function (to: string, from: string): Promise<GuardResult> {
+    // 1. beforeEach (전역 가드) 실행
     for (const guard of beforeGuardsFn) {
       const result = await guard(to, from);
-      if (!result) {
+      if (result === false) {
         return false;
       }
-      if (typeof result === 'string') {
-        return result;
+      if (typeof result === 'string') return result;
+    }
+
+    // 2. beforeEnter (라우트별 가드) 실행
+    const match = findRoute(to);
+    if (match?.route.beforeEnter) {
+      const result = await match.route.beforeEnter(to, from);
+      if (result === false) {
+        return false;
       }
+      if (typeof result === 'string') return result;
     }
     return true;
   };
@@ -126,6 +197,12 @@ export function createRouter(routes: RouteOption[]): Router {
 
   const forward = function () {
     window.history.forward();
+  };
+
+  const getParams = function (): Params {
+    const currentPath = getCurrentPath();
+    const match = findRoute(currentPath);
+    return match?.params ?? {};
   };
 
   const onRouteChange = function (fn: (path: string) => void) {
@@ -171,6 +248,7 @@ export function createRouter(routes: RouteOption[]): Router {
     back,
     forward,
     getCurrentPath,
+    getParams,
     getComponent,
     onRouteChange,
     beforeEach,
@@ -181,11 +259,33 @@ const routerContext = createContext<null | Router>(null);
 
 export function useRouter() {
   const router = context(routerContext);
+  if (!router) {
+    throw new Error('useRouter RouteProvider 내부에서 사용해야 합니다.');
+  }
   return router;
 }
 
+export function useParams(): Params {
+  const router = context(routerContext);
+  if (!router) {
+    throw new Error('useParams는 RouteProvider 내부에서 사용해야 합니다.');
+  }
+  return router.getParams();
+}
+
+export function useQueryString(): Params {
+  const searchParams = new URLSearchParams(window.location.search);
+  const query: Params = {};
+
+  for (const [key, value] of searchParams) {
+    query[key] = value;
+  }
+
+  return query;
+}
+
 export function RouteProvider(router: Router) {
-  return function RouteProviderImpl () {
+  return function RouteProviderImpl() {
     rootElement = (RouteProviderImpl as any).rootElement;
     currentMatchedInstance = (RouteProviderImpl as any).currentMatchedInstance;
     const targetComponent = router.getComponent();

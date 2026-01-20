@@ -12,6 +12,7 @@ import {
 import Home from './reona-x/src/router-fixture';
 import About from './reona-x/src/router-fixture/about';
 import Post from './reona-x/src/router-fixture/post';
+import Article from './reona-x/src/router-fixture/article';
 
 const router = createRouter([
   {
@@ -25,8 +26,14 @@ const router = createRouter([
   {
     path: '/post',
     component: Post,
+    children: [{
+      path: '/:postId',
+      component: Article,
+      beforeEnter: () => {
+
+      },
+    }],
   },
 ]);
 
-// rootRender(document.getElementById('root')!, ContextApp);
 rootRender(document.getElementById('root')!, RouteProvider(router));
