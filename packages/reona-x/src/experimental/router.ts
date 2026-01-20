@@ -13,18 +13,24 @@ interface RouteOption {
   props?: Props;
 }
 
+type GuardResult = boolean | string | void;
+
+type BeforeGuard = (to: string, from: string) => GuardResult | Promise<GuardResult>;
+
 interface Router {
-  push: (path: string) => void;
-  replace: (path: string) => void;
+  push: (path: string) => Promise<void>;
+  replace: (path: string) => Promise<void>;
   back: () => void;
   forward: () => void;
   getCurrentPath: () => string;
   getComponent: () => { component: Component, props: RouteOption['props'] };
   onRouteChange: (callback: (path: string) => void) => () => void;
+  beforeEach: (guard: BeforeGuard) => () => void;
 }
 
 export function createRouter(routes: RouteOption[]): Router {
   const listeners = new Set<(path: string) => void>();
+  const beforeGuardsFn: BeforeGuard[] = [];
 
   const findRoute = function (path: string): RouteOption | undefined {
     return routes.find((route) => {
@@ -40,11 +46,11 @@ export function createRouter(routes: RouteOption[]): Router {
     listeners.forEach((fn) => fn(currentPath));
   };
 
-  const getCurrentPath = function () {
+  const getCurrentPath = function (): string {
     return window.location.pathname;
   };
 
-  const getComponent = function () {
+  const getComponent = function (): { component: Component, props: RouteOption['props'] } {
     const currentPath = getCurrentPath();
     const route = findRoute(currentPath);
     return {
@@ -70,12 +76,46 @@ export function createRouter(routes: RouteOption[]): Router {
     notifyListeners();
   };
 
-  const push = function (path: string) {
+  const runGuards = async function (to: string, from: string): Promise<GuardResult> {
+    for (const guard of beforeGuardsFn) {
+      const result = await guard(to, from);
+      if (!result) {
+        return false;
+      }
+      if (typeof result === 'string') {
+        return result;
+      }
+    }
+    return true;
+  };
+
+  const push = async function (path: string) {
+    const from = getCurrentPath();
+    const result = await runGuards(path, from);
+
+    if (result === false) return;
+    if (typeof result === 'string') {
+      await push(result);
+      return;
+    }
+
     window.history.pushState(null, '', path);
     renderRoute();
   };
 
-  const replace = function (path: string) {
+  const replace = async function (path: string) {
+    const from = getCurrentPath();
+    const result = await runGuards(path, from);
+
+    if (result === false) {
+      return;
+    }
+
+    if (typeof result === 'string') {
+      await replace(result);
+      return;
+    }
+
     window.history.replaceState(null, '', path);
     renderRoute();
   };
@@ -88,14 +128,42 @@ export function createRouter(routes: RouteOption[]): Router {
     window.history.forward();
   };
 
-  const onRouteChange = function (callback: (path: string) => void) {
-    listeners.add(callback);
+  const onRouteChange = function (fn: (path: string) => void) {
+    listeners.add(fn);
     return () => {
-      listeners.delete(callback);
+      listeners.delete(fn);
     };
   };
 
-  window.addEventListener('popstate', renderRoute);
+  const beforeEach = function (guard: BeforeGuard) {
+    beforeGuardsFn.push(guard);
+    return function unsubscribe() {
+      const index = beforeGuardsFn.indexOf(guard);
+      if (index > -1) {
+        beforeGuardsFn.splice(index, 1);
+      }
+    };
+  };
+
+  // popstate 가드처리
+  const handlePopstate = async function () {
+    const to = getCurrentPath();
+    // popstate는 이미 url 변경된 상태이므로 가드 실패 시 원위치
+    const from = to;
+    const result = await runGuards(to, from);
+
+    if (result === false) {
+      window.history.forward();
+      return;
+    }
+
+    if (typeof result === 'string') {
+      window.history.replaceState(null, '', result);
+    }
+    renderRoute();
+  };
+
+  window.addEventListener('popstate', handlePopstate);
 
   return {
     push,
@@ -105,6 +173,7 @@ export function createRouter(routes: RouteOption[]): Router {
     getCurrentPath,
     getComponent,
     onRouteChange,
+    beforeEach,
   };
 }
 
@@ -120,6 +189,7 @@ export function RouteProvider(router: Router) {
     rootElement = (RouteProviderImpl as any).rootElement;
     currentMatchedInstance = (RouteProviderImpl as any).currentMatchedInstance;
     const targetComponent = router.getComponent();
+
     return routerContext.provider({
       value: router,
       children: targetComponent.component,
