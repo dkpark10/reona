@@ -2,8 +2,10 @@ import { html, createComponent, context } from '../core';
 import type { Component, Props, RenderResult } from '../utils/types';
 import { createContext } from '../core';
 import { isRenderResultObject } from '../utils';
+import type ComponentInstance from '../core/component-instance';
 
 let rootElement: HTMLElement | null = null;
+let currentMatchedInstance: ComponentInstance | null = null;
 
 interface RouteOption {
   path: string | RegExp;
@@ -51,8 +53,8 @@ export function createRouter(routes: RouteOption[]): Router {
     }
   };
 
-  const push = function (path: string) {
-    window.history.pushState(null, '', path);
+  const renderRoute = function () {
+    currentMatchedInstance?.unmountAll();
 
     const root = rootElement;
     if (root) {
@@ -62,14 +64,20 @@ export function createRouter(routes: RouteOption[]): Router {
       const getInstance = createComponent(component, { props });
       const instance = getInstance(0);
       instance.render(root);
+      currentMatchedInstance = instance;
     }
 
     notifyListeners();
   };
 
+  const push = function (path: string) {
+    window.history.pushState(null, '', path);
+    renderRoute();
+  };
+
   const replace = function (path: string) {
     window.history.replaceState(null, '', path);
-    notifyListeners();
+    renderRoute();
   };
 
   const back = function () {
@@ -87,7 +95,7 @@ export function createRouter(routes: RouteOption[]): Router {
     };
   };
 
-  window.addEventListener('popstate', notifyListeners);
+  window.addEventListener('popstate', renderRoute);
 
   return {
     push,
@@ -109,8 +117,8 @@ export function useRouter() {
 
 export function RouteProvider(router: Router) {
   return function RouteProviderImpl () {
-    // @ts-ignore
-    rootElement = RouteProviderImpl.rootElement;
+    rootElement = (RouteProviderImpl as any).rootElement;
+    currentMatchedInstance = (RouteProviderImpl as any).currentMatchedInstance;
     const targetComponent = router.getComponent();
     return routerContext.provider({
       value: router,

@@ -202,6 +202,32 @@ export default class ComponentInstance {
     }
   }
 
+  public unmountAll() {
+    const instances = this.collectInstances(this.prevVnodeTree);
+    instances.add(this);
+
+    for (const instance of instances) {
+      const dep = unMountHooks.get(instance);
+      if (dep) {
+        for (const fn of dep) {
+          fn();
+        }
+      }
+
+      instanceMap.get(instance.component)?.delete(instance.key);
+      if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
+        instanceMap.delete(instance.component);
+      }
+
+      mountHooks.delete(instance);
+      unMountHooks.delete(instance);
+      updatedHooks.delete(instance);
+      watchPropsHooks.delete(instance);
+
+      instance.isMounted = false;
+    }
+  }
+
   private collectInstances(
     vnode: VNode | undefined,
     set: Set<ComponentInstance> = new Set()
@@ -210,6 +236,7 @@ export default class ComponentInstance {
     switch (vnode.type) {
       case 'component':
         set.add(vnode.instance);
+        this.collectInstances(vnode.instance.prevVnodeTree, set);
         break;
       case 'element':
         vnode.children.forEach((child) => this.collectInstances(child, set));

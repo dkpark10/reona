@@ -25,6 +25,7 @@ export function rootRender<P extends Props>(
   });
 
   const instance = getInstance(0);
+  (component as any).currentMatchedInstance = instance;
   instance.render(container);
   return instance;
 }
