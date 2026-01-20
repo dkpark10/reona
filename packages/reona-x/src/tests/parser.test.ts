@@ -242,9 +242,7 @@ describe('파서 테스트', () => {
   });
 
   test('속성에 동적 값이 존재할 시 테스트 한다.', () => {
-    const template = html`<div class="${'c1'} ${'c2'} ${'c3'}" id="app ${'foo'} ${'bar'}">
-      123
-    </div>`;
+    const template = html`<div class="${'c1'} ${'c2'} ${'c3'}" id="app ${'foo'} ${'bar'}">123</div>`;
 
     expect(new Parser(template).parse()).toEqual({
       type: 'element',

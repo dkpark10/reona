@@ -1,111 +1,156 @@
-// import { html, createComponent } from '../core';
-// import type { Component, Props } from '../utils/types';
+import { html, createComponent, context } from '../core';
+import type { Component, Props, RenderResult } from '../utils/types';
+import { createContext } from '../core';
+import { isRenderResultObject } from '../utils';
 
-// export interface RouteOption {
-//   path: string | RegExp;
-//   component: Component;
-//   props?: Props;
-// }
+let rootElement: HTMLElement | null = null;
 
-// export interface Router {
-//   push: (path: string) => void;
-//   replace: (path: string) => void;
-//   back: () => void;
-//   forward: () => void;
-//   getCurrentPath: () => string;
-//   getComponent: () => Component | null;
-//   onRouteChange: (callback: (path: string) => void) => () => void;
-// }
+interface RouteOption {
+  path: string | RegExp;
+  component: Component;
+  props?: Props;
+}
 
-// export function createRouter(routes: RouteOption[]): Router {
-//   const listeners = new Set<(path: string) => void>();
+interface Router {
+  push: (path: string) => void;
+  replace: (path: string) => void;
+  back: () => void;
+  forward: () => void;
+  getCurrentPath: () => string;
+  getComponent: () => { component: Component, props: RouteOption['props'] };
+  onRouteChange: (callback: (path: string) => void) => () => void;
+}
 
-//   const findRoute = function (path: string): RouteOption | undefined {
-//     return routes.find((route) => {
-//       if (typeof route.path === 'string') {
-//         return route.path === path
-//       }
-//       return route.path.test(path);
-//     });
-//   };
+export function createRouter(routes: RouteOption[]): Router {
+  const listeners = new Set<(path: string) => void>();
 
-//   const notifyListeners = function () {
-//     const currentPath = getCurrentPath();
-//     listeners.forEach((fn) => fn(currentPath));
-//   };
+  const findRoute = function (path: string): RouteOption | undefined {
+    return routes.find((route) => {
+      if (typeof route.path === 'string') {
+        return route.path === path
+      }
+      return route.path.test(path);
+    });
+  };
 
-//   const getCurrentPath = function () {
-//     return window.location.pathname;
-//   };
+  const notifyListeners = function () {
+    const currentPath = getCurrentPath();
+    listeners.forEach((fn) => fn(currentPath));
+  };
 
-//   const getComponent = function (): Component | null {
-//     const currentPath = getCurrentPath();
-//     const route = findRoute(currentPath);
-//     return route?.component ?? null;
-//   };
+  const getCurrentPath = function () {
+    return window.location.pathname;
+  };
 
-//   const push = function (path: string) {
-//     window.history.pushState(null, '', path);
-//     notifyListeners();
-//   };
+  const getComponent = function () {
+    const currentPath = getCurrentPath();
+    const route = findRoute(currentPath);
+    return {
+      component: route?.component ?? (() => html``),
+      props: route?.props,
+    }
+  };
 
-//   const replace = function (path: string) {
-//     window.history.replaceState(null, '', path);
-//     notifyListeners();
-//   };
+  const push = function (path: string) {
+    window.history.pushState(null, '', path);
 
-//   const back = function () {
-//     window.history.back();
-//   };
+    const root = rootElement;
+    if (root) {
+      const { component, props } = getComponent();
+      root.replaceChildren();
 
-//   const forward = function () {
-//     window.history.forward();
-//   };
+      const getInstance = createComponent(component, { props });
+      const instance = getInstance(0);
+      instance.render(root);
+    }
 
-//   const onRouteChange = function (callback: (path: string) => void) {
-//     listeners.add(callback);
-//     return () => {
-//       listeners.delete(callback);
-//     };
-//   };
+    notifyListeners();
+  };
 
-//   window.addEventListener('popstate', notifyListeners);
+  const replace = function (path: string) {
+    window.history.replaceState(null, '', path);
+    notifyListeners();
+  };
 
-//   return {
-//     push,
-//     replace,
-//     back,
-//     forward,
-//     getCurrentPath,
-//     getComponent,
-//     onRouteChange,
-//   };
-// }
+  const back = function () {
+    window.history.back();
+  };
 
-// export function useRouter() {
-// }
+  const forward = function () {
+    window.history.forward();
+  };
 
-// export function EnrollRouter(router: Router) {
-//   contextProvider.setContext(router, router);
-//   return router.getComponent();
-// }
+  const onRouteChange = function (callback: (path: string) => void) {
+    listeners.add(callback);
+    return () => {
+      listeners.delete(callback);
+    };
+  };
 
-// type RequireKeys<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, K>;
+  window.addEventListener('popstate', notifyListeners);
 
-// type AnchorWithHref =
-//   RequireKeys<Partial<HTMLAnchorElement>, "href">;
+  return {
+    push,
+    replace,
+    back,
+    forward,
+    getCurrentPath,
+    getComponent,
+    onRouteChange,
+  };
+}
 
-// export function Link(attr: AnchorWithHref, children: Component) {
-//   const router = useRouter() as unknown as Router;
+const routerContext = createContext<null | Router>(null);
 
-//   const onClick = (e: MouseEvent) => {
-//     e.preventDefault();
-//     router.push(attr.href);
-//   };
+export function useRouter() {
+  const router = context(routerContext);
+  return router;
+}
 
-//   return html`
-//     <a href="${attr.href}" @click=${onClick}>
-//       ${createComponent(children)}
-//     </a>
-//   `;
-// }
+export function RouteProvider(router: Router) {
+  return function RouteProviderImpl () {
+    // @ts-ignore
+    rootElement = RouteProviderImpl.rootElement;
+    const targetComponent = router.getComponent();
+    return routerContext.provider({
+      value: router,
+      children: targetComponent.component,
+    });
+  }
+}
+
+type RequireKeys<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, K>;
+
+type AnchorWithHref =
+  RequireKeys<Partial<HTMLAnchorElement>, "href">;
+
+interface LinkComponentProps {
+  children: Component | RenderResult;
+  attr: AnchorWithHref
+}
+function LinkComponent({ children, attr }: LinkComponentProps) {
+  const router = useRouter();
+  if (!router) {
+    throw new Error('RouteProvider를 선언해야 합니다.');
+  }
+
+  const onClick = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push(attr.href);
+  };
+
+  return html`
+    <a href="${attr.href}" @click=${onClick}>
+      ${isRenderResultObject(children) ? children : createComponent(children)}
+    </a>
+  `;
+}
+
+export function Link(children: Component | RenderResult, attr: AnchorWithHref) {
+  return createComponent(LinkComponent, {
+    props: {
+      children,
+      attr,
+    }
+  });
+}

@@ -9,7 +9,7 @@ export type RenderResult = {
   values: any[];
 };
 
-export type Component<P = any> = (props: P) => RenderResult;
+export type Component<P = any> = (props?: P) => RenderResult;
 
 export interface Context<T> {
   provider: ({ value, children }: {

@@ -1,3 +1,5 @@
+import type { RenderResult } from "./types";
+
 export function isPrimitive(value: unknown) {
   return value === null || (typeof value !== 'object' && typeof value !== 'function');
 }
@@ -32,4 +34,17 @@ export function Component(tagName: string) {
       customElements.define(tagName, constructor);
     }
   };
+}
+
+export function isRenderResultObject(obj: any): obj is RenderResult {
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
+    typeof obj.template === 'string' &&
+    Array.isArray(obj.values)
+  );
+}
+
+export function isEmpty<T extends Record<string, any>>(obj: T) {
+  return Object.keys(obj).length <= 0;
 }

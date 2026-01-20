@@ -18,6 +18,8 @@ export function rootRender<P extends Props>(
     throw new Error('컴포넌트가 없습니다.');
   }
 
+  // @ts-ignore
+  component.rootElement = container;
   const getInstance = createComponent(component, {
     props: options?.props,
   });

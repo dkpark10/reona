@@ -1,15 +1,6 @@
 import type { RenderResult, Props } from '../utils/types';
-import { isEmpty } from '../../../shared';
+import { isRenderResultObject, isEmpty } from '../utils';
 import ComponentInstance from './component-instance';
-
-export function isRenderResultObject(obj: any): obj is RenderResult {
-  return (
-    obj !== null &&
-    typeof obj === 'object' &&
-    typeof obj.template === 'string' &&
-    Array.isArray(obj.values)
-  );
-}
 
 export type VTextNode = {
   type: 'text';

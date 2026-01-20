@@ -103,7 +103,9 @@ export default class ComponentInstance {
     this.prevVnodeTree = parser.parse();
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
-    parentElement.insertBefore(this.currentDom, null);
+    if (this.currentDom) {
+      parentElement.insertBefore(this.currentDom, null);
+    }
 
     this.runWatchProps();
     this.runMount();
@@ -188,6 +190,10 @@ export default class ComponentInstance {
           fn();
         }
         instanceMap.get(instance.component)?.delete(instance.key);
+        if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
+          instanceMap.delete(instance.component);
+        }
+
         mountHooks.delete(instance);
         unMountHooks.delete(instance);
         updatedHooks.delete(instance);
