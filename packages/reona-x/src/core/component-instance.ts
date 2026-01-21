@@ -19,6 +19,7 @@ if (NOT_PRODUCTION) {
   instanceMap = new WeakMap<Component, InstanceMapValue>();
 }
 
+/** @description 현재 렌더링 되고 있는 컴포넌트 */
 let currentInstance: ComponentInstance | null = null;
 export function getCurrentInstance() {
   return currentInstance;

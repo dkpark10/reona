@@ -1,0 +1,11 @@
+{
+  "name": "01-state",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "vite"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -39,13 +39,11 @@ importers:
         specifier: workspace:*
         version: link:../packages/reona-x
 
-  fixture:
-    dependencies:
-      reona-x:
-        specifier: workspace:*
-        version: link:../packages/reona-x
+  fixture: {}
 
   packages/reona-x: {}
+
+  track/01-state: {}
 
 packages:
 
