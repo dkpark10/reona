@@ -14,8 +14,6 @@ function checkInvalidHook(currentInstance) {
   }
 }
 
-const states = new WeakMap();
-
 export function state(initial) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
@@ -24,16 +22,9 @@ export function state(initial) {
 
   checkInvalidHook(currentInstance);
 
-  let stateList = states.get(currentInstance);
-  if (!stateList) {
-    stateList = [];
-    states.set(currentInstance, stateList);
-  }
-
   const stateIndex = currentInstance.stateHookIndex++;
-
-  if (stateList[stateIndex]) {
-    return stateList[stateIndex];
+  if (currentInstance.states[stateIndex]) {
+    return currentInstance.states[stateIndex];
   }
 
   if (initial && isPrimitive(initial)) {
@@ -55,6 +46,6 @@ export function state(initial) {
       return result;
     },
   });
-  stateList[stateIndex] = data;
+  currentInstance.states[stateIndex] = data;
   return data;
 }

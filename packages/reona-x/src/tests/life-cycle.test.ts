@@ -1,13 +1,7 @@
 import { beforeEach, afterEach, vi, expect, test, describe } from 'vitest';
 import { mounted, state, html, createComponent, rootRender, updated } from '../core';
-import {
-  mountHooks,
-  unMountHooks,
-  updatedHooks,
-  getInstanceMap,
-  watchPropsHooks,
-} from '../core/component-instance';
-import { ref, states, watchProps, refs } from '../core/hooks';
+import { getInstanceMap } from '../core/component-instance';
+import { ref, watchProps } from '../core/hooks';
 import { flushRaf } from './utils';
 import { createKey } from '../../../shared';
 
@@ -54,7 +48,7 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
     expect(mountFn).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(instance)).toBeUndefined();
+    expect(instance.mountHooks).toBeNull();
   });
 
   test('마운트 훅의 개수만큼 실행이 되야 하고 마운트 직후 마운트훅 맵을 클리어 한다.', async () => {
@@ -76,7 +70,7 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(mountFn2).toHaveBeenCalledOnce();
     expect(mountFn3).toHaveBeenCalledOnce();
 
-    expect(mountHooks.get(instance)).toBeUndefined();
+    expect(instance.mountHooks).toBeNull();
   });
 
   test('업데이트 훅 실행을 테스트 한다.', async () => {
@@ -174,7 +168,7 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(unMountFn1).toHaveBeenCalledOnce();
     expect(unMountFn2).toHaveBeenCalledOnce();
     expect(unMountFn3).toHaveBeenCalledOnce();
-    expect(unMountHooks.get(instance!)).toBeUndefined();
+    expect(instance?.unMountHooks).toBeNull();
   });
 
   test('조건부 렌더링에 따른 마운트, 언마운트 훅을 테스트를 한다.', async () => {
@@ -319,11 +313,12 @@ describe('라이프 사이클 훅 테스트', () => {
     const instanceMap = getInstanceMap();
     const instance = instanceMap.get(Child)?.get(createKey(1));
 
-    expect(states.get(instance!)).toBeUndefined();
-    expect(unMountHooks.get(instance!)).toBeUndefined();
-    expect(updatedHooks.get(instance!)).toBeUndefined();
-    expect(mountHooks.get(instance!)).toBeUndefined();
-    expect(watchPropsHooks.get(instance!)).toBeUndefined();
-    expect(refs.get(instance!)).toBeUndefined();
+    expect(instance?.states).toBeUndefined();
+    expect(instance?.unMountHooks).toBeUndefined();
+    expect(instance?.updatedHooks).toBeUndefined();
+    expect(instance?.mountHooks).toBeUndefined();
+    expect(instance?.watchPropsHooks).toBeUndefined();
+    expect(instance?.refs).toBeUndefined();
+    expect(instance?.memoizedList).toBeUndefined();
   });
 });

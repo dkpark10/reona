@@ -1,5 +1,5 @@
 import type { Component, Props, Data } from '../utils/types';
-import Parser, { type VNode } from './parser';
+import parse, { type VNode } from './parser';
 import { reconcile } from '../experimental/reconcile';
 import { createDOM } from './runtime-dom';
 
@@ -25,18 +25,6 @@ export function getCurrentInstance() {
   return currentInstance;
 }
 
-export const mountHooks = new WeakMap<ComponentInstance, Array<() => void | (() => () => void)>>();
-export const unMountHooks = new WeakMap<ComponentInstance, Array<() => void>>();
-export const updatedHooks = new WeakMap<
-  ComponentInstance,
-  Array<{
-    data: Data;
-    callback: (prev: Data) => void;
-    prevSnapshot: Data;
-  }>
->();
-export const watchPropsHooks = new WeakMap<ComponentInstance, Array<(prev: Props) => void>>();
-
 type ComponentInstanceOption = {
   key: string;
   sequence: number;
@@ -44,6 +32,23 @@ type ComponentInstanceOption = {
 
 /** @description 컴포넌트 인스턴스 - 상태, Props, 생명주기, VNode 트리, DOM 참조를 관리 */
 export default class ComponentInstance {
+  public states: Array<unknown> = [];
+  public mountHooks: Array<() => void | (() => () => void)> = [];
+  public unMountHooks: Array<() => void> = [];
+  public updatedHooks: Array<{
+    data: Data;
+    callback: (prev: Data) => void;
+    prevSnapshot: Data;
+  }> = [];
+  public watchPropsHooks: Array<(prev: Props) => void> = [];
+  public refs: Array<{ current: unknown }> = [];
+  public memoizedList: Array<{
+    data: unknown;
+    callback: () => unknown;
+    prevSnapshot: unknown;
+    cachedValue: unknown;
+  }> = [];
+
   public parentElement: Element;
 
   public component: Component;
@@ -98,10 +103,9 @@ export default class ComponentInstance {
 
     currentInstance = this;
     const template = this.component(this.nextProps);
-    const parser = new Parser(template, this.sequence + 1);
 
     this.parentElement = parentElement;
-    this.prevVnodeTree = parser.parse();
+    this.prevVnodeTree = parse(template, this.sequence + 1);
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
     if (this.currentDom) {
@@ -117,8 +121,7 @@ export default class ComponentInstance {
     currentInstance = this;
     const template = this.component(this.nextProps);
 
-    const parser = new Parser(template, this.sequence + 1);
-    this.nextVnodeTree = parser.parse();
+    this.nextVnodeTree = parse(template, this.sequence + 1);
 
     this.runUnmount();
     reconcile(this);
@@ -127,13 +130,10 @@ export default class ComponentInstance {
   }
 
   private runWatchProps() {
-    if (this.watchPropsTrigger) {
-      const dep = watchPropsHooks.get(this);
-      if (dep) {
-        for (const fn of dep) {
-          if (this.prevProps) {
-            fn(this.prevProps);
-          }
+    if (this.watchPropsTrigger && this.watchPropsHooks) {
+      for (const fn of this.watchPropsHooks) {
+        if (this.prevProps) {
+          fn(this.prevProps);
         }
       }
     }
@@ -144,37 +144,26 @@ export default class ComponentInstance {
   private runMount() {
     if (this.isMounted) return;
 
-    const mountDeps = mountHooks.get(this);
-    if (mountDeps) {
-      for (const fn of mountDeps) {
-        const cleanUp = fn();
-        if (typeof cleanUp === 'function') {
-          let unMountDeps = unMountHooks.get(this);
-          if (!unMountDeps) {
-            unMountDeps = [];
-            unMountHooks.set(this, unMountDeps);
-          }
-          unMountDeps.push(cleanUp);
-        }
+    for (const fn of this.mountHooks) {
+      const cleanUp = fn();
+      if (cleanUp && typeof cleanUp === 'function') {
+        this.unMountHooks!.push(cleanUp);
       }
     }
     this.isMounted = true;
     this.hookLimit = this.hookIndex;
-    mountHooks.delete(this);
+    (this.mountHooks as any) = null;
   }
 
   private runUpdate() {
-    const dep = updatedHooks.get(this);
-    if (dep) {
-      for (const hook of dep) {
-        if (!hook) continue;
-        const hasChanged = Object.keys(hook.data).some(
-          (key) => hook.data[key as keyof Data] !== hook.prevSnapshot[key as keyof Data]
-        );
-        if (hasChanged) {
-          hook.callback(hook.prevSnapshot);
-          hook.prevSnapshot = { ...hook.data };
-        }
+    for (const hook of this.updatedHooks) {
+      if (!hook) continue;
+      const hasChanged = Object.keys(hook.data).some(
+        (key) => hook.data[key as keyof Data] !== hook.prevSnapshot[key as keyof Data]
+      );
+      if (hasChanged) {
+        hook.callback(hook.prevSnapshot);
+        hook.prevSnapshot = { ...hook.data };
       }
     }
   }
@@ -185,20 +174,15 @@ export default class ComponentInstance {
 
     for (const instance of prevInstances) {
       if (!nextInstances.has(instance)) {
-        const dep = unMountHooks.get(instance);
-        if (!dep) continue;
-        for (const fn of dep) {
+        for (const fn of instance.unMountHooks) {
           fn();
         }
+        instance.cleanUp();
+
         instanceMap.get(instance.component)?.delete(instance.key);
         if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
           instanceMap.delete(instance.component);
         }
-
-        mountHooks.delete(instance);
-        unMountHooks.delete(instance);
-        updatedHooks.delete(instance);
-        watchPropsHooks.delete(instance);
       }
     }
   }
@@ -208,25 +192,26 @@ export default class ComponentInstance {
     instances.add(this);
 
     for (const instance of instances) {
-      const dep = unMountHooks.get(instance);
-      if (dep) {
-        for (const fn of dep) {
-          fn();
-        }
+      for (const fn of instance.unMountHooks) {
+        fn();
       }
 
       instanceMap.get(instance.component)?.delete(instance.key);
       if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
         instanceMap.delete(instance.component);
       }
-
-      mountHooks.delete(instance);
-      unMountHooks.delete(instance);
-      updatedHooks.delete(instance);
-      watchPropsHooks.delete(instance);
-
       instance.isMounted = false;
     }
+  }
+
+  public cleanUp() {
+    (this.states as any) = null;
+    (this.mountHooks as any) = null;
+    (this.unMountHooks as any) = null;
+    (this.updatedHooks as any) = null;
+    (this.watchPropsHooks as any) = null;
+    (this.refs as any) = null;
+    (this.memoizedList as any) = null;
   }
 
   private collectInstances(

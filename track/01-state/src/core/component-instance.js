@@ -1,4 +1,4 @@
-import Parser from './parser';
+import parse from './parser';
 import { createDOM } from './runtime-dom';
 
 /** @description 현재 렌더링 되고 있는 컴포넌트 */
@@ -9,6 +9,9 @@ export function getCurrentInstance() {
 
 /** @description 컴포넌트 인스턴스 - 상태, Props, 생명주기, VNode 트리, DOM 참조를 관리 */
 export default class ComponentInstance {
+  /** @type {Array<unknown>} */
+  states = [];
+
   /** @type {HTMLElement | null} */
   parentElement;
 
@@ -51,10 +54,9 @@ export default class ComponentInstance {
     /** @description 현재 렌더링 되고 있는 컴포넌트를 할당 */
     currentInstance = this;
     const template = this.component();
-    const parser = new Parser(template, this.sequence + 1);
 
     this.parentElement = parentElement;
-    this.prevVnodeTree = parser.parse();
+    this.prevVnodeTree = parse(template, this.sequence + 1);
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
     parentElement.insertBefore(this.currentDom, null);
@@ -65,8 +67,7 @@ export default class ComponentInstance {
     currentInstance = this;
     const template = this.component();
 
-    const parser = new Parser(template, this.sequence + 1);
-    this.nextVnodeTree = parser.parse();
+    this.nextVnodeTree = parse(template, this.sequence + 1);
 
     const newDom = createDOM(this.nextVnodeTree, this.parentElement);
     this.currentDom.replaceWith(newDom);

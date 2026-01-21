@@ -1,12 +1,6 @@
 import type { Props, Data, Context } from '../utils/types';
 import { isPrimitive } from '../../../shared';
-import ComponentInstance, {
-  getCurrentInstance,
-  mountHooks,
-  unMountHooks,
-  updatedHooks,
-  watchPropsHooks,
-} from './component-instance';
+import ComponentInstance, { getCurrentInstance } from './component-instance';
 import { update } from './renderer';
 
 function checkInvalidHook(currentInstance: ComponentInstance) {
@@ -19,8 +13,6 @@ function checkInvalidHook(currentInstance: ComponentInstance) {
   }
 }
 
-export const states = new WeakMap<ComponentInstance, Array<Record<string, any>>>();
-
 export function state<D extends Data>(initial: D) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
@@ -29,16 +21,9 @@ export function state<D extends Data>(initial: D) {
 
   checkInvalidHook(currentInstance);
 
-  let stateList = states.get(currentInstance);
-  if (!stateList) {
-    stateList = [];
-    states.set(currentInstance, stateList);
-  }
-
   const stateIndex = currentInstance.stateHookIndex++;
-
-  if (stateList[stateIndex]) {
-    return stateList[stateIndex] as D;
+  if (currentInstance.states[stateIndex]) {
+    return currentInstance.states[stateIndex] as D;
   }
 
   if (initial && isPrimitive(initial)) {
@@ -60,7 +45,8 @@ export function state<D extends Data>(initial: D) {
       return result;
     },
   });
-  stateList[stateIndex] = data;
+
+  currentInstance.states[stateIndex] = data;
   return data as D;
 }
 
@@ -82,12 +68,7 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
   }
 
   const unSubscribe = subscribe(currentInstance);
-  let dep = unMountHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    unMountHooks.set(currentInstance, dep);
-  }
-  dep.push(unSubscribe);
+  currentInstance.unMountHooks.push(unSubscribe);
   return data;
 }
 
@@ -101,13 +82,7 @@ export function mounted(callback: () => void) {
   if (currentInstance.isMounted) {
     return;
   }
-
-  let dep = mountHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    mountHooks.set(currentInstance, dep);
-  }
-  dep.push(callback);
+  currentInstance.mountHooks.push(callback);
 }
 
 export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
@@ -118,12 +93,7 @@ export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
 
   checkInvalidHook(currentInstance);
 
-  let dep = updatedHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    updatedHooks.set(currentInstance, dep);
-  }
-
+  const dep = currentInstance.updatedHooks;
   const index = currentInstance.updatedHookIndex++;
 
   if (!dep[index]) {
@@ -145,17 +115,9 @@ export function watchProps<P extends Props>(callback: (prev: P) => void) {
 
   checkInvalidHook(currentInstance);
 
-  let dep = watchPropsHooks.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    watchPropsHooks.set(currentInstance, dep);
-  }
-
   const index = currentInstance.watchPropsHookIndex++;
-  dep[index] = callback as (prev: Props) => void;
+  currentInstance.watchPropsHooks[index] = callback as (prev: Props) => void;
 }
-
-export const refs = new WeakMap<ComponentInstance, Array<{ current: unknown }>>();
 
 export function ref<Data>(initial: Data) {
   const currentInstance = getCurrentInstance();
@@ -165,23 +127,18 @@ export function ref<Data>(initial: Data) {
 
   checkInvalidHook(currentInstance);
 
-  let refList = refs.get(currentInstance);
-  if (!refList) {
-    refList = [];
-    refs.set(currentInstance, refList);
-  }
-
   const index = currentInstance.refHookIndex++;
+  const refs = currentInstance.refs;
 
-  if (refList[index]) {
-    return refList[index] as { current: Data };
+  if (refs[index]) {
+    return refs[index] as { current: Data };
   }
 
-  refList[index] = { current: initial };
-  return refList[index] as { current: Data };
+  refs[index] = { current: initial };
+  return refs[index] as { current: Data };
 }
 
-export const setRef = function <D extends { current: unknown }>(ref: D) {
+export function setRef<D extends { current: unknown }>(ref: D) {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
     throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
@@ -192,16 +149,6 @@ export const setRef = function <D extends { current: unknown }>(ref: D) {
   };
 };
 
-export const memoizedList = new WeakMap<
-  ComponentInstance,
-  Array<{
-    data: unknown;
-    callback: () => unknown;
-    prevSnapshot: unknown;
-    cachedValue: unknown;
-  }>
->();
-
 export function memo<D, R>(data: D, callback: () => R): R {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {
@@ -209,12 +156,6 @@ export function memo<D, R>(data: D, callback: () => R): R {
   }
 
   checkInvalidHook(currentInstance);
-
-  let dep = memoizedList.get(currentInstance);
-  if (!dep) {
-    dep = [];
-    memoizedList.set(currentInstance, dep);
-  }
 
   const index = currentInstance.memoHookIndex++;
 
@@ -229,6 +170,7 @@ export function memo<D, R>(data: D, callback: () => R): R {
     );
   };
 
+  const dep = currentInstance.memoizedList;
   if (!dep[index]) {
     const cachedValue = callback();
     dep[index] = {

@@ -36,4 +36,4 @@ const router = createRouter([
   },
 ]);
 
-rootRender(document.getElementById('root')!, RouteProvider(router));
+rootRender(document.getElementById('root')!, Condition);

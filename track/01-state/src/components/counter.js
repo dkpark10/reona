@@ -15,9 +15,9 @@ export default function Counter() {
 
   return html`
     <div id="app">
-      <button type="button" @click=${increase}>increase</button>
-      <button type="button" @click=${decrease}>decrease</button>
-      <div>${data.count}</div>
+      <button type="button" data-testid="increase" @click=${increase}>increase</button>
+      <button type="button" data-testid="decrease" @click=${decrease}>decrease</button>
+      <div id="value">${data.count}</div>
     </div>
   `;
 }

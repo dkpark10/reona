@@ -1,4 +1,4 @@
-import { expect, test, beforeEach, afterEach, describe, vi } from 'vitest';
+import { expect, test, beforeEach, afterEach } from 'vitest';
 import { rootRender } from '../core/runtime-dom';
 import App from '../components/parent';
 

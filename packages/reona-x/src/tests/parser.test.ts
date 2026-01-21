@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import Parser from '../core/parser';
+import parse from '../core/parser';
 import ComponentInstance from '../core/component-instance';
 import { html, createComponent } from '../core/component';
 
@@ -22,7 +22,7 @@ describe('파서 테스트', () => {
       </section>
     </div>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'div',
       children: [
@@ -106,7 +106,7 @@ describe('파서 테스트', () => {
 
     const template = html`<div id="app">${createComponent(Child, {})}</div>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'div',
       children: [{ type: 'component', instance: expect.any(ComponentInstance) }],
@@ -119,7 +119,7 @@ describe('파서 테스트', () => {
       ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
     </ul>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'ul',
       attr: { id: 'list' },
@@ -178,7 +178,7 @@ describe('파서 테스트', () => {
       </ul>
     </div>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'div',
       attr: { id: 'app' },
@@ -244,7 +244,7 @@ describe('파서 테스트', () => {
   test('속성에 동적 값이 존재할 시 테스트 한다.', () => {
     const template = html`<div class="${'c1'} ${'c2'} ${'c3'}" id="app ${'foo'} ${'bar'}">123</div>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'div',
       children: [{ type: 'text', value: '123' }],
@@ -258,7 +258,7 @@ describe('파서 테스트', () => {
   test('속성 이름 자체가 marker인 경우를 테스트 한다.', () => {
     const template = html`<input type="text" ${true ? 'checked' : ''}></input>`;
 
-    expect(new Parser(template).parse()).toEqual({
+    expect(parse(template)).toEqual({
       type: 'element',
       tag: 'input',
       children: [],
