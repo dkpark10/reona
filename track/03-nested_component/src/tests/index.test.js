@@ -14,14 +14,13 @@ afterEach(() => {
   }
 });
 
-test('컴포넌트는 재사용할 수 있어야 한다.', () => {
+test('조건부 렌더링에 따른 서로 다른 컴포넌트 인스턴스를 렌더링 해야 한다.', async () => {
   rootRender(document.getElementById('root'), App);
-  expect(document.querySelector('ul')?.children).toHaveLength(3);
+  expect(document.getElementById('child1')).toBeInTheDocument();
 
   document.querySelector('button').click();
-  const liList = document.querySelector('ul')?.children;
-  expect(liList).toHaveLength(3);
-  expect(liList[0].textContent).toBe('2');
-  expect(liList[1].textContent).toBe('3');
-  expect(liList[2].textContent).toBe('4');
+  expect(document.getElementById('child2')).toBeInTheDocument();
+
+  document.querySelector('button').click();
+  expect(document.getElementById('child1')).toBeInTheDocument();
 });

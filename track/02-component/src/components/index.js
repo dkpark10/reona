@@ -1,7 +1,7 @@
 import { html, state, createComponent } from '../core';
 import Child from './child';
 
-export default function Counter() {
+export default function App() {
   const data = state({
     count: 0,
   });

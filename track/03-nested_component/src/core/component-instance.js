@@ -2,14 +2,14 @@ import parse from './parser';
 import { createDOM } from './runtime-dom';
 
 /**
- * @typedef {Map<number, ComponentInstance>} InstanceMap
+ * @typedef {Map<number, ComponentInstance>} InstanceMapValue
  */
 
 /** 
  * @description 마운트 되고 있는 컴포넌트 리스트
- * @type {InstanceMap}
+ * @type {WeakMap<Function, InstanceMapValue>}
  */
-const instanceMap = new Map();
+const instanceMap = new WeakMap();
 export function getInstanceMap() {
   return instanceMap;
 }

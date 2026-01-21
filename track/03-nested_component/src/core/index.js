@@ -20,21 +20,23 @@ function html(strings, ...values) {
  */
 
 /**
- * @param {import('./parser').RenderResult} component 
+ * @param {() => import('./parser').RenderResult} component 
  * @param {ComponentOption} param1 
  */
 function createComponent(component, options) {
   const instanceMap = getInstanceMap();
 
-  /**
-   * @param {number} sequence 
-   * sequence를 key로서 사용
-   */
   const func = function getInstance(sequence) {
-    let instance = instanceMap.get(sequence);
+    let instanceDeps = instanceMap.get(component);
+    if (!instanceDeps) {
+      instanceDeps = new Map();
+    }
+
+    let instance = instanceDeps.get(sequence);
     if (!instance) {
       instance = new ComponentInstance(component, sequence);
-      instanceMap.set(sequence, instance);
+      instanceDeps.set(sequence, instance);
+      instanceMap.set(component, instanceDeps);
     }
 
     if (options && options.props) {
