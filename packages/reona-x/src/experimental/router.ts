@@ -32,7 +32,7 @@ export interface Router {
   forward: () => void;
   getCurrentPath: () => string;
   getParams: () => Params;
-  getComponent: () => { component: Component, props: Props };
+  getComponent: () => { component: Component; props: Props };
   onRouteChange: (callback: (path: string) => void) => () => void;
   beforeEach: (guard: BeforeGuard) => () => void;
 }
@@ -102,7 +102,7 @@ export function createRouter(routes: RouteOption[]): Router {
     return window.location.pathname;
   };
 
-  const getComponent = function (): { component: Component, props: Props } {
+  const getComponent = function (): { component: Component; props: Props } {
     const currentPath = getCurrentPath();
     const match = findRoute(currentPath);
 
@@ -123,7 +123,8 @@ export function createRouter(routes: RouteOption[]): Router {
 
   const renderRoute = function () {
     currentMatchedInstance?.hookHandler.unmountAll(
-      currentMatchedInstance.prevVnodeTree, currentMatchedInstance
+      currentMatchedInstance.prevVnodeTree,
+      currentMatchedInstance
     );
 
     const root = rootElement;
@@ -296,17 +297,16 @@ export function RouteProvider(router: Router) {
       value: router,
       children: targetComponent.component,
     });
-  }
+  };
 }
 
 type RequireKeys<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T, K>;
 
-type AnchorWithHref =
-  RequireKeys<Partial<HTMLAnchorElement>, "href">;
+type AnchorWithHref = RequireKeys<Partial<HTMLAnchorElement>, 'href'>;
 
 interface LinkComponentProps {
   children: Component | RenderResult;
-  attr: AnchorWithHref
+  attr: AnchorWithHref;
 }
 function LinkComponent({ children, attr }: LinkComponentProps) {
   const router = useRouter();
@@ -331,6 +331,6 @@ export function Link(children: Component | RenderResult, attr: AnchorWithHref) {
     props: {
       children,
       attr,
-    }
+    },
   });
 }

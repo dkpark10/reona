@@ -154,7 +154,7 @@ export function setRef<D extends { current: unknown }>(ref: D) {
   return function (value: unknown) {
     ref.current = value;
   };
-};
+}
 
 export function memo<D, R>(data: D, callback: () => R): R {
   const currentInstance = getCurrentInstance();

@@ -5,6 +5,7 @@ import Counter from './counter';
 import Refs from './refs';
 import Store from './store';
 import ContextApp from './context';
+import Todo from './todo';
 
 export {
   Nested,
@@ -14,4 +15,5 @@ export {
   Refs,
   Store,
   ContextApp,
+  Todo,
 };

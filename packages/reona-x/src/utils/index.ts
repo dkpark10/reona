@@ -1,4 +1,4 @@
-import type { RenderResult } from "./types";
+import type { RenderResult } from './types';
 
 export function isPrimitive(value: unknown) {
   return value === null || (typeof value !== 'object' && typeof value !== 'function');

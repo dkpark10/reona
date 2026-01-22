@@ -34,8 +34,7 @@ export default class HookHandler {
   public refHookIndex = 0;
   public memoHookIndex = 0;
 
-  constructor() {
-  }
+  constructor() {}
 
   public hookIndexInitialize() {
     this.stateHookIndex = 0;
@@ -95,7 +94,7 @@ export default class HookHandler {
         instance.hookHandler.cleanUp();
 
         const instanceMap = getInstanceMap();
-        instanceMap.get(instance.component)?.delete(instance.key);
+        instanceMap.get(instance.component)?.delete(instance.sequence);
         if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
           instanceMap.delete(instance.component);
         }
@@ -113,7 +112,7 @@ export default class HookHandler {
       }
 
       const instanceMap = getInstanceMap();
-      instanceMap.get(instance.component)?.delete(instance.key);
+      instanceMap.get(instance.component)?.delete(instance.sequence);
       if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
         instanceMap.delete(instance.component);
       }

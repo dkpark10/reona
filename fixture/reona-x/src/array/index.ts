@@ -18,6 +18,7 @@ export default function Array() {
             props: {
               value: item,
             },
+            key: item,
           }))}
         </ul>
         <ul>

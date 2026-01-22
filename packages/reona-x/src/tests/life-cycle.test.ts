@@ -3,7 +3,6 @@ import { mounted, state, html, createComponent, rootRender, updated } from '../c
 import { getInstanceMap } from '../core/component-instance';
 import { ref, watchProps } from '../core/hooks';
 import { flushRaf } from './utils';
-import { createKey } from '../../../shared';
 
 beforeEach(() => {
   const div = document.createElement('div');
@@ -160,7 +159,7 @@ describe('라이프 사이클 훅 테스트', () => {
     rootRender(document.getElementById('root')!, Component);
 
     const instanceMap = getInstanceMap();
-    const instance = instanceMap.get(Child)?.get(createKey(1));
+    const instance = instanceMap.get(Child)?.get(1);
 
     document.querySelector('button')?.click();
 
@@ -311,7 +310,7 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
 
     const instanceMap = getInstanceMap();
-    const instance = instanceMap.get(Child)?.get(createKey(1));
+    const instance = instanceMap.get(Child)?.get(1);
 
     expect(instance?.hookHandler.states).toBeUndefined();
     expect(instance?.hookHandler.unMountHooks).toBeUndefined();

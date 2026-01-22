@@ -171,6 +171,12 @@ export function reconcile(instance: ComponentInstance) {
       batchReplace(instance);
       return;
     }
+
+    // key 가 존재 하고 둘 다 다를 시
+    if (prevVnodeTree.attr?.key !== nextVnodeTree.attr?.key) {
+      batchReplace(instance);
+      return;
+    }
   }
 
   const newDom = recursiveDiff(
@@ -234,15 +240,19 @@ function recursiveDiff(
     return null;
   }
 
-  const prevLen = prev.children.length;
   const nextLen = next.children.length;
+  const prevLen = prev.children.length;
 
+  // 삭제된 요소의 경우
   if (prevLen > nextLen) {
-    let gap = prevLen - nextLen;
-    while (currentElement?.lastElementChild && gap) {
-      currentElement.lastElementChild.remove();
-      gap--;
-    }
+    const indicesToRemove = findRemoveElement(next, prev);
+
+    indicesToRemove.forEach((index) => {
+      const childToRemove = currentElement?.childNodes[index];
+      if (childToRemove) {
+        currentElement?.removeChild(childToRemove);
+      }
+    });
   }
 
   const fragment = document.createDocumentFragment();
@@ -305,4 +315,40 @@ function batchReplace(instance: ComponentInstance) {
 
   instance.prevVnodeTree = instance.nextVnodeTree;
   instance.currentDom = dom;
+}
+
+function findRemoveElement(nextVnode: VElementNode, prevVnode: VElementNode): number[] {
+  const nextChildren = nextVnode.children || [];
+  const prevChildren = prevVnode.children || [];
+
+  const nextKeySet = new Set<string | number>();
+  nextChildren.forEach((child) => {
+    if (child.type === 'element' && child.attr?.key !== undefined) {
+      nextKeySet.add(child.attr.key);
+    }
+
+    if (child.type === 'component' && child.key !== undefined) {
+      nextKeySet.add(child.key);
+    }
+  });
+
+  const result: number[] = [];
+
+  for (let i = prevChildren.length - 1; i >= 0; i--) {
+    const child = prevChildren[i];
+
+    // key가 있는 경우: key 기반 비교
+    if (child.type === 'element' && child.attr?.key !== undefined) {
+      if (!nextKeySet.has(child.attr.key)) {
+        result.push(i);
+      }
+    }
+
+    if (child.type === 'component' && child.key !== undefined) {
+      if (!nextKeySet.has(child.key)) {
+        result.push(i);
+      }
+    }
+  }
+  return result;
 }

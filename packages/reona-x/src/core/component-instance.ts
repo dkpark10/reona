@@ -5,7 +5,7 @@ import { createDOM } from './runtime-dom';
 import HookHandler from './hook-handler';
 
 /** @description 전역 컴포넌트 관리 map */
-type InstanceMapValue = Map<string, ComponentInstance>;
+type InstanceMapValue = Map<number, ComponentInstance>;
 let instanceMap: Map<Component, InstanceMapValue>;
 export function getInstanceMap() {
   return instanceMap;
@@ -27,13 +27,13 @@ export function getCurrentInstance() {
 }
 
 type ComponentInstanceOption = {
-  key: string;
   sequence: number;
+  key?: string | number;
 };
 
 /** @description 컴포넌트 인스턴스 - 상태, Props, 생명주기, VNode 트리, DOM 참조를 관리 */
 export default class ComponentInstance {
-  public hookHandler: HookHandler
+  public hookHandler: HookHandler;
 
   public parentElement: Element;
 
@@ -45,9 +45,9 @@ export default class ComponentInstance {
 
   public currentDom: HTMLElement;
 
-  public key: string;
-
   public sequence: number;
+
+  public key?: string | number;
 
   public nextProps?: Props;
 
@@ -78,8 +78,7 @@ export default class ComponentInstance {
     }
 
     this.hookHandler.runWatchProps(this.prevProps);
-    this.prevProps = this.nextProps,
-    this.hookHandler.runMount();
+    ((this.prevProps = this.nextProps), this.hookHandler.runMount());
   }
 
   public reRender() {
@@ -92,7 +91,6 @@ export default class ComponentInstance {
     this.hookHandler.runUnmount(this.prevVnodeTree, this.nextVnodeTree);
     reconcile(this);
     this.hookHandler.runWatchProps(this.prevProps);
-    this.prevProps = this.nextProps,
-    this.hookHandler.runUpdate();
+    ((this.prevProps = this.nextProps), this.hookHandler.runUpdate());
   }
 }

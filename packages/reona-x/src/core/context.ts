@@ -1,22 +1,12 @@
-import type { Component, RenderResult } from "../utils/types";
-import { createComponent, html } from "./component";
-
-function isRenderResultObject(obj: any): obj is RenderResult {
-  return (
-    obj !== null &&
-    typeof obj === 'object' &&
-    typeof obj.template === 'string' &&
-    Array.isArray(obj.values)
-  );
-}
+import type { Component, RenderResult } from '../utils/types';
+import { createComponent, html } from './component';
+import { isRenderResultObject } from '../utils';
 
 export function createContext<T extends unknown>(defaultValue: T) {
   let ctxData = defaultValue;
   let isProvided = false;
 
-  function provider({ value, children }: {
-    value?: T, children: Component | RenderResult;
-  }) {
+  function provider({ value, children }: { value?: T; children: Component | RenderResult }) {
     if (value) {
       ctxData = value;
     }
@@ -24,7 +14,7 @@ export function createContext<T extends unknown>(defaultValue: T) {
     if (isRenderResultObject(children)) {
       return children;
     }
-    return html`${createComponent(children)}`
+    return html`${createComponent(children)}`;
   }
 
   function getContextData() {
@@ -37,5 +27,5 @@ export function createContext<T extends unknown>(defaultValue: T) {
   return {
     provider,
     getContextData,
-  }
-};
+  };
+}

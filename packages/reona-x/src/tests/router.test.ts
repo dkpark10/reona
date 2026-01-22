@@ -1,6 +1,12 @@
 import { vi, expect, test, beforeEach, afterEach, describe } from 'vitest';
 import { html, rootRender, type Router } from '../core';
-import { createRouter, RouteProvider, useParams, useQueryString, Link } from '../experimental/router';
+import {
+  createRouter,
+  RouteProvider,
+  useParams,
+  useQueryString,
+  Link,
+} from '../experimental/router';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -65,9 +71,7 @@ describe('라우터 테스트', () => {
     let capturedParams: Record<string, string> = {};
     function Post() {
       return html`
-        <div id="post">
-          ${Link(html`<div>dynamic post</div>`, { href: '/post/456' })}
-        </div>
+        <div id="post">${Link(html`<div>dynamic post</div>`, { href: '/post/456' })}</div>
       `;
     }
 
@@ -80,9 +84,7 @@ describe('라우터 테스트', () => {
       {
         path: '/post',
         component: Post,
-        children: [
-          { path: '/:id', component: Article },
-        ],
+        children: [{ path: '/:id', component: Article }],
       },
     ]);
     // /post 매칭
@@ -105,9 +107,7 @@ describe('라우터 테스트', () => {
       return html`<div id="article">${capturedParams.category} - ${capturedParams.id}</div>`;
     }
 
-    const router = createRouter([
-      { path: '/post/:category/:id', component: Article },
-    ]);
+    const router = createRouter([{ path: '/post/:category/:id', component: Article }]);
 
     window.history.replaceState(null, '', '/post/tech/999');
     rootRenderImpl(router);
@@ -123,9 +123,7 @@ describe('라우터 테스트', () => {
       return html`<div id="search">Search: ${capturedQuery.q}</div>`;
     }
 
-    const router = createRouter([
-      { path: '/search', component: Search },
-    ]);
+    const router = createRouter([{ path: '/search', component: Search }]);
 
     window.history.replaceState(null, '', '/search?q=hello&page=1');
     rootRenderImpl(router);
@@ -221,9 +219,7 @@ describe('라우터 테스트', () => {
       return html`<div id="home">Home</div>`;
     }
 
-    const router = createRouter([
-      { path: '/', component: Home },
-    ]);
+    const router = createRouter([{ path: '/', component: Home }]);
 
     window.history.replaceState(null, '', '/nonexistent');
 
@@ -237,9 +233,7 @@ describe('라우터 테스트', () => {
       return html`<div>Home</div>`;
     }
 
-    const router = createRouter([
-      { path: '/', component: Home },
-    ]);
+    const router = createRouter([{ path: '/', component: Home }]);
 
     window.history.replaceState(null, '', '/test/path');
 
@@ -414,9 +408,7 @@ describe('라우터 테스트', () => {
       {
         path: '/post',
         component: Post,
-        children: [
-          { path: '/:id', component: Article, beforeEnter: beforeEnterFn },
-        ],
+        children: [{ path: '/:id', component: Article, beforeEnter: beforeEnterFn }],
       },
     ]);
 

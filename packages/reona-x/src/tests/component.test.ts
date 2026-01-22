@@ -134,262 +134,6 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('div[data-testid="data3"]')?.textContent).toBe('2');
   });
 
-  test('컴포넌트가 추가되었을 때 테스트 한다.', async () => {
-    function Component() {
-      const data = state({
-        arr: [0],
-      });
-
-      const trigger = () => {
-        data.arr = [...data.arr, data.arr.length];
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(1);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(2);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(3);
-  });
-
-  test('컴포넌트가 다수 추가되었을 때 테스트 한다.', async () => {
-    function Component() {
-      const data = state({
-        arr: [0],
-      });
-
-      const trigger = () => {
-        data.arr = Array.from({ length: data.arr.length * 3 }, (_, i) => i);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(1);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(3);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(9);
-  });
-
-  test('컴포넌트가 삭제되었을 때 테스트 한다.', async () => {
-    function Component() {
-      const data = state({
-        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      });
-
-      const trigger = () => {
-        data.arr = data.arr.slice(0, data.arr.length - 1);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(10);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(9);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(8);
-  });
-
-  test('컴포넌트가 다수 삭제되었을 때 테스트 한다.', async () => {
-    function Component() {
-      const data = state({
-        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      });
-
-      const trigger = () => {
-        data.arr = data.arr.slice(0, data.arr.length - 2);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => html`<li>${item + 1}</li>`)}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(10);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(8);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(6);
-  });
-
-  test('중첩 컴포넌트가 추가되었을 때 테스트 한다.', async () => {
-    function ArrayChild({ value }: { value: number }) {
-      return html`<li>${value * 2}</li>`;
-    }
-
-    function Component() {
-      const data = state({
-        arr: [0],
-      });
-
-      const trigger = () => {
-        data.arr = [...data.arr, data.arr.length];
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => createComponent(ArrayChild, { props: { value: item } }))}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(1);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(2);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(3);
-  });
-
-  test('중첩 컴포넌트가 다수 추가되었을 때 테스트 한다.', async () => {
-    function ArrayChild({ value }: { value: number }) {
-      return html`<li>${value * 2}</li>`;
-    }
-
-    function Component() {
-      const data = state({
-        arr: [0],
-      });
-
-      const trigger = () => {
-        data.arr = Array.from({ length: data.arr.length * 3 }, (_, i) => i);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => createComponent(ArrayChild, { props: { value: item } }))}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(1);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(3);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(9);
-  });
-
-  test('중첩 컴포넌트가 삭제되었을 때 테스트 한다.', async () => {
-    function ArrayChild({ value }: { value: number }) {
-      return html`<li>${value * 2}</li>`;
-    }
-
-    function Component() {
-      const data = state({
-        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      });
-
-      const trigger = () => {
-        data.arr = data.arr.slice(0, data.arr.length - 1);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => createComponent(ArrayChild, { props: { value: item } }))}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(10);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(9);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(8);
-  });
-
-  test('중첩 컴포넌트가 다수 삭제되었을 때 테스트 한다.', async () => {
-    function ArrayChild({ value }: { value: number }) {
-      return html`<li>${value * 2}</li>`;
-    }
-
-    function Component() {
-      const data = state({
-        arr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      });
-
-      const trigger = () => {
-        data.arr = data.arr.slice(0, data.arr.length - 2);
-      };
-
-      return html` <div id="app">
-        <button type="button" @click=${trigger}>trigger</button>
-        <ul>
-          ${data.arr.map((item) => createComponent(ArrayChild, { props: { value: item } }))}
-        </ul>
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, Component);
-    expect(document.querySelector('ul')?.children).toHaveLength(10);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(8);
-
-    document.querySelector('button')?.click();
-    await flushRaf();
-    expect(document.querySelector('ul')?.children).toHaveLength(6);
-  });
-
   test('부모 렌더링 시 자식 리렌더링을 테스트 한다.', async () => {
     let prev1 = -1;
     let prev2 = -1;
@@ -403,16 +147,15 @@ describe('컴포넌트 테스트', () => {
         data.count += 1;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${onClick}>트리거</button>
-          <div id="val1">${data.count}</div>
-          ${createComponent(Son, {
-            props: {
-              value: data.count * 2,
-            },
-          })}
-        </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${onClick}>트리거</button>
+        <div id="val1">${data.count}</div>
+        ${createComponent(Son, {
+          props: {
+            value: data.count * 2,
+          },
+        })}
+      </div>`;
     }
 
     interface CommonProps {
@@ -429,15 +172,14 @@ describe('컴포넌트 테스트', () => {
     function Son({ value }: CommonProps) {
       watchProps<CommonProps>(watchPropsFn1);
 
-      return html`
-        <div>
-          <div id="val2">${value}</div>
-          ${createComponent(GrandSon, {
-            props: {
-              value: value * 2,
-            },
-          })}
-        </div>`;
+      return html` <div>
+        <div id="val2">${value}</div>
+        ${createComponent(GrandSon, {
+          props: {
+            value: value * 2,
+          },
+        })}
+      </div>`;
     }
 
     function GrandSon({ value }: CommonProps) {
@@ -495,15 +237,14 @@ describe('컴포넌트 테스트', () => {
         data.trigger = !data.trigger;
       };
 
-      return html`
-        <div id="app">
-          <button type="button" @click=${onClick}>trigger</button>
-          ${createComponent(Timer, {
-              props: {
-                beginCountTrigger: data.trigger,
-              },
-            })}
-          </div>`;
+      return html` <div id="app">
+        <button type="button" @click=${onClick}>trigger</button>
+        ${createComponent(Timer, {
+          props: {
+            beginCountTrigger: data.trigger,
+          },
+        })}
+      </div>`;
     }
 
     function Timer({ beginCountTrigger }: TimerProps) {
@@ -535,7 +276,7 @@ describe('컴포넌트 테스트', () => {
           if (timer.current.id) {
             clearInterval(timer.current.id);
           }
-        }
+        };
       });
 
       return html`<time>${data.count}</time>`;

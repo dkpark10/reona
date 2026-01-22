@@ -77,7 +77,7 @@ export default function Todo() {
         <ul class="todo-list">
           ${data.todos.map(
             (item) => html`
-              <li class="todo-item ${item.isFinished ? 'finished' : ''}">
+              <li key=${item.id} class="todo-item ${item.isFinished ? 'finished' : ''}">
                 <input
                   type="checkbox"
                   ${item.isFinished ? 'checked' : ''}

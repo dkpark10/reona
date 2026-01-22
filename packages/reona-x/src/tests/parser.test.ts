@@ -116,7 +116,7 @@ describe('파서 테스트', () => {
 
   test('배열 vdom 값을 테스트 한다.', () => {
     const template = html` <ul id="list">
-      ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
+      ${[1, 2, 3].map((item) => html`<li key=${item}>${item}</li>`)}
     </ul>`;
 
     expect(parse(template)).toEqual({
@@ -126,6 +126,7 @@ describe('파서 테스트', () => {
       children: [
         {
           type: 'element',
+          attr: { key: '1' },
           tag: 'li',
           children: [
             {
@@ -136,6 +137,7 @@ describe('파서 테스트', () => {
         },
         {
           type: 'element',
+          attr: { key: '2' },
           tag: 'li',
           children: [
             {
@@ -146,6 +148,7 @@ describe('파서 테스트', () => {
         },
         {
           type: 'element',
+          attr: { key: '3' },
           tag: 'li',
           children: [
             {
@@ -163,22 +166,24 @@ describe('파서 테스트', () => {
       return html`<li>${value}</li>`;
     }
 
-    const template = html` <div id="app">
-      <ul>
-        ${[1, 2, 3].map((item) =>
-          createComponent(Child, {
-            props: {
-              value: item,
-            },
-          })
-        )}
-      </ul>
-      <ul>
-        ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
-      </ul>
-    </div>`;
+    const template = html`
+      <div id="app">
+        <ul>
+          ${[1, 2, 3].map((item) =>
+            createComponent(Child, {
+              props: {
+                value: item,
+              },
+              key: item,
+            })
+          )}
+        </ul>
+        <ul>
+          ${[1, 2, 3].map((item) => html`<li key=${item}>${item}</li>`)}
+        </ul>
+      </div>`;
 
-    expect(parse(template)).toEqual({
+    expect(parse(template, 0)).toEqual({
       type: 'element',
       tag: 'div',
       attr: { id: 'app' },
@@ -189,14 +194,17 @@ describe('파서 테스트', () => {
           children: [
             {
               type: 'component',
+              key: 1,
               instance: expect.any(ComponentInstance),
             },
             {
               type: 'component',
+              key: 2,
               instance: expect.any(ComponentInstance),
             },
             {
               type: 'component',
+              key: 3,
               instance: expect.any(ComponentInstance),
             },
           ],
@@ -208,6 +216,7 @@ describe('파서 테스트', () => {
             {
               type: 'element',
               tag: 'li',
+              attr: { key: '1' },
               children: [
                 {
                   type: 'text',
@@ -217,6 +226,7 @@ describe('파서 테스트', () => {
             },
             {
               type: 'element',
+              attr: { key: '2' },
               tag: 'li',
               children: [
                 {
@@ -227,6 +237,7 @@ describe('파서 테스트', () => {
             },
             {
               type: 'element',
+              attr: { key: '3' },
               tag: 'li',
               children: [
                 {
@@ -239,6 +250,38 @@ describe('파서 테스트', () => {
         },
       ],
     });
+  });
+
+  test('배열 엘리먼트에 key가 없을 때 에러를 던져야 한다.', () => {
+    const template = html`
+      <div id="app">
+        <ul>
+          ${[1, 2, 3].map((item) => html`<li>${item}</li>`)}
+        </ul>
+      </div>`;
+
+    expect(() => parse(template)).toThrow();
+  });
+
+  test('배열 중첩 컴포넌트에 key가 없을 때 에러를 던져야 한다.', () => {
+    function Child({ value }: { value: number }) {
+      return html`<li>${value}</li>`;
+    }
+
+    const template = html`
+      <div id="app">
+        <ul>
+          ${[1, 2, 3].map((item) =>
+            createComponent(Child, {
+              props: {
+                value: item,
+              },
+            })
+          )}
+        </ul>
+      </div>`;
+
+    expect(() => parse(template)).toThrow();
   });
 
   test('속성에 동적 값이 존재할 시 테스트 한다.', () => {

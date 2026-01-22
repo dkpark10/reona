@@ -17,6 +17,7 @@ export type VElementNode = {
 export type VComponent = {
   type: 'component';
   instance: ComponentInstance;
+  key?: string | number;
 };
 
 export type VNode = VTextNode | VElementNode | VComponent;
@@ -39,7 +40,6 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
     }
 
     const attrs: Props = {};
-
     for (const attr of el.attributes) {
       const { values } = renderResult;
 
@@ -108,9 +108,9 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
           const value = values[valueIndex];
 
           // createComponent 반환 함수일 시
-          if (typeof value === 'function' && value.__isCreateComponent) {
+          if (isCreateComponentFunc(value)) {
             const getInstance = value as (sequence: number) => any;
-            const instance = getInstance(currentSequence!);
+            const instance = getInstance(currentSequence!) as ComponentInstance;
 
             currentSequence!++;
             valueIndex++;
@@ -118,6 +118,7 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
             return {
               type: 'component',
               instance,
+              key: instance.key,
             };
           }
 
@@ -131,16 +132,26 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
             const result = values[valueIndex++].map((value: any) => {
               if (isRenderResultObject(value)) {
                 const vdom = parse(value);
+
+                if (vdom.type === 'element' && vdom.attr?.key === undefined) {
+                  throw new Error('배열 엘리먼트의 key가 누락되었습니다.');
+                }
+
                 return vdom;
               }
               if (isCreateComponentFunc(value)) {
                 const getInstance = value;
-                const instance = getInstance(currentSequence!);
+                const instance = getInstance(currentSequence!) as ComponentInstance;
                 currentSequence!++;
+
+                if (instance.key === null || instance.key === undefined) {
+                  throw new Error('배열컴포넌트의 key가 누락되었습니다.');
+                }
 
                 return {
                   type: 'component',
                   instance,
+                  key: instance.key,
                 };
               }
             });
@@ -203,4 +214,4 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
   }
 
   return convertNode(template.content.firstElementChild!);
-};
+}
