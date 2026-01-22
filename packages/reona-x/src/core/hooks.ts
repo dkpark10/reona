@@ -4,12 +4,13 @@ import ComponentInstance, { getCurrentInstance } from './component-instance';
 import { update } from './renderer';
 
 function checkInvalidHook(currentInstance: ComponentInstance) {
-  if (currentInstance.isMounted && currentInstance.hookIndex > currentInstance.hookLimit) {
+  const hookHandler = currentInstance.hookHandler;
+  if (hookHandler.isMounted && hookHandler.hookIndex > hookHandler.hookLimit) {
     throw new Error('훅은 함수 최상단에 선언해야 합니다.');
   }
 
-  if (!currentInstance.isMounted) {
-    currentInstance.hookIndex += 1;
+  if (!hookHandler.isMounted) {
+    hookHandler.hookIndex += 1;
   }
 }
 
@@ -21,9 +22,10 @@ export function state<D extends Data>(initial: D) {
 
   checkInvalidHook(currentInstance);
 
-  const stateIndex = currentInstance.stateHookIndex++;
-  if (currentInstance.states[stateIndex]) {
-    return currentInstance.states[stateIndex] as D;
+  const hookHandler = currentInstance.hookHandler;
+  const stateIndex = hookHandler.stateHookIndex++;
+  if (hookHandler.states[stateIndex]) {
+    return hookHandler.states[stateIndex] as D;
   }
 
   if (initial && isPrimitive(initial)) {
@@ -46,7 +48,7 @@ export function state<D extends Data>(initial: D) {
     },
   });
 
-  currentInstance.states[stateIndex] = data;
+  hookHandler.states[stateIndex] = data;
   return data as D;
 }
 
@@ -63,12 +65,13 @@ export function store<D extends Data>(storeOption: StoreOption<D>) {
   }
 
   checkInvalidHook(currentInstance);
-  if (currentInstance.isMounted) {
+  const hookHandler = currentInstance.hookHandler;
+  if (hookHandler.isMounted) {
     return data;
   }
 
   const unSubscribe = subscribe(currentInstance);
-  currentInstance.unMountHooks.push(unSubscribe);
+  hookHandler.unMountHooks.push(unSubscribe);
   return data;
 }
 
@@ -79,10 +82,11 @@ export function mounted(callback: () => void) {
   }
 
   checkInvalidHook(currentInstance);
-  if (currentInstance.isMounted) {
+  const hookHandler = currentInstance.hookHandler;
+  if (hookHandler.isMounted) {
     return;
   }
-  currentInstance.mountHooks.push(callback);
+  hookHandler.mountHooks.push(callback);
 }
 
 export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
@@ -93,8 +97,9 @@ export function updated<D extends Data>(data: D, callback: (prev: D) => void) {
 
   checkInvalidHook(currentInstance);
 
-  const dep = currentInstance.updatedHooks;
-  const index = currentInstance.updatedHookIndex++;
+  const hookHandler = currentInstance.hookHandler;
+  const dep = hookHandler.updatedHooks;
+  const index = hookHandler.updatedHookIndex++;
 
   if (!dep[index]) {
     dep[index] = {
@@ -115,8 +120,9 @@ export function watchProps<P extends Props>(callback: (prev: P) => void) {
 
   checkInvalidHook(currentInstance);
 
-  const index = currentInstance.watchPropsHookIndex++;
-  currentInstance.watchPropsHooks[index] = callback as (prev: Props) => void;
+  const hookHandler = currentInstance.hookHandler;
+  const index = hookHandler.watchPropsHookIndex++;
+  hookHandler.watchPropsHooks[index] = callback as (prev: Props) => void;
 }
 
 export function ref<Data>(initial: Data) {
@@ -127,8 +133,9 @@ export function ref<Data>(initial: Data) {
 
   checkInvalidHook(currentInstance);
 
-  const index = currentInstance.refHookIndex++;
-  const refs = currentInstance.refs;
+  const hookHandler = currentInstance.hookHandler;
+  const index = hookHandler.refHookIndex++;
+  const refs = hookHandler.refs;
 
   if (refs[index]) {
     return refs[index] as { current: Data };
@@ -157,7 +164,8 @@ export function memo<D, R>(data: D, callback: () => R): R {
 
   checkInvalidHook(currentInstance);
 
-  const index = currentInstance.memoHookIndex++;
+  const hookHandler = currentInstance.hookHandler;
+  const index = hookHandler.memoHookIndex++;
 
   const createSnapshot = (value: D) => (isPrimitive(value) ? value : { ...(value as object) });
 
@@ -170,7 +178,7 @@ export function memo<D, R>(data: D, callback: () => R): R {
     );
   };
 
-  const dep = currentInstance.memoizedList;
+  const dep = hookHandler.memoizedList;
   if (!dep[index]) {
     const cachedValue = callback();
     dep[index] = {

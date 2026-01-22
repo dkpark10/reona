@@ -200,7 +200,7 @@ function recursiveDiff(
       return nextVnodeTree.instance.currentDom;
     }
 
-    if (nextVnodeTree.instance.isMounted) {
+    if (nextVnodeTree.instance.hookHandler.isMounted) {
       nextVnodeTree.instance.reRender();
     }
     return null;

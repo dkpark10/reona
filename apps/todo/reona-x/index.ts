@@ -54,7 +54,7 @@ export default function Todo() {
       addTodo();
     }
   };
-  
+
   return html`
     <div class="container">
       <div class="todo-app">

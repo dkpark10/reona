@@ -122,7 +122,9 @@ export function createRouter(routes: RouteOption[]): Router {
   };
 
   const renderRoute = function () {
-    currentMatchedInstance?.unmountAll();
+    currentMatchedInstance?.hookHandler.unmountAll(
+      currentMatchedInstance.prevVnodeTree, currentMatchedInstance
+    );
 
     const root = rootElement;
     if (root) {

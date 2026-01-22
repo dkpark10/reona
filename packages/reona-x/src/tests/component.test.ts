@@ -408,10 +408,10 @@ describe('컴포넌트 테스트', () => {
           <button type="button" @click=${onClick}>트리거</button>
           <div id="val1">${data.count}</div>
           ${createComponent(Son, {
-        props: {
-          value: data.count * 2,
-        },
-      })}
+            props: {
+              value: data.count * 2,
+            },
+          })}
         </div>`;
     }
 
@@ -433,10 +433,10 @@ describe('컴포넌트 테스트', () => {
         <div>
           <div id="val2">${value}</div>
           ${createComponent(GrandSon, {
-        props: {
-          value: value * 2,
-        },
-      })}
+            props: {
+              value: value * 2,
+            },
+          })}
         </div>`;
     }
 
@@ -499,10 +499,10 @@ describe('컴포넌트 테스트', () => {
         <div id="app">
           <button type="button" @click=${onClick}>trigger</button>
           ${createComponent(Timer, {
-        props: {
-          beginCountTrigger: data.trigger,
-        },
-      })}
+              props: {
+                beginCountTrigger: data.trigger,
+              },
+            })}
           </div>`;
     }
 
