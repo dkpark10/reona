@@ -36,6 +36,8 @@ export default class ComponentInstance {
 
   stateHookIndex = 0;
 
+  isMounted = false;
+
   constructor(component, options) {
     this.component = component;
     this.sequence = options.sequence;
@@ -60,6 +62,8 @@ export default class ComponentInstance {
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
     parentElement.insertBefore(this.currentDom, null);
+    this.isMounted = true;
+    this.hookLimit = this.hookIndex;
   }
 
   reRender() {

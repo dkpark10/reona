@@ -160,6 +160,12 @@ export function reconcile(instance: ComponentInstance) {
       batchReplace(instance);
       return;
     }
+
+    // key 가 존재 하고 둘 다 다를 시
+    if ((prevVnodeTree.key && nextVnodeTree.key) && prevVnodeTree.key !== nextVnodeTree.key) {
+      batchReplace(instance);
+      return;
+    }
   }
 
   /**
@@ -243,16 +249,19 @@ function recursiveDiff(
   const nextLen = next.children.length;
   const prevLen = prev.children.length;
 
-  // 삭제된 요소의 경우
+  /**
+    * 이전 노드에서 추가된 경우
+    * todo 재조정 최적화
+    */
   if (prevLen > nextLen) {
     const indicesToRemove = findRemoveElement(next, prev);
 
-    indicesToRemove.forEach((index) => {
-      const childToRemove = currentElement?.childNodes[index];
+    for (const idx of indicesToRemove) {
+      const childToRemove = currentElement?.childNodes[idx];
       if (childToRemove) {
         currentElement?.removeChild(childToRemove);
       }
-    });
+    }
   }
 
   const fragment = document.createDocumentFragment();
@@ -261,7 +270,10 @@ function recursiveDiff(
     const childOfNext = next.children[i];
     const childDom = currentElement?.childNodes[i] as HTMLElement;
 
-    // 이전 노드에서 추가된 경우
+    /**
+     * 이전 노드에서 추가된 경우
+     * todo 재조정 최적화
+     */
     if (!childOfPrev && childOfNext) {
       if (childOfNext.type === 'element') {
         fragment.appendChild(createDOM(childOfNext as VNode));
@@ -337,7 +349,6 @@ function findRemoveElement(nextVnode: VElementNode, prevVnode: VElementNode): nu
   for (let i = prevChildren.length - 1; i >= 0; i--) {
     const child = prevChildren[i];
 
-    // key가 있는 경우: key 기반 비교
     if (child.type === 'element' && child.attr?.key !== undefined) {
       if (!nextKeySet.has(child.attr.key)) {
         result.push(i);

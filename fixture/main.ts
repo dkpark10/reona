@@ -1,4 +1,4 @@
-import { rootRender, createRouter, RouteProvider } from '../packages/reona-x/src/core';
+import { rootRender, createRouter, RouteProvider, state, html } from '../packages/reona-x/src/core';
 import {
   Nested,
   Array,
@@ -36,4 +36,26 @@ const router = createRouter([
   },
 ]);
 
-rootRender(document.getElementById('root')!, Array);
+function Component() {
+  const data = state({
+    arr: [0, 1, 2, 3, 4],
+  });
+
+  const deleteItem = (id: number) => {
+    data.arr = data.arr.filter((item) => item !== id);
+  };
+
+  return html`
+    <div id="app">
+      <ul>
+        ${data.arr.map((item) => html`
+          <li key=${item}>
+            <div class="value">${item}</div>
+            <button data-testid="btn-${item}" type="button" @click=${() => deleteItem(item)}></button>
+          </li>
+        `)}
+      </ul>
+    </div>`;
+};
+
+rootRender(document.getElementById('root')!, Component);

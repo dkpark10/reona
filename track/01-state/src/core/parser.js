@@ -58,12 +58,11 @@ export function isEmpty(obj) {
 /**
  * @description 받은 html을 vnode tree로 만듬
  * @param {RenderResult} renderResult
- * @param {number=} sequence
+ * @param {number} sequence
  * @returns {VNode}
  */
-export default function parse(renderResult, sequence) {
+export default function parse(renderResult) {
   let valueIndex = 0;
-  let currentSequence = sequence;
 
   /**
    * @param {HTMLElement} el

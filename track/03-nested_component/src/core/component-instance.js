@@ -52,6 +52,8 @@ export default class ComponentInstance {
 
   stateHookIndex = 0;
 
+  isMounted = false;
+
   constructor(component, sequence) {
     this.component = component;
     /** @description 해당 컴포넌트가 트리에서 어디에 위치해 있는지 식별하는 넘버 */
@@ -77,6 +79,8 @@ export default class ComponentInstance {
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
     parentElement.insertBefore(this.currentDom, null);
+    this.isMounted = true;
+    this.hookLimit = this.hookIndex;
   }
 
   reRender() {

@@ -2,6 +2,8 @@ import { expect, test, beforeEach, afterEach } from 'vitest';
 import { rootRender } from '../core/runtime-dom';
 import App from '../components';
 
+const flushRaf = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
 beforeEach(() => {
   const div = document.createElement('div');
   div.id = 'root';
@@ -19,8 +21,10 @@ test('조건부 렌더링에 따른 서로 다른 컴포넌트 인스턴스를 �
   expect(document.getElementById('child1')).toBeInTheDocument();
 
   document.querySelector('button').click();
+  await flushRaf();
   expect(document.getElementById('child2')).toBeInTheDocument();
 
   document.querySelector('button').click();
+  await flushRaf();
   expect(document.getElementById('child1')).toBeInTheDocument();
 });

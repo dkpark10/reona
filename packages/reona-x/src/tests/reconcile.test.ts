@@ -278,4 +278,142 @@ describe('재조정 로직으로 인한 컴포넌트 테스트', () => {
     await flushRaf();
     expect(document.querySelector('ul')?.children).toHaveLength(6);
   });
+
+  test('배열 항목에서 임의의 순서에 아이템을 삭제한다.', async () => {
+    function Component() {
+      const data = state({
+        arr: [0, 1, 2, 3, 4],
+      });
+
+      const deleteItem = (id: number) => {
+        data.arr = data.arr.filter((item) => item !== id);
+      };
+
+      return html`
+        <div id="app">
+          <ul>
+            ${data.arr.map((item) => html`
+              <li key=${item}>
+                <div class="value">${item}</div>
+                <button data-testid="btn-${item}" type="button" @click=${() => deleteItem(item)}></button>
+              </li>
+            `)}
+          </ul>
+        </div>`;
+    };
+
+    rootRender(document.getElementById('root')!, Component);
+
+    (document.querySelector('button[data-testid="btn-2"]') as HTMLButtonElement).click();
+    await flushRaf();
+    let items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['0', '1', '3', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(4);
+
+    (document.querySelector('button[data-testid="btn-0"]') as HTMLButtonElement).click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['1', '3', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(3);
+
+    (document.querySelector('button[data-testid="btn-3"]') as HTMLButtonElement).click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['1', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(2);
+  });
+
+  test('중첩 컴포넌트 배열 아이템에서 임의의 순서에 아이템을 삭제한다.', async () => {
+    function Child({ item, deleteItem }: { item: number; deleteItem: (id: number) => void; }) {
+      return html`
+        <li key=${item}>
+          <div class="value">${item}</div>
+          <button data-testid="btn-${item}" type="button" @click=${() => deleteItem(item)}></button>
+        </li>`;
+    }
+
+    function Component() {
+      const data = state({
+        arr: [0, 1, 2, 3, 4],
+      });
+
+      const deleteItem = (id: number) => {
+        data.arr = data.arr.filter((item) => item !== id);
+      };
+
+      return html`
+        <div id="app">
+          <ul>
+            ${data.arr.map((item) => createComponent(Child, {
+              props: {
+                item,
+                deleteItem,
+              },
+              key: item,
+            }))}
+          </ul>
+        </div>`;
+    };
+
+    rootRender(document.getElementById('root')!, Component);
+
+    (document.querySelector('button[data-testid="btn-2"]') as HTMLButtonElement).click();
+    await flushRaf();
+    let items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['0', '1', '3', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(4);
+
+    (document.querySelector('button[data-testid="btn-0"]') as HTMLButtonElement).click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['1', '3', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(3);
+
+    (document.querySelector('button[data-testid="btn-3"]') as HTMLButtonElement).click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['1', '4']);
+    expect(document.querySelectorAll('li')).toHaveLength(2);
+  });
+
+  test('배열 항목에서 임의의 순서에 아이템을 추가한다.', async () => {
+    function Component() {
+      const data = state({
+        arr: [0],
+      });
+
+      const addItem = () => {
+        data.arr = [data.arr.length, ...data.arr];
+      };
+
+      return html`
+        <div id="app">
+          <ul>
+            ${data.arr.map((item) => html`
+              <li key=${item}>
+                <div class="value">${item}</div>
+                <button type="button" @click=${addItem}></button>
+              </li>
+            `)}
+          </ul>
+        </div>`;
+    };
+
+    rootRender(document.getElementById('root')!, Component);
+    let items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['0']);
+    expect(document.querySelectorAll('li')).toHaveLength(1);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['1', '0']);
+    expect(document.querySelectorAll('li')).toHaveLength(2);
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+    items = [...document.querySelectorAll('li .value')].map(el => el.textContent);
+    expect(items).toEqual(['2', '1', '0']);
+    expect(document.querySelectorAll('li')).toHaveLength(3);
+  });
 });

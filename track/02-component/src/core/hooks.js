@@ -1,5 +1,25 @@
 import  { getCurrentInstance } from './component-instance';
 
+const renderQueue = new Set();
+let rafId = null;
+
+export function update(instance) {
+  renderQueue.add(instance);
+
+  if (rafId !== null) return;
+
+  rafId = requestAnimationFrame(() => {
+    try {
+      renderQueue.forEach((instance) => {
+        instance.reRender();
+      });
+    } finally {
+      renderQueue.clear();
+      rafId = null;
+    }
+  });
+}
+
 function isPrimitive(value) {
   return value === null || (typeof value !== 'object' && typeof value !== 'function');
 }
@@ -41,7 +61,7 @@ export function state(initial) {
 
       const result = Reflect.set(target, key, value, receiver);
       if (prevValue !== value) {
-        currentInstance.reRender();
+        update(currentInstance);
       }
       return result;
     },
