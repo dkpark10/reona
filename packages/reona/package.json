@@ -1,0 +1,49 @@
+{
+  "name": "reona",
+  "version": "0.1.0-alpha.0",
+  "description": "react 인터페이스 기반 UI 라이브러리",
+  "files": [
+    "dist",
+    "README.md",
+    "architecture.png"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dkpark10/reona.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dkpark10/reona/issues"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && tsup",
+    "preview": "vite preview",
+    "prepare": "cp ../../README.md ./README.md && cp ../../architecture.png ./architecture.png",
+    "test": "vitest --run",
+    "deploy": "pnpm run prepare && pnpm run test && pnpm run build && npm publish --access=public"
+  },
+  "keywords": [
+    "reona"
+  ],
+  "author": "dkpark10",
+  "license": "ISC",
+  "packageManager": "pnpm@9.15.5",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": {
+        "types": "./src/core/index.ts",
+        "default": "./src/core/index.ts"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  }
+}

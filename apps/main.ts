@@ -1,5 +1,5 @@
-import { rootRender } from 'reona-x';
-import App from './todo/reona-x';
-// import App from './tic-tac-toe/reona-x';
+import { rootRender } from 'reona';
+import App from './todo';
+// import App from './tic-tac-toe';
 
 rootRender(document.getElementById('root')!, App);

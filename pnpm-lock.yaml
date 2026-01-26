@@ -38,17 +38,19 @@ importers:
 
   apps:
     dependencies:
-      reona-x:
+      reona:
         specifier: workspace:*
-        version: link:../packages/reona-x
+        version: link:../packages/reona
 
   fixture: {}
 
-  packages/reona-x: {}
+  packages/reona: {}
 
   track/01-state: {}
 
   track/02-component: {}
+
+  track/03-nested_component: {}
 
 packages:
 

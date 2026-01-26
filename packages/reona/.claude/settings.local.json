@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(pnpm build)",
+      "Bash(npm whoami:*)",
+      "Bash(pnpm --filter=reona test)",
+      "Bash(npm publish:*)"
+    ]
+  }
+}

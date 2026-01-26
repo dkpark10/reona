@@ -4,7 +4,7 @@
   "packageManager": "pnpm@9.15.5",
   "scripts": {
     "dev": "pnpm run --filter=fixture dev",
-    "build": "pnpm run --filter=reona-x build",
+    "build": "pnpm run --filter=reona build",
     "test": "turbo run test",
     "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,js,jsx,json}\""
