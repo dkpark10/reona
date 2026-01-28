@@ -145,17 +145,6 @@ export function ref<Data>(initial: Data) {
   return refs[index] as { current: Data };
 }
 
-export function setRef<D extends { current: unknown }>(ref: D) {
-  const currentInstance = getCurrentInstance();
-  if (currentInstance === null) {
-    throw new Error('setRef 함수는 컴포넌트 내에서 선언해야 합니다.');
-  }
-
-  return function (value: unknown) {
-    ref.current = value;
-  };
-}
-
 export function memo<D, R>(data: D, callback: () => R): R {
   const currentInstance = getCurrentInstance();
   if (currentInstance === null) {

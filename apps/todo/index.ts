@@ -1,4 +1,4 @@
-import { html, state, ref, setRef, memo } from 'reona';
+import { html, state, ref, memo } from 'reona';
 import './styles/index.css';
 
 interface TodoItem {
@@ -64,7 +64,7 @@ export default function Todo() {
             <input
               type="text"
               placeholder="할 일을 입력하세요"
-              $$ref=${setRef(inputRef)}
+              $$ref=${inputRef}
               @keydown=${handleKeydown}
             />
             <button class="add-btn" type="button" @click=${addTodo}>추가</button>

@@ -1,4 +1,4 @@
-import { html, state, ref, setRef, memo } from '../../../../packages/reona/src/core';
+import { html, state } from '../../../../packages/reona/src/core';
 
 interface TodoItem {
   id: number;

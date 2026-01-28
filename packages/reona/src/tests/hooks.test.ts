@@ -6,7 +6,6 @@ import {
   ref,
   mounted,
   rootRender,
-  setRef,
   state,
   html,
   memo,
@@ -207,7 +206,7 @@ describe('refs 테스트', () => {
 
       return html`
         <div id="app">
-          <h1 $$ref="${setRef(headingElement)}">hh</h1>
+          <h1 $$ref="${headingElement}">hh</h1>
         </div>
       `;
     }

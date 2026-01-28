@@ -61,8 +61,14 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
         el.addEventListener(eventName, value);
       } else {
         if (/^\$\$ref\b/.test(key)) {
-          const setRef = value as Function;
-          setRef(el);
+          const refValue = value;
+          if (typeof refValue === 'function') {
+            refValue(el);
+          } else {
+            if (Object.prototype.hasOwnProperty.call(refValue, 'current')) {
+              refValue.current = el;
+            }
+          }
         } else {
           el.setAttribute(key, value);
         }

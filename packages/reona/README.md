@@ -1,10 +1,18 @@
 # reona
 
-react 기반 인터페이스 UI 라이브러리
+react 인터페이스 기반 UI 라이브러리
 
 ## 전체 구성도
 
 ![architecture](/architecture.png)
+
+## demo
+
+*todo*:
+[https://stackblitz.com/edit/vitejs-vite-jcdhge7f?file=package.json](https://stackblitz.com/edit/vitejs-vite-jcdhge7f?file=package.json)
+
+*tic tac toe*:
+[https://stackblitz.com/edit/vitejs-vite-xjsmpcxp?file=package.json](https://stackblitz.com/edit/vitejs-vite-xjsmpcxp?file=package.json)
 
 ## 사용법
 
