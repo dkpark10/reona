@@ -72,6 +72,29 @@ describe('라이프 사이클 훅 테스트', () => {
     expect(instance.hookHandler.mountHooks).toBeNull();
   });
 
+  test('비동기 마운트 훅을 테스트 한다.', async () => {
+    function Component() {
+      const data = state({
+        value: 0,
+      });
+
+      mounted(async () => {
+        const d = await Promise.resolve(123);
+        data.value = d;
+      });
+
+      return html`<div id="app">${data.value}</div>`;
+    }
+
+    const instance = rootRender(document.getElementById('root')!, Component);
+
+    expect(document.getElementById('app')?.textContent?.trim()).toBe('0');
+    await flushRaf();
+    expect(document.getElementById('app')?.textContent?.trim()).toBe('123');
+
+    expect(instance.hookHandler.mountHooks).toBeNull();
+  });
+
   test('데이터 변경 시 업데이트 훅 실행이 되야 한다.', async () => {
     let expectedValue;
     const updatedFn = vi.fn((prev) => {
