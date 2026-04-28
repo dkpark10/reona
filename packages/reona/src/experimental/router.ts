@@ -306,7 +306,7 @@ type AnchorWithHref = RequireKeys<Partial<HTMLAnchorElement>, 'href'>;
 
 interface LinkComponentProps {
   children: Component | RenderResult;
-  attr: AnchorWithHref;
+  attr: AnchorWithHref & { key?: string | number };
 }
 function LinkComponent({ children, attr }: LinkComponentProps) {
   const router = useRouter();
@@ -321,16 +321,20 @@ function LinkComponent({ children, attr }: LinkComponentProps) {
 
   return html`
     <a href="${attr.href}" @click=${onClick}>
-      ${isRenderResultObject(children) ? children : createComponent(children)}
+      ${isRenderResultObject(children) ? children : createComponent(children, { key: attr.key })}
     </a>
   `;
 }
 
-export function Link(children: Component | RenderResult, attr: AnchorWithHref) {
+export function Link(
+  children: Component | RenderResult,
+  attr: AnchorWithHref & { key?: string | number }
+) {
   return createComponent(LinkComponent, {
     props: {
       children,
       attr,
     },
+    key: attr.key,
   });
 }
