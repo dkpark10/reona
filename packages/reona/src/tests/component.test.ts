@@ -1,5 +1,15 @@
 import { vi, expect, test, beforeEach, afterEach, describe } from 'vitest';
-import { mounted, ref, watchProps, rootRender, state, html, createComponent } from '../core';
+import {
+  mounted,
+  ref,
+  watchProps,
+  rootRender,
+  state,
+  html,
+  createComponent,
+  createContext,
+  context,
+} from '../core';
 import { flushRaf } from './utils';
 
 beforeEach(() => {
@@ -298,5 +308,164 @@ describe('컴포넌트 테스트', () => {
     vi.advanceTimersByTime(1000);
     expect(document.querySelector('time')?.textContent).toBe('3');
     expect(executionCount).toBe(1);
+  });
+
+  test('서로 다른 부모의 자식끼리 인스턴스를 공유하지 않는다.', async () => {
+    function Leaf({ id }: { id: string }) {
+      const data = state({ count: 0 });
+
+      const onClick = () => {
+        data.count += 1;
+      };
+
+      return html`
+        <button type="button" data-testid=${id} @click=${onClick}>${data.count}</button>
+      `;
+    }
+
+    function A() {
+      return html`<div>
+        ${createComponent(Leaf, { props: { id: 'a1' } })}
+        ${createComponent(Leaf, { props: { id: 'a2' } })}
+      </div>`;
+    }
+
+    function B() {
+      return html`<div>${createComponent(Leaf, { props: { id: 'b1' } })}</div>`;
+    }
+
+    function App() {
+      return html`<div>${createComponent(A)}${createComponent(B)}</div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    (document.querySelector('[data-testid="a2"]') as HTMLButtonElement).click();
+    await flushRaf();
+
+    expect(document.querySelector('[data-testid="a1"]')?.textContent).toBe('0');
+    expect(document.querySelector('[data-testid="a2"]')?.textContent).toBe('1');
+    expect(document.querySelector('[data-testid="b1"]')?.textContent).toBe('0');
+  });
+
+  test.skip('중첩 html 안의 컴포넌트끼리 인스턴스를 공유하지 않는다.', async () => {
+    function C({ tag }: { tag: string }) {
+      return html`<span>${tag}</span>`;
+    }
+
+    function App() {
+      return html`<div>
+        ${html`<p>${createComponent(C, { props: { tag: 'A' } })}</p>`}
+        ${html`<p>${createComponent(C, { props: { tag: 'B' } })}</p>`}
+      </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    const spans = document.querySelectorAll('span');
+    expect(spans[0]?.textContent).toBe('A');
+    expect(spans[1]?.textContent).toBe('B');
+  });
+
+  test.skip('리렌더링 시 이벤트 핸들러가 새 props를 참조한다.', async () => {
+    const log = vi.fn();
+
+    function Child({ v }: { v: number }) {
+      const onClick = () => log(v);
+      return html`<button type="button" id="child" @click=${onClick}>${v}</button>`;
+    }
+
+    function App() {
+      const data = state({ v: 1 });
+      const onClick = () => {
+        data.v += 1;
+      };
+
+      return html`<div>
+        <button type="button" id="parent" @click=${onClick}>up</button>
+        ${createComponent(Child, { props: { v: data.v } })}
+      </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    (document.getElementById('parent') as HTMLButtonElement).click();
+    await flushRaf();
+    expect(document.getElementById('child')?.textContent).toBe('2');
+
+    (document.getElementById('child') as HTMLButtonElement).click();
+    expect(log).toHaveBeenLastCalledWith(2);
+  });
+
+  test.skip('중첩된 Provider는 각자의 값을 제공한다.', async () => {
+    const Ctx = createContext('default');
+
+    function OuterReader() {
+      const value = context(Ctx);
+      return html`<span id="outer">${value}</span>`;
+    }
+
+    function InnerReader() {
+      const value = context(Ctx);
+      return html`<span id="inner">${value}</span>`;
+    }
+
+    function Inner() {
+      return Ctx.provider({
+        value: 'inner',
+        children: html`${createComponent(InnerReader)}`,
+      });
+    }
+
+    function App() {
+      return Ctx.provider({
+        value: 'outer',
+        children: html`<div>${createComponent(Inner)}${createComponent(OuterReader)}</div>`,
+      });
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    expect(document.getElementById('inner')?.textContent).toBe('inner');
+    expect(document.getElementById('outer')?.textContent).toBe('outer');
+  });
+
+  test.skip('리렌더링 시 삭제된 속성이 DOM에서 지워진다.', async () => {
+    function App() {
+      const data = state({ on: true });
+      const onClick = () => {
+        data.on = !data.on;
+      };
+
+      return html`<div>
+        <button type="button" @click=${onClick}>toggle</button>
+        ${data.on ? html`<p class="x" title="t">p</p>` : html`<p>p</p>`}
+      </div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+    expect(document.querySelector('p')?.getAttribute('class')).toBe('x');
+
+    document.querySelector('button')?.click();
+    await flushRaf();
+
+    expect(document.querySelector('p')?.hasAttribute('class')).toBe(false);
+    expect(document.querySelector('p')?.hasAttribute('title')).toBe(false);
+  });
+
+  test.skip('고정 문자열과 컴포넌트가 같은 텍스트에 있어도 고정 문자열이 유지된다.', async () => {
+    function C() {
+      return html`<b>C</b>`;
+    }
+
+    function App() {
+      return html`<div id="wrap">hello ${createComponent(C)} world</div>`;
+    }
+
+    rootRender(document.getElementById('root')!, App);
+
+    const wrap = document.getElementById('wrap');
+    expect(wrap?.querySelector('b')?.textContent).toBe('C');
+    expect(wrap?.textContent).toBe('hello C world');
   });
 });
