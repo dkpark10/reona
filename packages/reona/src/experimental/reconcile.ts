@@ -300,6 +300,7 @@ function changeAttribute(
   currentElement: Element | null
 ) {
   if (!currentElement) return;
+
   if (prevVnodeTree.type === 'element' && nextVnodeTree.type === 'element') {
     if (!shallowEqual(nextVnodeTree.attr, prevVnodeTree.attr)) {
       Object.entries(nextVnodeTree.attr || {}).forEach(([name, value]) => {
@@ -310,10 +311,14 @@ function changeAttribute(
         }
       });
 
-      // 이전에만 있던 이벤트는 제거
+      // 이전 렌더링 시 있던 속성, 이벤트는 제거
       Object.keys(prevVnodeTree.attr || {}).forEach((name) => {
-        if (name.startsWith('@') && !(name in (nextVnodeTree.attr || {}))) {
+        if (name in (nextVnodeTree.attr || {})) return;
+
+        if (name.startsWith('@')) {
           patchEvent(currentElement, name.slice(1));
+        } else if (!name.startsWith('$$ref')) {
+          currentElement.removeAttribute(name);
         }
       });
     }

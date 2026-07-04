@@ -1,0 +1,39 @@
+🔴 상 — 상태가 섞이거나 화면이 틀려요
+
+1. 서로 다른 부모의 자식끼리 인스턴스를 같이 써요
+component-instance.ts의 parse(template, this.sequence + 1), component.ts의 getInstance
+- 재현: App → A(Leaf, Leaf), B(Leaf). A의 두 번째 Leaf를 누르면 B의 Leaf 숫자가 올라가요.
+
+2. 중첩 html 안의 컴포넌트끼리 인스턴스를 같이 써요
+parser.ts의 parse(value)가 sequence를 넘기지 않아서 번호가 undefined, NaN이 돼요.
+- 재현: ${html<p>${C({tag:'A'})}</p>}${html<p>${C({tag:'B'})}</p>} → 화면에 A, A가 나와요.
+- 조건부 렌더링이나 .map(() => html...) 안에 컴포넌트를 넣으면 바로 걸려요. 1번과 원인이 같은 계열이에요.
+
+3. 다시 그릴 때 이벤트 핸들러가 바뀌지 않아요
+reconcile.ts의 changeAttribute는 문자열 속성만 처리해요.
+- 재현: props v가 1에서 2로 바뀌면 버튼 글자는 2인데, 클릭 핸들러는 여전히 1을 써요.
+- 핸들러가 props를 참조하는 모든 컴포넌트가 영향을 받아요.
+
+4. context가 전역 변수 하나예요
+context.ts의 ctxData
+- 재현: Provider 두 개에 각각 'outer', 'inner'를 넘기면 둘 다 inner를 읽어요.
+- 렌더 순서상 마지막 Provider 값이 모두를 덮어써요.
+
+🟠 중 — 화면이 틀리지만 피해 갈 수는 있어요
+
+5. 삭제된 속성이 DOM에서 지워지지 않아요
+reconcile.ts의 changeAttribute
+- 재현: <p class="x" title="t">가 <p>로 바뀌어도 class, title이 남아요.
+
+6. 같은 텍스트 안에 있는 고정 문자열과 컴포넌트가 함께 오면 고정 문자열이 사라져요
+parser.ts의 convertChild에 있는 markers.map 분기
+- 재현: <div>hello ${createComponent(C)} world</div> → <div><b>C</b></div>가 나와요.
+
+🟡 하 — 테스트, 도구 쪽
+
+8. 테스트끼리 가짜 타이머가 새어 나가요
+component.test.ts의 "watchProps 호출 횟수" 테스트가 vi.useFakeTimers()를 켜고 끄지 않아요. 그 뒤에 추가하는 테스트는 flushRaf()에서 5초 동안 멈췄다가 실패해요.
+
+9. 아무것도 검증하지 못하는 테스트가 있어요
+life-cycle.test.ts의 "언마운트 시 훅 데이터 정리"
+- 인스턴스가 맵에서 지워진 뒤에 꺼내서 instance가 undefined예요. 그래서 toBeUndefined() 단언이 전부 그냥 통과해요.

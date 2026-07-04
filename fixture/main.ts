@@ -7,7 +7,8 @@ import {
   Refs,
   Store,
   ContextApp,
-  Rerender,
+  Deldom,
+  EventHandler
 } from './reona/src';
 
 import Home from './reona/src/router-fixture';

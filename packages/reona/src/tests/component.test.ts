@@ -433,16 +433,17 @@ describe('컴포넌트 테스트', () => {
     expect(document.getElementById('outer')?.textContent).toBe('outer');
   });
 
-  test.skip('리렌더링 시 삭제된 속성이 DOM에서 지워진다.', async () => {
+  test('리렌더링 시 삭제된 속성이 DOM에서 지워진다.', async () => {
     function App() {
       const data = state({ on: true });
+
       const onClick = () => {
         data.on = !data.on;
       };
 
       return html`<div>
         <button type="button" @click=${onClick}>toggle</button>
-        ${data.on ? html`<p class="x" title="t">p</p>` : html`<p>p</p>`}
+        ${data.on ? html`<p class="x" title="t">true</p>` : html`<p>false</p>`}
       </div>`;
     }
 

@@ -39,6 +39,7 @@ const invokerMap = new WeakMap<Element, Record<string, Invoker>>();
  */
 export function patchEvent(el: Element, eventName: string, handler?: (e: Event) => void) {
   let invokers = invokerMap.get(el);
+
   if (!invokers) {
     invokers = {};
     invokerMap.set(el, invokers);
