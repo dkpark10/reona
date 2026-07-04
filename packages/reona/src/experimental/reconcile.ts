@@ -2,7 +2,7 @@
 import type { VNode, VElementNode } from '../core/parser';
 import { shallowEqual } from '../../../shared';
 import ComponentInstance from '../core/component-instance';
-import { createDOM } from '../core/runtime-dom';
+import { createDOM, patchEvent } from '../core/runtime-dom';
 
 /**
  *
@@ -305,6 +305,15 @@ function changeAttribute(
       Object.entries(nextVnodeTree.attr || {}).forEach(([name, value]) => {
         if (typeof value === 'string') {
           currentElement.setAttribute(name, value);
+        } else if (name.startsWith('@') && typeof value === 'function') {
+          patchEvent(currentElement, name.slice(1), value);
+        }
+      });
+
+      // 이전에만 있던 이벤트는 제거
+      Object.keys(prevVnodeTree.attr || {}).forEach((name) => {
+        if (name.startsWith('@') && !(name in (nextVnodeTree.attr || {}))) {
+          patchEvent(currentElement, name.slice(1));
         }
       });
     }

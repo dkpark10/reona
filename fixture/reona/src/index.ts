@@ -6,6 +6,7 @@ import Refs from './refs';
 import Store from './store';
 import ContextApp from './context';
 import Todo from './todo';
+import Rerender from './test-case';
 
 export {
   Nested,
@@ -16,4 +17,5 @@ export {
   Store,
   ContextApp,
   Todo,
+  Rerender,
 };

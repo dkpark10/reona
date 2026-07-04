@@ -29,6 +29,41 @@ export function rootRender<P extends Props>(
   return instance;
 }
 
+type Invoker = ((e: Event) => void) & { value: (e: Event) => void };
+
+const invokerMap = new WeakMap<Element, Record<string, Invoker>>();
+
+/**
+ * @description 이벤트 리스너는 invoker 하나만 등록하고 실제 핸들러는 invoker.value 로 교체한다.
+ * 리렌더링 시 새 클로저로 바뀐 핸들러를 add/remove 없이 반영하기 위함.
+ */
+export function patchEvent(el: Element, eventName: string, handler?: (e: Event) => void) {
+  let invokers = invokerMap.get(el);
+  if (!invokers) {
+    invokers = {};
+    invokerMap.set(el, invokers);
+  }
+
+  const existing = invokers[eventName];
+  if (handler && existing) {
+    existing.value = handler;
+    return;
+  }
+
+  if (handler) {
+    const invoker = ((e: Event) => invoker.value(e)) as Invoker;
+    invoker.value = handler;
+    invokers[eventName] = invoker;
+    el.addEventListener(eventName, invoker);
+    return;
+  }
+
+  if (existing) {
+    el.removeEventListener(eventName, existing);
+    delete invokers[eventName];
+  }
+}
+
 /** @description vnode 객체를 실제 dom 으로 만듬 */
 export function createDOM(vnode: VNode): HTMLElement;
 export function createDOM(vnode: VNode, parentElement: Element): HTMLElement;
@@ -57,8 +92,7 @@ export function createDOM(vnode: VNode, parentElement?: Element) {
   if (vnode.attr) {
     for (const [key, value] of Object.entries(vnode.attr)) {
       if (/@([^\s=/>]+)/.test(key) && typeof value === 'function') {
-        const eventName = key.slice(1);
-        el.addEventListener(eventName, value);
+        patchEvent(el, key.slice(1), value);
       } else {
         if (/^\$\$ref\b/.test(key)) {
           const refValue = value;
