@@ -42,6 +42,20 @@ export default function App() {
 rootRender(document.getElementById('root')!, App);
 ```
 
+state는 얕은 반응성이라 최상위 속성에 값을 대입할 때만 다시 렌더링됩니다. 배열이나 객체 같은 중첩 값은 직접 수정하지 말고 새 값을 대입해야 합니다.
+
+```javascript
+const data = state({
+  list: [1],
+});
+
+// ❌ 다시 렌더링되지 않음
+data.list.push(2);
+
+// ✅ 새 배열을 대입
+data.list = [...data.list, 2];
+```
+
 ### 라이프 사이클 mount, unmount, updated
 ```javascript
 import { mount } from 'reona';
