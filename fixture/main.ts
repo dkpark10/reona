@@ -8,7 +8,8 @@ import {
   Store,
   ContextApp,
   Deldom,
-  EventHandler
+  EventHandler,
+  StringCase,
 } from './reona/src';
 
 import Home from './reona/src/router-fixture';

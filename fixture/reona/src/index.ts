@@ -6,8 +6,6 @@ import Refs from './refs';
 import Store from './store';
 import ContextApp from './context';
 import Todo from './todo';
-import Deldom from './test-case/del-dom';
-import EventHandler from './test-case/event-handler';
 
 export {
   Nested,
@@ -17,7 +15,7 @@ export {
   Refs,
   Store,
   ContextApp,
-  Todo,
-  EventHandler,
-  Deldom
+  Todo
 };
+
+export * from './test-case';
