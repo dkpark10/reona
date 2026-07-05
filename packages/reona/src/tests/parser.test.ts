@@ -114,6 +114,25 @@ describe('파서 테스트', () => {
     });
   });
 
+  test('고정 문자열과 컴포넌트가 같은 텍스트에 있을 때 vdom 값을 테스트 한다.', () => {
+    function C() {
+      return html`<b>C</b>`;
+    }
+
+    const template = html`<div id="wrap">hello ${createComponent(C)} world</div>`;
+
+    expect(parse(template)).toEqual({
+      type: 'element',
+      tag: 'div',
+      children: [
+        { type: 'text', value: 'hello ' },
+        { type: 'component', instance: expect.any(ComponentInstance) },
+        { type: 'text', value: ' world' },
+      ],
+      attr: { id: 'wrap' },
+    });
+  });
+
   test('배열 vdom 값을 테스트 한다.', () => {
     const template = html` <ul id="list">
       ${[1, 2, 3].map((item) => html`<li key=${item}>${item}</li>`)}

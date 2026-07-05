@@ -95,80 +95,42 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
 
   function convertChild(node: ChildNode): VNode | Array<VNode | null> | null {
     if (node.nodeType === Node.TEXT_NODE) {
-      let text = node.textContent ?? '';
+      const text = node.textContent ?? '';
 
       // 공백제거
       if (/^\s*$/.test(text)) return null;
 
-      // marker가 붙어있는 경우가 있으므로 match
-      const markers = text.match(/__marker_(\d+)__/g);
-      if (markers && markers.length >= 1) {
-        return markers.map(() => {
-          const { values } = renderResult;
-          const value = values[valueIndex];
+      // 마커 기준으로 쪼개서 고정 문자열과 값을 순서대로 반환
+      // 원시값은 앞뒤 문자열과 하나의 텍스트로 합치고, 노드가 오면 끊는다.
+      if (/__marker_\d+__/.test(text)) {
+        const result: Array<VNode | Array<VNode | undefined>> = [];
+        let buffer = '';
 
-          // createComponent 반환 함수일 시
-          if (isCreateComponentFunc(value)) {
-            const getInstance = value as (sequence: number) => any;
-            const instance = getInstance(currentSequence!) as ComponentInstance;
+        const flush = () => {
+          if (!/^\s*$/.test(buffer)) {
+            result.push({ type: 'text', value: buffer });
+          }
+          buffer = '';
+        };
 
-            currentSequence!++;
-            valueIndex++;
-
-            return {
-              type: 'component',
-              instance,
-              key: instance.key,
-            };
+        for (const part of text.split(/(__marker_\d+__)/)) {
+          if (!/^__marker_\d+__$/.test(part)) {
+            buffer += part;
+            continue;
           }
 
-          if (isRenderResultObject(value)) {
-            const vdom = parse(value);
-            return vdom;
+          const vnode = convertValue(renderResult.values[valueIndex++]);
+          if (!Array.isArray(vnode) && vnode.type === 'text') {
+            buffer += vnode.value;
+            continue;
           }
 
-          // 배열이 들어 왔다면
-          if (Array.isArray(value)) {
-            const result = values[valueIndex++].map((value: any) => {
-              if (isRenderResultObject(value)) {
-                const vdom = parse(value);
+          flush();
+          result.push(vnode);
+        }
+        flush();
 
-                if (vdom.type === 'element' && vdom.attr?.key === undefined) {
-                  throw new Error('배열 엘리먼트의 key가 누락되었습니다.');
-                }
-
-                return vdom;
-              }
-              if (isCreateComponentFunc(value)) {
-                const getInstance = value;
-                const instance = getInstance(currentSequence!) as ComponentInstance;
-                currentSequence!++;
-
-                if (instance.key === null || instance.key === undefined) {
-                  throw new Error('배열컴포넌트의 key가 누락되었습니다.');
-                }
-
-                return {
-                  type: 'component',
-                  instance,
-                  key: instance.key,
-                };
-              }
-            });
-            return result;
-          }
-
-          // marker가 있다면 원본 텍스트를 변경한다.
-          if (/__marker_(\d+)__/.test(text)) {
-            text = replaceMarkers(text);
-            return {
-              type: 'text',
-              value: text,
-            };
-          }
-          // marker 가 없으면 빈 텍스트 반환
-          return null;
-        });
+        return result as Array<VNode | null>;
       }
 
       return {
@@ -184,12 +146,40 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
     return null;
   }
 
-  function replaceMarkers(str: string): string {
-    const { values } = renderResult;
-    return str.replace(/__marker_(\d+)__/g, () => {
-      const v = values[valueIndex++];
-      return v !== undefined ? String(v) : '';
-    });
+  function convertValue(value: any): VNode | Array<VNode | undefined> {
+    // createComponent 반환 함수일 시
+    if (isCreateComponentFunc(value)) {
+      const instance = value(currentSequence!);
+      currentSequence!++;
+      return { type: 'component', instance, key: instance.key };
+    }
+
+    if (isRenderResultObject(value)) {
+      return parse(value);
+    }
+
+    // 배열이 들어 왔다면
+    if (Array.isArray(value)) {
+      return value.map((item: any) => {
+        if (isRenderResultObject(item)) {
+          const vdom = parse(item);
+          if (vdom.type === 'element' && vdom.attr?.key === undefined) {
+            throw new Error('배열 엘리먼트의 key가 누락되었습니다.');
+          }
+          return vdom;
+        }
+        if (isCreateComponentFunc(item)) {
+          const instance = item(currentSequence!);
+          currentSequence!++;
+          if (instance.key === null || instance.key === undefined) {
+            throw new Error('배열컴포넌트의 key가 누락되었습니다.');
+          }
+          return { type: 'component', instance, key: instance.key };
+        }
+      });
+    }
+
+    return { type: 'text', value: value !== undefined ? String(value) : '' };
   }
 
   // 메인 파싱 로직

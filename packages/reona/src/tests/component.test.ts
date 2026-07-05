@@ -457,7 +457,7 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('p')?.hasAttribute('title')).toBe(false);
   });
 
-  test.skip('고정 문자열과 컴포넌트가 같은 텍스트에 있어도 고정 문자열이 유지된다.', async () => {
+  test('고정 문자열과 컴포넌트가 같은 텍스트에 있어도 고정 문자열이 유지된다.', async () => {
     function C() {
       return html`<b>C</b>`;
     }
