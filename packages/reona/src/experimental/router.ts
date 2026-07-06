@@ -133,7 +133,7 @@ export function createRouter(routes: RouteOption[]): Router {
       root.replaceChildren();
 
       const getInstance = createComponent(component, { props });
-      const instance = getInstance(0);
+      const instance = getInstance('0');
       instance.render(root);
       currentMatchedInstance = instance;
     }

@@ -1,6 +1,6 @@
 import type { RenderResult, Props } from '../utils/types';
 import { isRenderResultObject, isEmpty } from '../utils';
-import ComponentInstance from './component-instance';
+import ComponentInstance, { type InstancePath } from './component-instance';
 
 export type VTextNode = {
   type: 'text';
@@ -22,14 +22,24 @@ export type VComponent = {
 
 export type VNode = VTextNode | VElementNode | VComponent;
 
-function isCreateComponentFunc(func: any): func is (sequence: number) => ComponentInstance {
+function isCreateComponentFunc(func: any): func is (path: InstancePath) => ComponentInstance {
   return typeof func === 'function' && func.__isCreateComponent;
 }
 
-/** @description 받은 html을 vnode tree로 만듬 */
-export default function parse(renderResult: RenderResult, sequence?: number) {
+/**
+ * @description 받은 html을 vnode tree로 만듬
+ * @param parentPath 부모 컴포넌트의 트리 경로 (ex. "0/1")
+ * @param counter 중첩 html 끼리 자식 순번을 이어서 세기 위해 공유
+ * 원시 숫자로 넘기면 재귀 parse 에 복사본이 전달되어 증가분이 바깥에 반영되지 않는다.
+ * ex) html`<div>${html`<p>${A}</p>`}${html`<p>${B}</p>`}</div>` 에서 A, B 모두 "0/0" 이 되어 인스턴스를 공유
+ */
+export default function parse(
+  renderResult: RenderResult,
+  parentPath: InstancePath = '0',
+  counter = { index: 0 }
+) {
   let valueIndex = 0;
-  let currentSequence = sequence;
+  const nextPath = (): InstancePath => `${parentPath}/${counter.index++}`;
 
   function convertNode(el?: Element): VElementNode | VTextNode {
     if (!el) {
@@ -149,28 +159,26 @@ export default function parse(renderResult: RenderResult, sequence?: number) {
   function convertValue(value: any): VNode | Array<VNode | undefined> {
     // createComponent 반환 함수일 시
     if (isCreateComponentFunc(value)) {
-      const instance = value(currentSequence!);
-      currentSequence!++;
+      const instance = value(nextPath());
       return { type: 'component', instance, key: instance.key };
     }
 
     if (isRenderResultObject(value)) {
-      return parse(value);
+      return parse(value, parentPath, counter);
     }
 
     // 배열이 들어 왔다면
     if (Array.isArray(value)) {
       return value.map((item: any) => {
         if (isRenderResultObject(item)) {
-          const vdom = parse(item);
+          const vdom = parse(item, parentPath, counter);
           if (vdom.type === 'element' && vdom.attr?.key === undefined) {
             throw new Error('배열 엘리먼트의 key가 누락되었습니다.');
           }
           return vdom;
         }
         if (isCreateComponentFunc(item)) {
-          const instance = item(currentSequence!);
-          currentSequence!++;
+          const instance = item(nextPath());
           if (instance.key === null || instance.key === undefined) {
             throw new Error('배열컴포넌트의 key가 누락되었습니다.');
           }

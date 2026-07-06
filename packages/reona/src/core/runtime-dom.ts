@@ -22,7 +22,7 @@ export function rootRender<P extends Props>(
     props: options?.props,
   });
 
-  const instance = getInstance(0);
+  const instance = getInstance('0');
   (component as any).rootElement = container;
   (component as any).currentMatchedInstance = instance;
   instance.render(container);

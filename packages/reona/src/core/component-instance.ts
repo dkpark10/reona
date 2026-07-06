@@ -5,7 +5,13 @@ import { createDOM } from './runtime-dom';
 import HookHandler from './hook-handler';
 
 /** @description 전역 컴포넌트 관리 map */
-type InstanceMapValue = Map<number, ComponentInstance>;
+/**
+ * @description 컴포넌트의 트리에서의 경로 (ex. "0", "0/1/0")
+ * 재귀 템플릿 리터럴 타입은 불가하여 두번째 마디부터는 string 으로 둔다.
+ */
+export type InstancePath = `${number}` | `${number}/${string}`;
+
+type InstanceMapValue = Map<InstancePath, ComponentInstance>;
 let instanceMap: Map<Component, InstanceMapValue>;
 export function getInstanceMap() {
   return instanceMap;
@@ -27,7 +33,7 @@ export function getCurrentInstance() {
 }
 
 type ComponentInstanceOption = {
-  sequence: number;
+  componentPath: InstancePath;
   key?: string | number;
 };
 
@@ -45,7 +51,7 @@ export default class ComponentInstance {
 
   public currentDom: HTMLElement;
 
-  public sequence: number;
+  public componentPath: InstancePath;
 
   public key?: string | number;
 
@@ -56,7 +62,7 @@ export default class ComponentInstance {
   constructor(component: Component, options: ComponentInstanceOption) {
     this.component = component;
     this.key = options.key;
-    this.sequence = options.sequence;
+    this.componentPath = options.componentPath;
     this.hookHandler = new HookHandler();
   }
 
@@ -70,7 +76,7 @@ export default class ComponentInstance {
     const template = this.component(this.nextProps);
 
     this.parentElement = parentElement;
-    this.prevVnodeTree = parse(template, this.sequence + 1);
+    this.prevVnodeTree = parse(template, this.componentPath);
 
     this.currentDom = createDOM(this.prevVnodeTree, parentElement);
     if (this.currentDom) {
@@ -86,7 +92,7 @@ export default class ComponentInstance {
     currentInstance = this;
     const template = this.component(this.nextProps);
 
-    this.nextVnodeTree = parse(template, this.sequence + 1);
+    this.nextVnodeTree = parse(template, this.componentPath);
 
     this.hookHandler.runUnmount(this.prevVnodeTree, this.nextVnodeTree);
     reconcile(this);

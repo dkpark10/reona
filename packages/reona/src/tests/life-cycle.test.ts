@@ -200,7 +200,7 @@ describe('라이프 사이클 훅 테스트', () => {
     rootRender(document.getElementById('root')!, Component);
 
     const instanceMap = getInstanceMap();
-    const instance = instanceMap.get(Child)?.get(1);
+    const instance = instanceMap.get(Child)?.get('0/0');
 
     document.querySelector('button')?.click();
 
@@ -351,7 +351,7 @@ describe('라이프 사이클 훅 테스트', () => {
     await flushRaf();
 
     const instanceMap = getInstanceMap();
-    const instance = instanceMap.get(Child)?.get(1);
+    const instance = instanceMap.get(Child)?.get('0/0');
 
     expect(instance?.hookHandler.states).toBeUndefined();
     expect(instance?.hookHandler.unMountHooks).toBeUndefined();

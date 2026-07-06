@@ -94,7 +94,7 @@ export default class HookHandler {
         instance.hookHandler.cleanUp();
 
         const instanceMap = getInstanceMap();
-        instanceMap.get(instance.component)?.delete(instance.sequence);
+        instanceMap.get(instance.component)?.delete(instance.componentPath);
         if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
           instanceMap.delete(instance.component);
         }
@@ -112,7 +112,7 @@ export default class HookHandler {
       }
 
       const instanceMap = getInstanceMap();
-      instanceMap.get(instance.component)?.delete(instance.sequence);
+      instanceMap.get(instance.component)?.delete(instance.componentPath);
       if ((instanceMap.get(instance.component)?.size || 0) <= 0) {
         instanceMap.delete(instance.component);
       }

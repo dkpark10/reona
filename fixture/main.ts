@@ -10,6 +10,7 @@ import {
   Deldom,
   EventHandler,
   StringCase,
+  SameInstance,
 } from './reona/src';
 
 import Home from './reona/src/router-fixture';
@@ -20,7 +21,7 @@ import Article from './reona/src/router-fixture/article';
 const router = createRouter([
   {
     path: '/',
-    component: Home,
+    component: SameInstance,
   },
   {
     path: '/about',

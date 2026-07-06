@@ -311,7 +311,7 @@ describe('컴포넌트 테스트', () => {
     expect(executionCount).toBe(1);
   });
 
-  test.skip('서로 다른 부모의 자식끼리 인스턴스를 공유하지 않는다.', async () => {
+  test('서로 다른 부모의 자식끼리 인스턴스를 공유하지 않는다.', async () => {
     function Leaf({ id }: { id: string }) {
       const data = state({ count: 0 });
 
@@ -325,10 +325,11 @@ describe('컴포넌트 테스트', () => {
     }
 
     function A() {
-      return html`<div>
-        ${createComponent(Leaf, { props: { id: 'a1' } })}
-        ${createComponent(Leaf, { props: { id: 'a2' } })}
-      </div>`;
+      return html`
+        <div>
+          ${createComponent(Leaf, { props: { id: 'a1' } })}
+          ${createComponent(Leaf, { props: { id: 'a2' } })}
+        </div>`;
     }
 
     function B() {
@@ -336,7 +337,11 @@ describe('컴포넌트 테스트', () => {
     }
 
     function App() {
-      return html`<div>${createComponent(A)}${createComponent(B)}</div>`;
+      return html`
+        <div>
+          ${createComponent(A)}
+          ${createComponent(B)}
+        </div>`;
     }
 
     rootRender(document.getElementById('root')!, App);
@@ -347,25 +352,6 @@ describe('컴포넌트 테스트', () => {
     expect(document.querySelector('[data-testid="a1"]')?.textContent).toBe('0');
     expect(document.querySelector('[data-testid="a2"]')?.textContent).toBe('1');
     expect(document.querySelector('[data-testid="b1"]')?.textContent).toBe('0');
-  });
-
-  test.skip('중첩 html 안의 컴포넌트끼리 인스턴스를 공유하지 않는다.', async () => {
-    function C({ tag }: { tag: string }) {
-      return html`<span>${tag}</span>`;
-    }
-
-    function App() {
-      return html`<div>
-        ${html`<p>${createComponent(C, { props: { tag: 'A' } })}</p>`}
-        ${html`<p>${createComponent(C, { props: { tag: 'B' } })}</p>`}
-      </div>`;
-    }
-
-    rootRender(document.getElementById('root')!, App);
-
-    const spans = document.querySelectorAll('span');
-    expect(spans[0]?.textContent).toBe('A');
-    expect(spans[1]?.textContent).toBe('B');
   });
 
   test('리렌더링 시 이벤트 핸들러가 새 props를 참조한다.', async () => {

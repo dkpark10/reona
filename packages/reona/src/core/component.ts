@@ -1,6 +1,6 @@
 import type { RenderResult, Component, Props } from '../utils/types';
 import { shallowEqual } from '../../../shared';
-import ComponentInstance, { getInstanceMap } from './component-instance';
+import ComponentInstance, { getInstanceMap, type InstancePath } from './component-instance';
 
 interface CreateComponentOption<P extends Props> {
   key?: string | number;
@@ -12,8 +12,8 @@ export function createComponent<P extends Props>(
   options?: CreateComponentOption<P>
 ) {
   const instanceMap = getInstanceMap();
-  /** @description 컴포넌트의 트리에서의 sequence */
-  const func = function getInstance(sequence: number) {
+  /** @description path: 컴포넌트의 트리에서의 경로 (ex. "0/1/0") */
+  const func = function getInstance(path: InstancePath) {
     const key = options?.key;
 
     let instanceDeps = instanceMap.get(component);
@@ -21,10 +21,10 @@ export function createComponent<P extends Props>(
       instanceDeps = new Map();
     }
 
-    let instance: ComponentInstance | undefined = instanceDeps.get(sequence);
+    let instance: ComponentInstance | undefined = instanceDeps.get(path);
     if (!instance) {
-      instance = new ComponentInstance(component, { key, sequence });
-      instanceDeps.set(sequence, instance);
+      instance = new ComponentInstance(component, { key, componentPath: path });
+      instanceDeps.set(path, instance);
       instanceMap.set(component, instanceDeps);
     }
 

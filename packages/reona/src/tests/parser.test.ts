@@ -202,7 +202,7 @@ describe('파서 테스트', () => {
         </ul>
       </div>`;
 
-    expect(parse(template, 0)).toEqual({
+    expect(parse(template, '0')).toEqual({
       type: 'element',
       tag: 'div',
       attr: { id: 'app' },
